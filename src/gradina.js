@@ -952,28 +952,7 @@ export function adaugaGradina(scene, renderer, L, W, optiuni = {}) {
   }
 
   /* --- iarba --- */
-  if (o.iarba) {
-    const cheie = L + "x" + W + "x" + o.densIarba;
-    if (!CACHE_IARBA || CACHE_IARBA.cheie !== cheie)
-      CACHE_IARBA = { cheie, geo: geoIarba(L, W, o.densIarba, 4242) };
-    const m = new THREE.Mesh(
-      CACHE_IARBA.geo,
-      cuVant(
-        new THREE.MeshStandardMaterial({
-          color: "#6f7f57",
-          map: T.iarba,
-          alphaMap: T.iarba,
-          alphaTest: 0.35,
-          side: THREE.DoubleSide,
-          roughness: 1,
-          vertexColors: true,
-        }),
-        0.075
-      )
-    );
-    m.receiveShadow = true;
-    grup.add(m);
-  }
+  // if (o.iarba) { ... } // eliminat (iarba 3D)
     
   // Adaugă flori
   if (o.flori !== false) {
