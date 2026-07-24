@@ -4,7 +4,8 @@
 // Structura proiect: vezi acoperis-REPRODUCERE.txt
 import React, { useRef, useEffect } from "react";
 import * as THREE from "three";
-import { adaugaGradina } from "./gradina";
+import { adaugaPeisaj } from "./peisaj.js";
+// import { adaugaGradina } from "./gradina";
 import { texPavaj } from "./texturi.js";
 import { CONFIG_ACOPERIS as C } from "../config/CONFIG";
 
@@ -567,7 +568,7 @@ export default function Scena3D({ cfg }) {
     loop();
     const onR = () => { const w = el.clientWidth, h = el.clientHeight; cam.aspect = w / h; cam.updateProjectionMatrix(); rnd.setSize(w, h); };
     window.addEventListener("resize", onR);
-    adaugaGradina(scene, rnd, L, W);
+    adaugaPeisaj(scene, rnd, L, W);
 
     return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", onR); window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); rnd.dispose(); el.removeChild(rnd.domElement); };
   }, [cfg]);
