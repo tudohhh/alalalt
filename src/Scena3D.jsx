@@ -178,8 +178,20 @@ export default function Scena3D({ cfg }) {
 
     const scene = new THREE.Scene();
     // Cer cu gradient
-  // skyCanvas eliminat (TEST #5)
-    scene.background = new THREE.Color(0x87CEEB); // cer albastru simplu
+  const skyCanvas = document.createElement('canvas'); skyCanvas.width = 512; skyCanvas.height = 512;
+  const skyCtx = skyCanvas.getContext('2d');
+  const skyGrad = skyCtx.createLinearGradient(0, 0, 0, 512);
+  skyGrad.addColorStop(0, '#b8d4f0'); skyGrad.addColorStop(0.4, '#dce8f0'); skyGrad.addColorStop(0.7, '#e8e4d8'); skyGrad.addColorStop(1, '#d5cec0');
+  skyCtx.fillStyle = skyGrad; skyCtx.fillRect(0, 0, 512, 512);
+  // Nori subtiri
+  for (let i = 0; i < 15; i++) {
+    skyCtx.fillStyle = 'rgba(255,255,255,0.12)';
+    skyCtx.beginPath();
+    skyCtx.ellipse(100 + Math.random()*312, 50 + Math.random()*100, 30+Math.random()*60, 8+Math.random()*15, Math.random()*0.5, 0, Math.PI*2);
+    skyCtx.fill();
+  }
+  const skyTex = new THREE.CanvasTexture(skyCanvas); skyTex.colorSpace = THREE.SRGBColorSpace;
+  scene.background = skyTex; skyTex.minFilter = THREE.LinearFilter; skyTex.magFilter = THREE.LinearFilter;
     const cam = new THREE.PerspectiveCamera(38, Wpx / Hpx, 0.1, 400);
     const rnd = new THREE.WebGLRenderer({ antialias: true });
     rnd.setPixelRatio(Math.min(window.devicePixelRatio, 2)); rnd.setSize(Wpx, Hpx);
