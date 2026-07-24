@@ -565,14 +565,10 @@ const COMPOZITIE = [
   { specie: "Fag", x: -13.2, z: 9.5, scara: 0.62, rot: 3.4, seed: 1287 },
   { specie: "Fag", x: 12.5, z: 8, scara: 0.85, rot: 1.7, seed: 4460 },
   { specie: "Fag", x: 13.5, z: -9, scara: 0.7, rot: 4.2, seed: 8875 },
-  { specie: "Tufa", x: -2.5, z: 7.5, scara: 1.0, rot: 0.0, seed: 3741 },
-  { specie: "Tufa", x:  2.5, z: 7.5, scara: 1.0, rot: 3.14, seed: 5960 },
-  { specie: "Tufa", x: -5.0, z: 9.0, scara: 0.9, rot: 0.5, seed: 7182 },
-  { specie: "Tufa", x:  5.0, z: 9.0, scara: 0.9, rot: 2.6, seed: 6103 },
   { specie: "Tufa", x: -4.0, z: -7.0, scara: 0.8, rot: 1.1, seed: 9021 },
   { specie: "Tufa", x:  4.0, z: -7.0, scara: 0.8, rot: 4.2, seed: 8875 },
-  { specie: "Tufa", x: -8.0, z: 10.0, scara: 1.2, rot: 0.8, seed: 2298 },
-  { specie: "Tufa", x:  8.0, z: 10.0, scara: 1.2, rot: 3.9, seed: 1287 },
+  { specie: "Tufa", x: -2.0, z: 8.0, scara: 0.9, rot: 0.0, seed: 3741 },
+  { specie: "Tufa", x:  2.0, z: 8.0, scara: 0.9, rot: 3.14, seed: 5960 },
 ];
 
 /* ---------- iarba ---------- */
