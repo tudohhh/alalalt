@@ -482,7 +482,7 @@ function generaCopac(p, seed) {
     L.n += 4;
   };
 
-  const perVarf = Math.max(1, Math.round(p.frunzePerVarf));
+  const perVarf = Math.max(1, Math.round(p.frunzePerVarf * 1.5));
   for (const v of varfuri)
     for (let i = 0; i < perVarf; i++) {
       const dep = v.d.clone().addScaledVector(SUS, -0.5 - r() * 0.6).normalize();
@@ -513,10 +513,10 @@ function generaCopac(p, seed) {
 
 /* ---------- specii si compozitie ---------- */
 const SPECII = {
-  Fag: { tip: "foios", inaltime: 5.5, latime: 1.8, grosime: 0.16, ramificatii: 5, deschidere: 42, umbrire: 0.55, frunzePerVarf: 4, marimeFrunza: 0.42, culoareFrunze: "#6d7d54", culoareTrunchi: "#6b5a48", variatieCuloare: 0.06 },
-  Brad: { tip: "brad", inaltime: 7, latime: 1.7, grosime: 0.13, ramificatii: 5, deschidere: 42, umbrire: 0.55, frunzePerVarf: 4, marimeFrunza: 0.34, culoareFrunze: "#3c4a3a", culoareTrunchi: "#4a3c30", variatieCuloare: 0.05 },
-  Plop: { tip: "plop", inaltime: 9, latime: 1.1, grosime: 0.15, ramificatii: 5, deschidere: 30, umbrire: 0.55, frunzePerVarf: 4, marimeFrunza: 0.36, culoareFrunze: "#78875e", culoareTrunchi: "#7a6a55", variatieCuloare: 0.07 },
-  Tufa: { tip: "tufa", inaltime: 1.6, latime: 0.9, grosime: 0.1, ramificatii: 4, deschidere: 55, umbrire: 0.55, frunzePerVarf: 5, marimeFrunza: 0.26, culoareFrunze: "#5f6e4c", culoareTrunchi: "#5a4a3a", variatieCuloare: 0.09 },
+  Fag: { tip: "foios", inaltime: 5.5, latime: 1.8, grosime: 0.16, ramificatii: 5, deschidere: 42, umbrire: 0.55, frunzePerVarf: 8, marimeFrunza: 0.55, culoareFrunze: "#6d7d54", culoareTrunchi: "#6b5a48", variatieCuloare: 0.06 },
+  Brad: { tip: "brad", inaltime: 7, latime: 1.7, grosime: 0.13, ramificatii: 5, deschidere: 42, umbrire: 0.55, frunzePerVarf: 8, marimeFrunza: 0.44, culoareFrunze: "#3c4a3a", culoareTrunchi: "#4a3c30", variatieCuloare: 0.05 },
+  Plop: { tip: "plop", inaltime: 9, latime: 1.1, grosime: 0.15, ramificatii: 5, deschidere: 30, umbrire: 0.55, frunzePerVarf: 8, marimeFrunza: 0.47, culoareFrunze: "#78875e", culoareTrunchi: "#7a6a55", variatieCuloare: 0.07 },
+  Tufa: { tip: "tufa", inaltime: 1.6, latime: 0.9, grosime: 0.1, ramificatii: 4, deschidere: 55, umbrire: 0.55, frunzePerVarf: 10, marimeFrunza: 0.34, culoareFrunze: "#5f6e4c", culoareTrunchi: "#5a4a3a", variatieCuloare: 0.09 },
 };
 
 const COMPOZITIE = [
