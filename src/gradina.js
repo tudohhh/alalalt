@@ -2,6 +2,10 @@ import * as THREE from "three";
 
 /* ============================================================
    GRADINA — copaci, iarba, gard, vant, mediu de reflexie.
+   Se lipeste peste scena existenta cu O SINGURA linie:
+       adaugaGradina(scene, renderer, L, W);
+   Copacii se genereaza o singura data si se tin in cache, ca sa nu
+   se reconstruiasca la fiecare miscare de slider.
    ============================================================ */
 
 const srgb = (t) => {
@@ -156,12 +160,14 @@ function texContact() {
   return new THREE.CanvasTexture(c);
 }
 
-/* ---------- gazon ---------- */
+
+/* ---------- gazon: textura de detaliu, cusuta la margini ---------- */
 function texGazon() {
   const S = 1024;
   const c = document.createElement("canvas");
   c.width = c.height = S;
   const x = c.getContext("2d");
+  // canvas separat pentru relief: alb = fir ridicat, negru = pamant
   const b = document.createElement("canvas");
   b.width = b.height = S;
   const bx = b.getContext("2d");
@@ -201,6 +207,7 @@ function texGazon() {
     x.fillRect(px - rr, py - rr, rr * 2, rr * 2);
   }
 
+  // trei straturi: firele scurte umplu fundalul, cele lungi dau silueta
   const straturi = [
     { n: 26000, lmin: 3, lvar: 5, wmin: 0.7, wvar: 0.9, lum: 0.35 },
     { n: 18000, lmin: 7, lvar: 9, wmin: 1.0, wvar: 1.3, lum: 0.6 },
@@ -228,7 +235,7 @@ function texGazon() {
   return { map: srgb(t), bump: tb };
 }
 
-/* ---------- macro-variatie ---------- */
+/* ---------- macro-variatie: sparge repetitia dalei ---------- */
 function texMacro() {
   const S = 256;
   const c = document.createElement("canvas");
@@ -258,7 +265,7 @@ function texMacro() {
   return t;
 }
 
-/* ---------- solul: COMPLET PLAT (fără dealuri / denivelări) ---------- */
+/* ---------- solul: detaliu fin + macro + stingere spre orizont ---------- */
 function faSol(latura, razaPlata) {
   const G = texGazon();
   const rep = latura / 12.0;
@@ -268,6 +275,8 @@ function faSol(latura, razaPlata) {
 
   const mat = new THREE.MeshStandardMaterial({
     color: 0xffffff,
+    // `map` trebuie sa existe ca three sa includa <map_fragment> in shader.
+    // Nu e citit direct: codul de mai jos il inlocuieste cu dala rotita.
     map: G.map,
     bumpMap: G.bump,
     bumpScale: 0.12,
@@ -279,6 +288,10 @@ function faSol(latura, razaPlata) {
     sh.uniforms.uMacro = { value: mac };
     sh.uniforms.uDet = { value: G.map };
 
+    // ATENTIE: uniformele si functiile NU se pun inaintea shaderului. Prefixul
+    // three contine `precision`, iar orice `float` declarat mai devreme e
+    // eroare de compilare — de aceea iesea o pata verde. Locul lor e dupa
+    // <include common>, unde precizia e deja declarata.
     sh.vertexShader = sh.vertexShader.replace(
       "#include <common>",
       "#include <common>\n varying vec3 vWPos;"
@@ -301,15 +314,23 @@ function faSol(latura, razaPlata) {
       `vec2 wxz = vWPos.xz;
        float dOriz = length(wxz);
 
+       // 1. DEFORMARE UV: coordonatele se deplaseaza cu un zgomot lent inainte
+       //    de citire. Grila nu mai e dreapta nicaieri, deci nu exista aliniere
+       //    de recunoscut. Spre deosebire de dalele rotite, deformarea e
+       //    continua, deci nu apar cusaturi la marginea zonelor.
        vec2 wp  = (vec2(texture2D(uMacro, wxz * 0.0090).r,
                         texture2D(uMacro, wxz * 0.0090 + vec2(0.5)).r) - 0.5) * 3.4;
        vec2 wp2 = (vec2(texture2D(uMacro, wxz * 0.0031).r,
                         texture2D(uMacro, wxz * 0.0031 + vec2(0.5)).r) - 0.5) * 9.0;
 
+       // 2. DOUA SCARI: dala de 12 m aproape, de 42 m departe. Perioadele nu
+       //    se divid una pe alta, deci nu se pot suprapune.
        vec3 baza = texture2D(uDet, (wxz + wp) / 12.0).rgb;
        vec3 dep  = texture2D(uDet, (wxz + wp2) / 42.36).rgb;
        baza = mix(baza, dep, smoothstep(18.0, 80.0, dOriz));
 
+       // 3. DOUA SCARI DE MACRO, la 33 m si 11 m, decalate. Cu una singura,
+       //    dalele se realiniaza cu ea si grila reapare in departare.
        vec3 m1 = texture2D(uMacro, wxz * 0.03000).rgb;
        vec3 m2 = texture2D(uMacro, wxz * 0.09000 + vec2(0.37, 0.61)).rgb;
        baza *= (0.00 + m1 * 1.00) * (0.30 + m2 * 0.70);
@@ -320,8 +341,22 @@ function faSol(latura, razaPlata) {
     mat.userData.sh = sh;
   };
 
-  // Plan geometric simplu, plat, fără bucla care adăuga dealuri
-  const geo = new THREE.PlaneGeometry(latura, latura);
+  // DENIVELARI. Un plan perfect orizontal nu poate avea relief: lumina cade
+  // identic peste tot. Ridic terenul cu unde line, dar numai in afara curtii,
+  // altfel casa, gardul si aleea ar ramane in aer.
+  const geo = new THREE.PlaneGeometry(latura, latura, 160, 160);
+  const po = geo.attributes.position;
+  for (let i = 0; i < po.count; i++) {
+    const px = po.getX(i), py = po.getY(i);
+    const d = Math.hypot(px, py);
+    const k = Math.min(1, Math.max(0, (d - razaPlata) / 45));
+    const h =
+      Math.sin(px * 0.035 + py * 0.021) * 1.35 +
+      Math.sin(px * 0.011 - py * 0.017) * 2.4 +
+      Math.sin(px * 0.083 + py * 0.061) * 0.42;
+    po.setZ(i, h * k * k);
+  }
+  geo.computeVertexNormals();
 
   const m = new THREE.Mesh(geo, mat);
   m.rotation.x = -Math.PI / 2;
@@ -330,9 +365,9 @@ function faSol(latura, razaPlata) {
   return m;
 }
 
-/* ---------- generator de copac ---------- */
+/* ---------- generator de copac: intoarce ARRAYS, nu obiecte 3D ---------- */
 function generaCopac(p, seed) {
-    const r = rng(seed);
+  const r = rng(seed);
   const H = p.inaltime * (0.88 + r() * 0.24);
   const umbra = p.umbrire;
   const ace = p.tip === "brad";
@@ -412,7 +447,7 @@ function generaCopac(p, seed) {
         const nr = 4 + Math.round(r() * 2);
         for (let k = 0; k < nr; k++) {
           const rol = (k / nr) * 6.283 + i * 1.1;
-          const d = abate(SUS, 1.18 + r() * 0.25 + (r() - 0.5) * 0.15, rol + (r() - 0.5) * 0.2).normalize();
+          const d = abate(SUS, 1.18 + r() * 0.25, rol).normalize();
           const lg = p.latime * Math.pow(1 - t, 0.85) * (0.75 + r() * 0.45);
           creste(a.clone(), d, lg * 0.55, rad0 * 0.3 * (1 - t * 0.6), Math.max(1, niv - 2));
         }
@@ -433,6 +468,7 @@ function generaCopac(p, seed) {
     creste(new THREE.Vector3(0, hT, 0), SUS.clone(), H * 0.3, rad0, niv);
   }
 
+  // cutia de incadrare a lemnului, pentru gradientul de umbrire
   let minY = Infinity, maxY = -Infinity, cx = 0, cy = 0, cz = 0;
   for (let i = 0; i < B.pos.length; i += 3) {
     const y = B.pos[i + 1];
@@ -482,7 +518,7 @@ function generaCopac(p, seed) {
     L.n += 4;
   };
 
-  const perVarf = Math.max(1, Math.round(p.frunzePerVarf * 1.5));
+  const perVarf = Math.max(1, Math.round(p.frunzePerVarf));
   for (const v of varfuri)
     for (let i = 0; i < perVarf; i++) {
       const dep = v.d.clone().addScaledVector(SUS, -0.5 - r() * 0.6).normalize();
@@ -513,12 +549,14 @@ function generaCopac(p, seed) {
 
 /* ---------- specii si compozitie ---------- */
 const SPECII = {
-  Fag: { tip: "foios", inaltime: 5.5, latime: 1.8, grosime: 0.16, ramificatii: 5, deschidere: 42, umbrire: 0.55, frunzePerVarf: 8, marimeFrunza: 0.55, culoareFrunze: "#6d7d54", culoareTrunchi: "#6b5a48", variatieCuloare: 0.06 , variatieInaltime: 0.2, variatieLatime: 0.2, variatieCuloare: 0.12, variatieFrunze: 0.25 },
-  Brad: { tip: "brad", inaltime: 7, latime: 1.7, grosime: 0.13, ramificatii: 5, deschidere: 42, umbrire: 0.55, frunzePerVarf: 8, marimeFrunza: 0.44, culoareFrunze: "#3c4a3a", culoareTrunchi: "#4a3c30", variatieCuloare: 0.05 , variatieInaltime: 0.18, variatieLatime: 0.18, variatieCuloare: 0.1, variatieFrunze: 0.2 },
-  Plop: { tip: "plop", inaltime: 9, latime: 1.1, grosime: 0.15, ramificatii: 5, deschidere: 30, umbrire: 0.55, frunzePerVarf: 8, marimeFrunza: 0.47, culoareFrunze: "#78875e", culoareTrunchi: "#7a6a55", variatieCuloare: 0.07 , variatieInaltime: 0.22, variatieLatime: 0.22, variatieCuloare: 0.15, variatieFrunze: 0.25 },
-  Tufa: { tip: "tufa", inaltime: 1.6, latime: 0.9, grosime: 0.1, ramificatii: 4, deschidere: 55, umbrire: 0.55, frunzePerVarf: 10, marimeFrunza: 0.34, culoareFrunze: "#2e4a2e", culoareTrunchi: "#5a4a3a", variatieCuloare: 0.09 , variatieInaltime: 0.25, variatieLatime: 0.25, variatieCuloare: 0.18, variatieFrunze: 0.3 },
+  Fag: { tip: "foios", inaltime: 5.5, latime: 1.8, grosime: 0.16, ramificatii: 5, deschidere: 42, umbrire: 0.55, frunzePerVarf: 4, marimeFrunza: 0.42, culoareFrunze: "#6d7d54", culoareTrunchi: "#6b5a48", variatieCuloare: 0.06 },
+  Brad: { tip: "brad", inaltime: 7, latime: 1.7, grosime: 0.13, ramificatii: 5, deschidere: 42, umbrire: 0.55, frunzePerVarf: 4, marimeFrunza: 0.34, culoareFrunze: "#3c4a3a", culoareTrunchi: "#4a3c30", variatieCuloare: 0.05 },
+  Plop: { tip: "plop", inaltime: 9, latime: 1.1, grosime: 0.15, ramificatii: 5, deschidere: 30, umbrire: 0.55, frunzePerVarf: 4, marimeFrunza: 0.36, culoareFrunze: "#78875e", culoareTrunchi: "#7a6a55", variatieCuloare: 0.07 },
+  Tufa: { tip: "tufa", inaltime: 1.6, latime: 0.9, grosime: 0.1, ramificatii: 4, deschidere: 55, umbrire: 0.55, frunzePerVarf: 5, marimeFrunza: 0.26, culoareFrunze: "#5f6e4c", culoareTrunchi: "#5a4a3a", variatieCuloare: 0.09 },
 };
 
+// Soarele: key la (L*1.7, ..., W*0.3) => elevatie ~34 grade, umbrele cad spre -X.
+// De aceea masa e pe -X: acolo umbrele pleaca DE LA casa, nu peste acoperis.
 const COMPOZITIE = [
   { specie: "Plop", x: -9.5, z: -8, scara: 1, rot: 0.4, seed: 2141 },
   { specie: "Brad", x: -13, z: -12.5, scara: 0.9, rot: 1.2, seed: 3312 },
@@ -590,7 +628,7 @@ function geoIarba(L, W, dens, seed) {
   return g;
 }
 
-/* ---------- gard ---------- */
+/* ---------- gard de casa: soclu + stalpi + sipca verticala ---------- */
 function geoGard(L, W, seed) {
   const r = rng(seed);
   const mk = () => ({ pos: [], nor: [], idx: [], n: 0 });
@@ -667,8 +705,7 @@ function geoGard(L, W, seed) {
   return { zid: fa(ZID), cap: fa(CAP), sipci: fa(SIP) };
 }
 
-
-/* ---------- mediu de reflexie simplificat (fără panouri ciudate în fundal) ---------- */
+/* ---------- mediu de reflexie ---------- */
 let ENV = null;
 function mediu(renderer) {
   if (ENV) return ENV;
@@ -676,16 +713,26 @@ function mediu(renderer) {
   ec.width = 1024;
   ec.height = 512;
   const x = ec.getContext("2d");
-  
-  // Gradient simplu de cer curat (albastru cer deschis sus, alb/orizont neutru jos)
   const g = x.createLinearGradient(0, 0, 0, 512);
-  g.addColorStop(0, "#87CEEB"); // Albastru cer
-  g.addColorStop(0.7, "#E0F6FF"); // Albastru foarte deschis spre orizont
-  g.addColorStop(1, "#F0F8FF"); // Ton neutru jos
-  
+  g.addColorStop(0, "#79aed6");
+  g.addColorStop(0.42, "#cfe0e9");
+  g.addColorStop(0.5, "#e8e4d8");
+  g.addColorStop(0.53, "#96a184");
+  g.addColorStop(1, "#5d6752");
   x.fillStyle = g;
   x.fillRect(0, 0, 1024, 512);
-
+  const sun = x.createRadialGradient(772, 148, 6, 772, 148, 130);
+  sun.addColorStop(0, "rgba(255,247,226,1)");
+  sun.addColorStop(0.35, "rgba(255,242,214,0.45)");
+  sun.addColorStop(1, "rgba(255,242,214,0)");
+  x.fillStyle = sun;
+  x.fillRect(600, 0, 350, 300);
+  for (let i = 0; i < 22; i++) {
+    x.fillStyle = "rgba(255,255,255,0.16)";
+    x.beginPath();
+    x.ellipse(Math.random() * 1024, 60 + Math.random() * 150, 40 + Math.random() * 90, 9 + Math.random() * 16, 0, 0, 6.283);
+    x.fill();
+  }
   const t = new THREE.CanvasTexture(ec);
   t.mapping = THREE.EquirectangularReflectionMapping;
   try {
@@ -699,7 +746,7 @@ function mediu(renderer) {
   return ENV;
 }
 
-
+/* ---------- cache ---------- */
 let CACHE_COPACI = null;
 let CACHE_IARBA = null;
 let CACHE_GARD = null;
@@ -716,6 +763,9 @@ function texturi() {
   return TEX;
 }
 
+/* ============================================================
+   API
+   ============================================================ */
 export function adaugaGradina(scene, renderer, L, W, optiuni = {}) {
   const o = Object.assign(
     { copaci: true, iarba: true, gard: true, sol: true, densIarba: 9000, latSol: 400, envMap: true },
@@ -727,35 +777,23 @@ export function adaugaGradina(scene, renderer, L, W, optiuni = {}) {
 
   if (o.envMap && renderer) scene.environment = mediu(renderer);
 
+  /* --- solul --- */
   if (o.sol) grup.add(faSol(o.latSol, Math.max(L, W) / 2 + 20));
 
+  /* --- copaci --- */
   if (o.copaci) {
     if (!CACHE_COPACI) {
       CACHE_COPACI = COMPOZITIE.map((c) => {
         const par = Object.assign({}, SPECII[c.specie]);
-    // Aplică variație aleatorie folosind seed-ul
-    const r = rng(c.seed || 42);
-    par.inaltime *= (0.85 + r() * 0.3); // +/- 15%
-    par.latime *= (0.85 + r() * 0.3);
-    par.marimeFrunza *= (0.8 + r() * 0.4);
-    par.grosime *= (0.85 + r() * 0.3);
         par.inaltime *= c.scara;
         par.latime *= c.scara;
         par.grosime *= c.scara;
         par.marimeFrunza *= Math.sqrt(c.scara);
+        // perspectiva aeriana falsa: ceata reala incepe la 55 m, deci nimic
+        // din curte n-o atinge si scena s-ar aplatiza
         const d = Math.hypot(c.x, c.z);
         const cet = Math.min(0.28, Math.max(0, (d - 6) / 38));
-        const cf = new THREE.Color(par.culoareFrunze).lerp(new THREE.Color("#6d7d54"), cet);
-    // Variație individuală pentru fiecare plantă
-    const hueShift = (r() - 0.5) *  0.15;
-    const satShift = (r() - 0.5) *  0.8;
-    const lightShift = (r() - 0.5) *  0.5;
-    cf.offsetHSL(hueShift, satShift, lightShift);
-    
-    // variație aplicată mai jos
-    // Variație aleatorie de culoare (verde mai deschis/închis)
-    const cVar = (r() - 0.5) * 0.1;
-    // variație aplicată mai jos
+        const cf = new THREE.Color(par.culoareFrunze).lerp(new THREE.Color("#e6eae7"), cet);
         return Object.assign({}, c, {
           date: generaCopac(par, c.seed),
           culoareFrunze: cf.getHex(),
@@ -767,6 +805,7 @@ export function adaugaGradina(scene, renderer, L, W, optiuni = {}) {
 
     for (const c of CACHE_COPACI) {
       const g = new THREE.Group();
+
       const gl = new THREE.BufferGeometry();
       gl.setAttribute("position", new THREE.BufferAttribute(c.date.lemn.pos, 3));
       gl.setAttribute("normal", new THREE.BufferAttribute(c.date.lemn.nor, 3));
@@ -806,6 +845,7 @@ export function adaugaGradina(scene, renderer, L, W, optiuni = {}) {
       frunze.receiveShadow = true;
       g.add(frunze);
 
+      // disc de contact propriu: umbra generala a casei acopera doar L+5 x W+5
       const disc = new THREE.Mesh(
         new THREE.PlaneGeometry(1, 1),
         new THREE.MeshBasicMaterial({ map: T.contact, transparent: true, depthWrite: false, opacity: 0.7 })
@@ -821,6 +861,7 @@ export function adaugaGradina(scene, renderer, L, W, optiuni = {}) {
     }
   }
 
+  /* --- iarba --- */
   if (o.iarba) {
     const cheie = L + "x" + W + "x" + o.densIarba;
     if (!CACHE_IARBA || CACHE_IARBA.cheie !== cheie)
@@ -844,6 +885,7 @@ export function adaugaGradina(scene, renderer, L, W, optiuni = {}) {
     grup.add(m);
   }
 
+  /* --- gard --- */
   if (o.gard) {
     const cheie = L + "x" + W;
     if (!CACHE_GARD || CACHE_GARD.cheie !== cheie) CACHE_GARD = { cheie, geo: geoGard(L, W, 88) };
@@ -861,6 +903,9 @@ export function adaugaGradina(scene, renderer, L, W, optiuni = {}) {
   scene.add(grup);
   pornesteCeasul();
 
+  // Frustumul umbrelor din scena acopera doar +/-15 m, deci copacii de la
+  // marginea curtii n-ar arunca nicio umbra. Il largim aici, ca sa nu fie
+  // nevoie de nicio modificare in Scena3D.jsx.
   requestAnimationFrame(() => {
     scene.traverse((n) => {
       if (n.isDirectionalLight && n.castShadow && n.shadow) {
