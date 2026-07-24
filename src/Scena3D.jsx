@@ -10,6 +10,8 @@ import { CONFIG_ACOPERIS as C } from "../config/CONFIG";
 // Generează textură de pavaj (piatră cubică cu rosturi)
 
 // Generează textură de pavaj cu dale mari, relief și contrast
+
+// Generează textură de pavaj cu dale mari, relief și contrast
 function texPavaj() {
   const S = 512;
   const canvas = document.createElement('canvas');
@@ -130,7 +132,7 @@ function texPavaj() {
   
   const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(3, 3); // Dale mari, vizibile
+  texture.repeat.set(3, 3);
   texture.anisotropy = 16;
   texture.colorSpace = THREE.SRGBColorSpace;
   
@@ -141,6 +143,7 @@ function texPavaj() {
   
   return { map: texture, bump: bumpTexture };
 }
+
 , ${baseColor[1]}, ${baseColor[2]})`;
   ctx.fillRect(0, 0, S, S);
   
