@@ -4,7 +4,7 @@
 // Structura proiect: vezi acoperis-REPRODUCERE.txt
 import React, { useRef, useEffect } from "react";
 import * as THREE from "three";
-// adaugaGradina eliminat
+import { adaugaGradina } from "./gradina";
 import { CONFIG_ACOPERIS as C } from "../config/CONFIG";
 
 
@@ -132,11 +132,41 @@ function texInvelitoare(hex, tip) {
   return { map: srgb(t), bump: bt };
 }
 
-// texTeren eliminat
+function texTeren() {
+  const c = document.createElement("canvas"); c.width = c.height = 512;
+  const x = c.getContext("2d");
+  x.fillStyle = "#87927a"; x.fillRect(0, 0, 512, 512);
+  for (let i = 0; i < 2200; i++) {
+    x.fillStyle = ["#7d8a6f", "#8f9a80", "#79856d", "#93a086"][i % 4];
+    x.globalAlpha = 0.25;
+    x.fillRect(Math.random() * 512, Math.random() * 512, 2 + Math.random() * 8, 2 + Math.random() * 5);
+  }
+  x.globalAlpha = 1;
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(20, 20); t.anisotropy = 8;
+  return srgb(t);
+}
 
-// texCer eliminat
+function texCer() {
+  const c = document.createElement("canvas"); c.width = 16; c.height = 512;
+  const x = c.getContext("2d");
+  const g = x.createLinearGradient(0, 0, 0, 512);
+  g.addColorStop(0, "#a9c3d4"); g.addColorStop(0.55, "#cfdde6"); g.addColorStop(1, "#e9ecea");
+  x.fillStyle = g; x.fillRect(0, 0, 16, 512);
+  const h = x.createRadialGradient(13, 130, 5, 13, 130, 260);
+  h.addColorStop(0, "rgba(255,238,205,0.55)"); h.addColorStop(1, "rgba(255,238,205,0)");
+  x.fillStyle = h; x.fillRect(0, 0, 16, 512);
+  return srgb(new THREE.CanvasTexture(c));
+}
 
-// umbraContact eliminat
+function umbraContact() {
+  const c = document.createElement("canvas"); c.width = c.height = 256;
+  const x = c.getContext("2d");
+  const g = x.createRadialGradient(128, 128, 20, 128, 128, 128);
+  g.addColorStop(0, "rgba(30,32,26,0.38)"); g.addColorStop(0.6, "rgba(30,32,26,0.14)"); g.addColorStop(1, "rgba(30,32,26,0)");
+  x.fillStyle = g; x.fillRect(0, 0, 256, 256);
+  return new THREE.CanvasTexture(c);
+}
 
 export default function Scena3D({ cfg }) {
   const mount = useRef(null);
@@ -161,7 +191,7 @@ export default function Scena3D({ cfg }) {
     skyCtx.fill();
   }
   const skyTex = new THREE.CanvasTexture(skyCanvas); skyTex.colorSpace = THREE.SRGBColorSpace;
-  scene.background = new THREE.Color(0x87CEEB); // cer albastru skyTex.minFilter = THREE.LinearFilter; skyTex.magFilter = THREE.LinearFilter;
+  scene.background = skyTex; skyTex.minFilter = THREE.LinearFilter; skyTex.magFilter = THREE.LinearFilter;
     const cam = new THREE.PerspectiveCamera(38, Wpx / Hpx, 0.1, 400);
     const rnd = new THREE.WebGLRenderer({ antialias: true });
     rnd.setPixelRatio(Math.min(window.devicePixelRatio, 2)); rnd.setSize(Wpx, Hpx);
@@ -189,7 +219,7 @@ export default function Scena3D({ cfg }) {
     const m=new THREE.Mesh(new THREE.PlaneGeometry(320,80), new THREE.MeshBasicMaterial({map:t,transparent:true,depthWrite:false,fog:false}));
     m.position.set(0,22,-95); scene.add(m);
   })();
-    // scene.fog eliminat
+    scene.fog = new THREE.Fog("#e6eae7", 55, 170);
 
     const teren = new THREE.Mesh(new THREE.PlaneGeometry(320, 320),
       new THREE.MeshStandardMaterial({ map: texTeren(), roughness: 1 }));
@@ -539,7 +569,7 @@ export default function Scena3D({ cfg }) {
     loop();
     const onR = () => { const w = el.clientWidth, h = el.clientHeight; cam.aspect = w / h; cam.updateProjectionMatrix(); rnd.setSize(w, h); };
     window.addEventListener("resize", onR);
-    // adaugaGradina eliminat
+    adaugaGradina(scene, rnd, L, W);
 
     return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", onR); window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); rnd.dispose(); el.removeChild(rnd.domElement); };
   }, [cfg]);
