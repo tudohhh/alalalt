@@ -670,17 +670,21 @@ function geoGard(L, W, seed) {
 
 /* ---------- mediu de reflexie simplificat (fără panouri ciudate în fundal) ---------- */
 let ENV = null;
-
-/* ---------- mediu de reflexie simplificat (cer uniform) ---------- */
-let ENV = null;
 function mediu(renderer) {
   if (ENV) return ENV;
   const ec = document.createElement("canvas");
-  ec.width = 2;
-  ec.height = 2;
+  ec.width = 1024;
+  ec.height = 512;
   const x = ec.getContext("2d");
-  x.fillStyle = "#87CEEB";
-  x.fillRect(0, 0, 2, 2);
+  
+  // Gradient simplu de cer curat (albastru cer deschis sus, alb/orizont neutru jos)
+  const g = x.createLinearGradient(0, 0, 0, 512);
+  g.addColorStop(0, "#87CEEB"); // Albastru cer
+  g.addColorStop(0.7, "#E0F6FF"); // Albastru foarte deschis spre orizont
+  g.addColorStop(1, "#F0F8FF"); // Ton neutru jos
+  
+  x.fillStyle = g;
+  x.fillRect(0, 0, 1024, 512);
 
   const t = new THREE.CanvasTexture(ec);
   t.mapping = THREE.EquirectangularReflectionMapping;
@@ -694,7 +698,6 @@ function mediu(renderer) {
   }
   return ENV;
 }
-
 
 
 let CACHE_COPACI = null;
