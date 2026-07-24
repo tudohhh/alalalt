@@ -1,4 +1,7 @@
+// BACKUP 20.07.2026 — src/Scena3D.jsx FINAL (configurator acoperis v1)
+// Include: texturi procedurale+bump, sRGB, UV pe linia pantei, ocluzie
 // streasina, pazii+hip ridges, horn, lumina laterala ierarhizata, vigneta.
+// Structura proiect: vezi acoperis-REPRODUCERE.txt
 import React, { useRef, useEffect } from "react";
 import * as THREE from "three";
 import { adaugaGradina } from "./gradina";
@@ -188,18 +191,15 @@ export default function Scena3D({ cfg }) {
     skyCtx.fill();
   }
   const skyTex = new THREE.CanvasTexture(skyCanvas); skyTex.colorSpace = THREE.SRGBColorSpace;
-  // background setat forțat mai jos skyTex.minFilter = THREE.LinearFilter; skyTex.magFilter = THREE.LinearFilter;
+  scene.background = skyTex; skyTex.minFilter = THREE.LinearFilter; skyTex.magFilter = THREE.LinearFilter;
     const cam = new THREE.PerspectiveCamera(38, Wpx / Hpx, 0.1, 400);
     const rnd = new THREE.WebGLRenderer({ antialias: true });
     rnd.setPixelRatio(Math.min(window.devicePixelRatio, 2)); rnd.setSize(Wpx, Hpx);
-    rnd.shadowMap.enabled = true; rnd.shadowMap.type = THREE.PCFSoftShadowMap;
-    rnd.shadowMap.autoUpdate = false; rnd.shadowMap.autoUpdate = false;
+    rnd.shadowMap.enabled = true; rnd.shadowMap.type = THREE.PCFSoftShadowMap; rnd.shadowMap.autoUpdate = false;
     if ("outputColorSpace" in rnd) rnd.outputColorSpace = THREE.SRGBColorSpace;
+    else rnd.outputEncoding = THREE.sRGBEncoding;
     rnd.toneMapping = THREE.ACESFilmicToneMapping;
-    rnd.toneMappingExposure = 1.5;
-    // else rnd.outputEncoding = THREE.sRGBEncoding;
-    rnd.toneMapping = THREE.ACESFilmicToneMapping;
-  rnd.toneMappingExposure = 1.5;
+  rnd.toneMappingExposure = 1.4;
     rnd.setClearColor(0xdce8f0);
     el.appendChild(rnd.domElement);
 
@@ -219,8 +219,7 @@ export default function Scena3D({ cfg }) {
     const m=new THREE.Mesh(new THREE.PlaneGeometry(320,80), new THREE.MeshBasicMaterial({map:t,transparent:true,depthWrite:false,fog:false}));
     m.position.set(0,22,-95); scene.add(m);
   })();
-    // Ceata redusă pentru contrast
-    scene.fog = new THREE.Fog("#dce8f0", 120, 250);
+    scene.fog = new THREE.Fog("#e6eae7", 55, 170);
 
     const teren = new THREE.Mesh(new THREE.PlaneGeometry(320, 320),
       new THREE.MeshStandardMaterial({ map: texTeren(), roughness: 1 }));
@@ -278,7 +277,7 @@ export default function Scena3D({ cfg }) {
       co.scale.y = 0.85; co.position.set(L / 2 + 5, 1.2 * s2 + 0.95 * s2, W / 2 + 1); co.castShadow = true; scene.add(co); }
 
     scene.add(new THREE.HemisphereLight(0xfdf3e3, 0x8a9480, 0.75));
-    const key = new THREE.DirectionalLight(0xfff0e0, 2.8);
+    const key = new THREE.DirectionalLight(0xffe9cf, 2.1);
     key.position.set(L * 1.7, hz + hRoof + 6.5, W * 0.3); key.castShadow = true;
     key.shadow.mapSize.set(2048, 2048); key.shadow.radius = 8;
     const s = Math.max(L, W) * 1.5;
@@ -581,9 +580,3 @@ export default function Scena3D({ cfg }) {
     </div>
   );
 }
-
-// FORȚARE SETĂRI CER (suprascrie orice altceva)
-const forcedSky = new THREE.Color(0x6ba3d6);
-scene.background = new THREE.Color(0x4a90d9); // Cer albastru simplu, fără texturi
-console.log("✅ Scena3D: background forțat la albastru");
-console.log("✅ Scena3D: tonemapping ACESFilmic, Exposure 1.5");
