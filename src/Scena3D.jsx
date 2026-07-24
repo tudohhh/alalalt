@@ -558,7 +558,7 @@ export default function Scena3D({ cfg }) {
     adaugaGradina(scene, rnd, L, W);
 
     return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", onR); window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); rnd.dispose(); el.removeChild(rnd.domElement); };
-  } [cfg]);
+  }, [cfg]);
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
       <div ref={mount} style={{ width: "100%", height: "100%", touchAction: "none", cursor: "grab" }} />
