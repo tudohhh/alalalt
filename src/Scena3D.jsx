@@ -227,10 +227,10 @@ export default function Scena3D({ cfg }) {
   // Plan de sol principal
   const teren = new THREE.Mesh(
     new THREE.PlaneGeometry(320, 320),
-    new THREE.MeshStandardMaterial({ color: 0x6a8a5a, roughness: 1 })
+    new THREE.MeshStandardMaterial({ color: 0x7a9a6a, roughness: 1 })
   );
   teren.rotation.x = -Math.PI / 2;
-  teren.position.y = 0;
+  teren.position.y = -0.01;
   teren.receiveShadow = true;
   scene.add(teren);
 const teren = new THREE.Mesh(new THREE.PlaneGeometry(320, 320),
