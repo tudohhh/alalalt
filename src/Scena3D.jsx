@@ -132,34 +132,13 @@ function texInvelitoare(hex, tip) {
   return { map: srgb(t), bump: bt };
 }
 
-function texTeren() {
-  const c = document.createElement("canvas"); c.width = c.height = 512;
-  const x = c.getContext("2d");
-  x.fillStyle = "#87927a"; x.fillRect(0, 0, 512, 512);
-  for (let i = 0; i < 2200; i++) {
-    x.fillStyle = ["#7d8a6f", "#8f9a80", "#79856d", "#93a086"][i % 4];
-    x.globalAlpha = 0.25;
-    x.fillRect(Math.random() * 512, Math.random() * 512, 2 + Math.random() * 8, 2 + Math.random() * 5);
-  }
-  x.globalAlpha = 1;
+// texTeren eliminatx.globalAlpha = 1;
   const t = new THREE.CanvasTexture(c);
   t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(20, 20); t.anisotropy = 8;
   return srgb(t);
 }
 
-function texCer() {
-  const c = document.createElement("canvas"); c.width = 16; c.height = 512;
-  const x = c.getContext("2d");
-  const g = x.createLinearGradient(0, 0, 0, 512);
-  g.addColorStop(0, "#a9c3d4"); g.addColorStop(0.55, "#cfdde6"); g.addColorStop(1, "#e9ecea");
-  x.fillStyle = g; x.fillRect(0, 0, 16, 512);
-  const h = x.createRadialGradient(13, 130, 5, 13, 130, 260);
-  h.addColorStop(0, "rgba(255,238,205,0.55)"); h.addColorStop(1, "rgba(255,238,205,0)");
-  x.fillStyle = h; x.fillRect(0, 0, 16, 512);
-  return srgb(new THREE.CanvasTexture(c));
-}
-
-function umbraContact() {
+// texCer eliminatfunction umbraContact() {
   const c = document.createElement("canvas"); c.width = c.height = 256;
   const x = c.getContext("2d");
   const g = x.createRadialGradient(128, 128, 20, 128, 128, 128);
