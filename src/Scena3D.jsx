@@ -263,6 +263,17 @@ export default function Scena3D({ cfg }) {
     const hRoof = (W / 2) * Math.tan(rad(panta));
 
     const scene = new THREE.Scene();
+
+  // NOU PLAN DE SOL (înlocuiește balta)
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(400, 400),
+    new THREE.MeshStandardMaterial({ color: 0x6a8a5a, roughness: 1 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = 0;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
     // Cer cu gradient
   const skyCanvas = document.createElement('canvas'); skyCanvas.width = 512; skyCanvas.height = 512;
   const skyCtx = skyCanvas.getContext('2d');
@@ -307,9 +318,7 @@ export default function Scena3D({ cfg }) {
   })();
     scene.fog = new THREE.Fog("#e6eae7", 55, 170);
 
-    const teren = new THREE.Mesh(new THREE.PlaneGeometry(320, 320),
-      new THREE.MeshStandardMaterial({ map: texTeren(), roughness: 1 }));
-    teren.rotation.x = -Math.PI / 2; teren.receiveShadow = true; scene.add(teren);
+    // teren eliminat
   // Plan imens pentru continuitate
   // bigGround COMENTAT (test curat)
     const apron = new THREE.Mesh(new THREE.PlaneGeometry(L + 3.2, W + 3.2),
