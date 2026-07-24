@@ -332,6 +332,7 @@ function faSol(latura, razaPlata) {
 
 /* ---------- generator de copac ---------- */
 function generaCopac(p, seed) {
+  const r = rng(seed + 999); // generator local pentru variație
   const r = rng(seed);
   const H = p.inaltime * (0.88 + r() * 0.24);
   const umbra = p.umbrire;
@@ -412,7 +413,7 @@ function generaCopac(p, seed) {
         const nr = 4 + Math.round(r() * 2);
         for (let k = 0; k < nr; k++) {
           const rol = (k / nr) * 6.283 + i * 1.1;
-          const d = abate(SUS, 1.18 + r() * 0.25, rol).normalize();
+          const d = abate(SUS, 1.18 + r() * 0.25 + (r() - 0.5) * 0.15, rol + (r() - 0.5) * 0.2).normalize();
           const lg = p.latime * Math.pow(1 - t, 0.85) * (0.75 + r() * 0.45);
           creste(a.clone(), d, lg * 0.55, rad0 * 0.3 * (1 - t * 0.6), Math.max(1, niv - 2));
         }
@@ -513,10 +514,10 @@ function generaCopac(p, seed) {
 
 /* ---------- specii si compozitie ---------- */
 const SPECII = {
-  Fag: { tip: "foios", inaltime: 5.5, latime: 1.8, grosime: 0.16, ramificatii: 5, deschidere: 42, umbrire: 0.55, frunzePerVarf: 8, marimeFrunza: 0.55, culoareFrunze: "#6d7d54", culoareTrunchi: "#6b5a48", variatieCuloare: 0.06 },
-  Brad: { tip: "brad", inaltime: 7, latime: 1.7, grosime: 0.13, ramificatii: 5, deschidere: 42, umbrire: 0.55, frunzePerVarf: 8, marimeFrunza: 0.44, culoareFrunze: "#3c4a3a", culoareTrunchi: "#4a3c30", variatieCuloare: 0.05 },
-  Plop: { tip: "plop", inaltime: 9, latime: 1.1, grosime: 0.15, ramificatii: 5, deschidere: 30, umbrire: 0.55, frunzePerVarf: 8, marimeFrunza: 0.47, culoareFrunze: "#78875e", culoareTrunchi: "#7a6a55", variatieCuloare: 0.07 },
-  Tufa: { tip: "tufa", inaltime: 1.6, latime: 0.9, grosime: 0.1, ramificatii: 4, deschidere: 55, umbrire: 0.55, frunzePerVarf: 10, marimeFrunza: 0.34, culoareFrunze: "#2e4a2e", culoareTrunchi: "#5a4a3a", variatieCuloare: 0.09 },
+  Fag: { tip: "foios", inaltime: 5.5, latime: 1.8, grosime: 0.16, ramificatii: 5, deschidere: 42, umbrire: 0.55, frunzePerVarf: 8, marimeFrunza: 0.55, culoareFrunze: "#6d7d54", culoareTrunchi: "#6b5a48", variatieCuloare: 0.06 , variatieInaltime: 0.2, variatieLatime: 0.2, variatieCuloare: 0.12, variatieFrunze: 0.25 },
+  Brad: { tip: "brad", inaltime: 7, latime: 1.7, grosime: 0.13, ramificatii: 5, deschidere: 42, umbrire: 0.55, frunzePerVarf: 8, marimeFrunza: 0.44, culoareFrunze: "#3c4a3a", culoareTrunchi: "#4a3c30", variatieCuloare: 0.05 , variatieInaltime: 0.18, variatieLatime: 0.18, variatieCuloare: 0.1, variatieFrunze: 0.2 },
+  Plop: { tip: "plop", inaltime: 9, latime: 1.1, grosime: 0.15, ramificatii: 5, deschidere: 30, umbrire: 0.55, frunzePerVarf: 8, marimeFrunza: 0.47, culoareFrunze: "#78875e", culoareTrunchi: "#7a6a55", variatieCuloare: 0.07 , variatieInaltime: 0.22, variatieLatime: 0.22, variatieCuloare: 0.15, variatieFrunze: 0.25 },
+  Tufa: { tip: "tufa", inaltime: 1.6, latime: 0.9, grosime: 0.1, ramificatii: 4, deschidere: 55, umbrire: 0.55, frunzePerVarf: 10, marimeFrunza: 0.34, culoareFrunze: "#2e4a2e", culoareTrunchi: "#5a4a3a", variatieCuloare: 0.09 , variatieInaltime: 0.25, variatieLatime: 0.25, variatieCuloare: 0.18, variatieFrunze: 0.3 },
 };
 
 const COMPOZITIE = [
@@ -733,6 +734,12 @@ export function adaugaGradina(scene, renderer, L, W, optiuni = {}) {
     if (!CACHE_COPACI) {
       CACHE_COPACI = COMPOZITIE.map((c) => {
         const par = Object.assign({}, SPECII[c.specie]);
+    // Aplică variație aleatorie folosind seed-ul
+    const r = rng(c.seed || 42);
+    par.inaltime *= (0.85 + r() * 0.3); // +/- 15%
+    par.latime *= (0.85 + r() * 0.3);
+    par.marimeFrunza *= (0.8 + r() * 0.4);
+    par.grosime *= (0.85 + r() * 0.3);
         par.inaltime *= c.scara;
         par.latime *= c.scara;
         par.grosime *= c.scara;
@@ -740,6 +747,9 @@ export function adaugaGradina(scene, renderer, L, W, optiuni = {}) {
         const d = Math.hypot(c.x, c.z);
         const cet = Math.min(0.28, Math.max(0, (d - 6) / 38));
         const cf = new THREE.Color(par.culoareFrunze).lerp(new THREE.Color("#e6eae7"), cet);
+    // Variație aleatorie de culoare (verde mai deschis/închis)
+    const cVar = (r() - 0.5) * 0.1;
+    cf.offsetHSL(0, cVar * 0.3, cVar * 0.15);
         return Object.assign({}, c, {
           date: generaCopac(par, c.seed),
           culoareFrunze: cf.getHex(),
