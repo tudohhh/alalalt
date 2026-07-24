@@ -7,6 +7,93 @@ import * as THREE from "three";
 import { adaugaGradina } from "./gradina";
 import { CONFIG_ACOPERIS as C } from "../config/CONFIG";
 
+// Generează textură de pavaj (piatră cubică cu rosturi)
+function texPavaj() {
+  const S = 512;
+  const canvas = document.createElement('canvas');
+  canvas.width = S;
+  canvas.height = S;
+  const ctx = canvas.getContext('2d');
+  
+  // Fundal gri-piatră
+  const baseColor = [195, 185, 175];
+  ctx.fillStyle = `rgb(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]})`;
+  ctx.fillRect(0, 0, S, S);
+  
+  // Dimensiunea dalei în pixeli
+  const tileSize = 64;
+  const gap = 3;
+  const halfTile = tileSize / 2;
+  
+  // Desenează dalele cu variație de culoare și textură
+  for (let y = 0; y < S; y += tileSize) {
+    for (let x = 0; x < S; x += tileSize) {
+      // Offset pentru aspect natural (rosturi decalate)
+      const offsetX = (Math.floor(y / tileSize) % 2) * (tileSize / 2);
+      const startX = x + offsetX;
+      
+      // Variație de culoare pentru fiecare dală
+      const variation = (Math.random() - 0.5) * 25;
+      const r = Math.max(0, Math.min(255, baseColor[0] + variation));
+      const g = Math.max(0, Math.min(255, baseColor[1] + variation * 1.2));
+      const b = Math.max(0, Math.min(255, baseColor[2] + variation * 0.8));
+      ctx.fillStyle = `rgb(${r|0}, ${g|0}, ${b|0})`;
+      
+      // Desenează dala cu colțuri ușor rotunjite
+      const radius = 3;
+      const x1 = startX + gap;
+      const y1 = y + gap;
+      const w = tileSize - gap * 2;
+      const h = tileSize - gap * 2;
+      
+      ctx.beginPath();
+      ctx.moveTo(x1 + radius, y1);
+      ctx.lineTo(x1 + w - radius, y1);
+      ctx.quadraticCurveTo(x1 + w, y1, x1 + w, y1 + radius);
+      ctx.lineTo(x1 + w, y1 + h - radius);
+      ctx.quadraticCurveTo(x1 + w, y1 + h, x1 + w - radius, y1 + h);
+      ctx.lineTo(x1 + radius, y1 + h);
+      ctx.quadraticCurveTo(x1, y1 + h, x1, y1 + h - radius);
+      ctx.lineTo(x1, y1 + radius);
+      ctx.quadraticCurveTo(x1, y1, x1 + radius, y1);
+      ctx.closePath();
+      ctx.fill();
+      
+      // Adaugă textură fină (granulație) pe dală
+      for (let i = 0; i < 30; i++) {
+        const px = startX + gap + Math.random() * (tileSize - gap * 2);
+        const py = y + gap + Math.random() * (tileSize - gap * 2);
+        const size = 1 + Math.random() * 2;
+        const brightness = 30 + Math.random() * 40;
+        ctx.fillStyle = `rgba(${brightness}, ${brightness}, ${brightness}, 0.15)`;
+        ctx.fillRect(px, py, size, size);
+      }
+    }
+  }
+  
+  // Adaugă rosturile (linii întunecate între dale)
+  ctx.strokeStyle = 'rgba(60, 55, 50, 0.5)';
+  ctx.lineWidth = 2;
+  for (let y = 0; y <= S; y += tileSize) {
+    for (let x = 0; x <= S; x += tileSize) {
+      const offsetX = (Math.floor(y / tileSize) % 2) * (tileSize / 2);
+      const startX = x + offsetX;
+      ctx.beginPath();
+      ctx.moveTo(startX, y);
+      ctx.lineTo(startX + tileSize, y);
+      ctx.stroke();
+    }
+  }
+  
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(6, 6);
+  texture.anisotropy = 8;
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+
 
 
 
@@ -230,7 +317,7 @@ export default function Scena3D({ cfg }) {
   bigGround.rotation.x = -Math.PI / 2; bigGround.position.y = -0.02; bigGround.receiveShadow = true;
   scene.add(bigGround);
     const apron = new THREE.Mesh(new THREE.PlaneGeometry(L + 3.2, W + 3.2),
-      new THREE.MeshStandardMaterial({ color: "#c7c2b5", roughness: 0.95 }));
+      new THREE.MeshStandardMaterial({ map: texPavaj(), roughness: 0.85, metalness: 0.05 }));
     apron.rotation.x = -Math.PI / 2; apron.position.y = 0.012; apron.receiveShadow = true; scene.add(apron);
     const bordT = new THREE.Mesh(new THREE.PlaneGeometry(L + 3.9, W + 3.9),
       (() => {
@@ -254,7 +341,7 @@ export default function Scena3D({ cfg }) {
   })());
     bordT.rotation.x = -Math.PI / 2; bordT.position.y = 0.008; bordT.receiveShadow = true; scene.add(bordT);
     const alee = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 7),
-      new THREE.MeshStandardMaterial({ color: "#bdb7a9", roughness: 0.95 }));
+      new THREE.MeshStandardMaterial({ map: texPavaj(), roughness: 0.85, metalness: 0.05 }));
     alee.rotation.x = -Math.PI / 2; alee.position.set(-L / 5, 0.013, W / 2 + 3.5 + 1.6); scene.add(alee);
     const uc = new THREE.Mesh(new THREE.PlaneGeometry(L + 5, W + 5),
       new THREE.MeshBasicMaterial({ map: umbraContact(), transparent: true, depthWrite: false }));
