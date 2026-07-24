@@ -549,10 +549,10 @@ function generaCopac(p, seed) {
 
 /* ---------- specii si compozitie ---------- */
 const SPECII = {
-  Fag: { tip: "foios", inaltime: 5.5, latime: 1.8, grosime: 0.16, ramificatii: 5, deschidere: 42, umbrire: 0.55, frunzePerVarf: 8, marimeFrunza: 0.55, culoareFrunze: "#6d7d54", culoareTrunchi: "#6b5a48", variatieCuloare: 0.06 },
-  Brad: { tip: "brad", inaltime: 7, latime: 1.7, grosime: 0.13, ramificatii: 5, deschidere: 42, umbrire: 0.55, frunzePerVarf: 8, marimeFrunza: 0.44, culoareFrunze: "#3c4a3a", culoareTrunchi: "#4a3c30", variatieCuloare: 0.05 },
-  Plop: { tip: "plop", inaltime: 9, latime: 1.1, grosime: 0.15, ramificatii: 5, deschidere: 30, umbrire: 0.55, frunzePerVarf: 8, marimeFrunza: 0.47, culoareFrunze: "#78875e", culoareTrunchi: "#7a6a55", variatieCuloare: 0.07 },
-  Tufa: { tip: "tufa", inaltime: 1.6, latime: 0.9, grosime: 0.1, ramificatii: 4, deschidere: 55, umbrire: 0.55, frunzePerVarf: 10, marimeFrunza: 0.34, culoareFrunze: "#2e4a2e", culoareTrunchi: "#5a4a3a", variatieCuloare: 0.09 },
+  Fag: { tip: "foios", inaltime: 5.5, latime: 1.8, grosime: 0.16, ramificatii: 5, deschidere: 42, umbrire: 0.55, frunzePerVarf: 16, marimeFrunza: 0.72, culoareFrunze: "#6d7d54", culoareTrunchi: "#6b5a48", variatieCuloare: 0.06 },
+  Brad: { tip: "brad", inaltime: 7, latime: 1.7, grosime: 0.13, ramificatii: 5, deschidere: 42, umbrire: 0.55, frunzePerVarf: 16, marimeFrunza: 0.57, culoareFrunze: "#3c4a3a", culoareTrunchi: "#4a3c30", variatieCuloare: 0.05 },
+  Plop: { tip: "plop", inaltime: 9, latime: 1.1, grosime: 0.15, ramificatii: 5, deschidere: 30, umbrire: 0.55, frunzePerVarf: 16, marimeFrunza: 0.61, culoareFrunze: "#78875e", culoareTrunchi: "#7a6a55", variatieCuloare: 0.07 },
+  Tufa: { tip: "tufa", inaltime: 1.6, latime: 0.9, grosime: 0.1, ramificatii: 4, deschidere: 55, umbrire: 0.55, frunzePerVarf: 20, marimeFrunza: 0.44, culoareFrunze: "#2e4a2e", culoareTrunchi: "#5a4a3a", variatieCuloare: 0.09 },
 };
 
 // Soarele: key la (L*1.7, ..., W*0.3) => elevatie ~34 grade, umbrele cad spre -X.
@@ -565,14 +565,10 @@ const COMPOZITIE = [
   { specie: "Fag", x: -13.2, z: 9.5, scara: 0.62, rot: 3.4, seed: 1287 },
   { specie: "Fag", x: 12.5, z: 8, scara: 0.85, rot: 1.7, seed: 4460 },
   { specie: "Fag", x: 13.5, z: -9, scara: 0.7, rot: 4.2, seed: 8875 },
-  { specie: "Tufa", x: -2.0, z: 8.0, scara: 0.9, rot: 0.0, seed: 3741 },
-  { specie: "Tufa", x:  2.0, z: 8.0, scara: 0.9, rot: 3.14, seed: 5960 },
   { specie: "Tufa", x: -4.0, z: -7.0, scara: 0.8, rot: 1.1, seed: 9021 },
   { specie: "Tufa", x:  4.0, z: -7.0, scara: 0.8, rot: 4.2, seed: 8875 },
-  { specie: "Tufa", x: -5.5, z: 6.0, scara: 0.9, rot: 0.0, seed: 7182 },
-  { specie: "Tufa", x:  5.5, z: 6.0, scara: 0.9, rot: 3.14, seed: 2298 },
-  { specie: "Tufa", x: -8.0, z: 10.0, scara: 1.2, rot: 0.8, seed: 1287 },
-  { specie: "Tufa", x:  8.0, z: 10.0, scara: 1.2, rot: 3.9, seed: 6103 },
+  { specie: "Tufa", x: -2.0, z: 8.0, scara: 0.9, rot: 0.0, seed: 3741 },
+  { specie: "Tufa", x:  2.0, z: 8.0, scara: 0.9, rot: 3.14, seed: 5960 },
 ];
 
 /* ---------- iarba ---------- */
