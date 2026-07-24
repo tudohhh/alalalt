@@ -563,14 +563,16 @@ const COMPOZITIE = [
   { specie: "Fag", x: -11.5, z: -4.5, scara: 0.75, rot: 2.1, seed: 5518 },
   { specie: "Fag", x: -10.5, z: 6.5, scara: 1.1, rot: 0.9, seed: 7734 },
   { specie: "Fag", x: -13.2, z: 9.5, scara: 0.62, rot: 3.4, seed: 1287 },
-  { specie: "Tufa", x: -7.9, z: 6.5, scara: 1, rot: 0.2, seed: 9021 },
   { specie: "Fag", x: 12.5, z: 8, scara: 0.85, rot: 1.7, seed: 4460 },
-  { specie: "Tufa", x: 7.6, z: 6.3, scara: 1, rot: 2.6, seed: 6103 },
   { specie: "Fag", x: 13.5, z: -9, scara: 0.7, rot: 4.2, seed: 8875 },
-  { specie: "Tufa", x: 8.2, z: -6.6, scara: 0.9, rot: 5.1, seed: 2298 },
-  { specie: "Tufa", x: -3.7, z: 7.2, scara: 0.85, rot: 1.1, seed: 3741 },
-  { specie: "Tufa", x: -0.7, z: 8.8, scara: 0.7, rot: 4.8, seed: 5960 },
-  { specie: "Tufa", x: -3.9, z: 11, scara: 1, rot: 2.2, seed: 7182 },
+  { specie: "Tufa", x: -2.5, z: 7.5, scara: 1.0, rot: 0.0, seed: 3741 },
+  { specie: "Tufa", x:  2.5, z: 7.5, scara: 1.0, rot: 3.14, seed: 5960 },
+  { specie: "Tufa", x: -5.0, z: 9.0, scara: 0.9, rot: 0.5, seed: 7182 },
+  { specie: "Tufa", x:  5.0, z: 9.0, scara: 0.9, rot: 2.6, seed: 6103 },
+  { specie: "Tufa", x: -4.0, z: -7.0, scara: 0.8, rot: 1.1, seed: 9021 },
+  { specie: "Tufa", x:  4.0, z: -7.0, scara: 0.8, rot: 4.2, seed: 8875 },
+  { specie: "Tufa", x: -8.0, z: 10.0, scara: 1.2, rot: 0.8, seed: 2298 },
+  { specie: "Tufa", x:  8.0, z: 10.0, scara: 1.2, rot: 3.9, seed: 1287 },
 ];
 
 /* ---------- iarba ---------- */
