@@ -751,6 +751,11 @@ export function adaugaGradina(scene, renderer, L, W, optiuni = {}) {
     const satShift = (r() - 0.5) * 0.5;
     const lightShift = (r() - 0.5) * 0.3;
     cf.offsetHSL(hueShift, satShift, lightShift);
+    // Variație individuală pentru fiecare plantă
+    const hueShift = (r() - 0.5) * 0.08;
+    const satShift = (r() - 0.5) * 0.5;
+    const lightShift = (r() - 0.5) * 0.3;
+    // variație aplicată mai jos
     // Variație aleatorie de culoare (verde mai deschis/închis)
     const cVar = (r() - 0.5) * 0.1;
     // variație aplicată mai jos
