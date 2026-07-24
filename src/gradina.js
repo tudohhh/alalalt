@@ -128,6 +128,7 @@ function texturaFrunza(tip, seed) {
 
 
 
+
 /* ---------- flori ---------- */
 function adaugaFlori(scene, L, W) {
   const group = new THREE.Group();
@@ -142,14 +143,19 @@ function adaugaFlori(scene, L, W) {
   const numFlori = 80 + Math.floor(Math.random() * 40);
   
   for (let i = 0; i < numFlori; i++) {
-    // Poziție aleatorie în curte (evită casa și aleea)
-    const x = (Math.random() - 0.5) * (L + 6);
-    const z = (Math.random() - 0.5) * (W + 6);
+    // Poziție aleatorie în curte (evită casa, pavajul și aleea)
+    const x = (Math.random() - 0.5) * (L + 12);
+    const z = (Math.random() - 0.5) * (W + 12);
     
-    // Evită suprafața casei
-    if (Math.abs(x) < L / 2 + 0.5 && Math.abs(z) < W / 2 + 0.5) continue;
-    // Evită aleea (aproximativ)
-    if (x > -1.5 && x < 0.5 && z > W/2 - 1 && z < W/2 + 3) continue;
+    // 1. Evită suprafața casei + pavajul (apron: L+3.2, W+3.2)
+    if (Math.abs(x) < L / 2 + 2.0 && Math.abs(z) < W / 2 + 2.0) continue;
+    
+    // 2. Evită aleea (în fața casei, pe partea stângă)
+    // Aleea: x între -1.5 și 0.5, z între W/2-1 și W/2+3
+    if (x > -2.0 && x < 1.0 && z > W/2 - 1.0 && z < W/2 + 4.0) continue;
+    
+    // 3. Evită zonele foarte apropiate de gard (pentru a nu clipa)
+    if (Math.abs(x) > L / 2 + 5.0 || Math.abs(z) > W / 2 + 5.0) continue;
     
     const color = colors[Math.floor(Math.random() * colors.length)];
     
@@ -206,6 +212,7 @@ function adaugaFlori(scene, L, W) {
   scene.add(group);
   return group;
 }
+
 
 function texIarba() {
   const c = document.createElement("canvas");
