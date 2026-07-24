@@ -214,14 +214,7 @@ ctx.fillRect(0, 0, S, S);
   texture.anisotropy = 8;
   texture.colorSpace = THREE.SRGBColorSpace;
   return texture;
-}
-
-
-
-
-
-
-const rad = g => (g * Math.PI) / 180;
+}const rad = g => (g * Math.PI) / 180;
 const srgb = t => { if ("colorSpace" in t) t.colorSpace = THREE.SRGBColorSpace; else t.encoding = THREE.sRGBEncoding; return t; };
 
 function meshTri(tris, mat, uvScale = 0.55) {
