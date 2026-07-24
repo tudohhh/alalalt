@@ -1,7 +1,4 @@
-// BACKUP 20.07.2026 — src/Scena3D.jsx FINAL (configurator acoperis v1)
-// Include: texturi procedurale+bump, sRGB, UV pe linia pantei, ocluzie
 // streasina, pazii+hip ridges, horn, lumina laterala ierarhizata, vigneta.
-// Structura proiect: vezi acoperis-REPRODUCERE.txt
 import React, { useRef, useEffect } from "react";
 import * as THREE from "three";
 import { adaugaGradina } from "./gradina";
@@ -200,7 +197,7 @@ export default function Scena3D({ cfg }) {
     if ("outputColorSpace" in rnd) rnd.outputColorSpace = THREE.SRGBColorSpace;
     rnd.toneMapping = THREE.ACESFilmicToneMapping;
     rnd.toneMappingExposure = 1.0;
-    else rnd.outputEncoding = THREE.sRGBEncoding;
+    // else rnd.outputEncoding = THREE.sRGBEncoding;
     rnd.toneMapping = THREE.ACESFilmicToneMapping;
   rnd.toneMappingExposure = 1.4;
     rnd.setClearColor(0xdce8f0);
