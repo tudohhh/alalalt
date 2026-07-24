@@ -616,4 +616,4 @@ export function adaugaGradina(scene, renderer, L, W, optiuni = {}) {
   return grup;
 }
 
-export { SPECII, COMPOZITIE };
+// export { SPECII, COMPOZITIE }; // eliminate - mutate în peisaj.js
