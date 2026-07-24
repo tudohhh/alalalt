@@ -263,43 +263,6 @@ export default function Scena3D({ cfg }) {
     const hRoof = (W / 2) * Math.tan(rad(panta));
 
     const scene = new THREE.Scene();
-
-  // Iarbă DOAR în interiorul gardului (L+7, W+7)
-  const iarbaInterior = new THREE.Mesh(
-    new THREE.PlaneGeometry(L + 7, W + 7),
-    new THREE.MeshStandardMaterial({
-      map: texGazon().map,
-      bumpMap: texGazon().bump,
-      bumpScale: 0.12,
-      roughness: 1
-    })
-  );
-  iarbaInterior.rotation.x = -Math.PI / 2;
-  iarbaInterior.position.y = 0;
-  iarbaInterior.receiveShadow = true;
-  scene.add(iarbaInterior);
-
-  // Sol simplu în exterior (gri-maro)
-  const solExterior = new THREE.Mesh(
-    new THREE.PlaneGeometry(400, 400),
-    new THREE.MeshStandardMaterial({ color: 0x8a7f72, roughness: 1 })
-  );
-  solExterior.rotation.x = -Math.PI / 2;
-  solExterior.position.y = -0.01;
-  solExterior.receiveShadow = true;
-  scene.add(solExterior);
-
-
-  // NOU PLAN DE SOL (înlocuiește balta)
-  const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(400, 400),
-    new THREE.MeshStandardMaterial({ color: 0x6a8a5a, roughness: 1 })
-  );
-  ground.rotation.x = -Math.PI / 2;
-  ground.position.y = 0;
-  ground.receiveShadow = true;
-  scene.add(ground);
-
     // Cer cu gradient
   const skyCanvas = document.createElement('canvas'); skyCanvas.width = 512; skyCanvas.height = 512;
   const skyCtx = skyCanvas.getContext('2d');
@@ -344,9 +307,14 @@ export default function Scena3D({ cfg }) {
   })();
     scene.fog = new THREE.Fog("#e6eae7", 55, 170);
 
-    // teren eliminat
+    const teren = new THREE.Mesh(new THREE.PlaneGeometry(320, 320),
+      new THREE.MeshStandardMaterial({ map: texTeren(), roughness: 1 }));
+    teren.rotation.x = -Math.PI / 2; teren.receiveShadow = true; scene.add(teren);
   // Plan imens pentru continuitate
-  // bigGround COMENTAT (test curat)
+  const bigGround = new THREE.Mesh(new THREE.PlaneGeometry(400, 400),
+    new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.95 }));
+  bigGround.rotation.x = -Math.PI / 2; bigGround.position.y = -0.02; bigGround.receiveShadow = true;
+  scene.add(bigGround);
     const apron = new THREE.Mesh(new THREE.PlaneGeometry(L + 3.2, W + 3.2),
       new THREE.MeshStandardMaterial({ map: texPavaj(), roughness: 0.85, metalness: 0.05 }));
     apron.rotation.x = -Math.PI / 2; apron.position.y = 0.012; apron.receiveShadow = true; scene.add(apron);
