@@ -667,7 +667,8 @@ function geoGard(L, W, seed) {
   return { zid: fa(ZID), cap: fa(CAP), sipci: fa(SIP) };
 }
 
-/* ---------- mediu de reflexie ---------- */
+
+/* ---------- mediu de reflexie simplificat (fără panouri ciudate în fundal) ---------- */
 let ENV = null;
 function mediu(renderer) {
   if (ENV) return ENV;
@@ -675,26 +676,16 @@ function mediu(renderer) {
   ec.width = 1024;
   ec.height = 512;
   const x = ec.getContext("2d");
+  
+  // Gradient simplu de cer curat (albastru cer deschis sus, alb/orizont neutru jos)
   const g = x.createLinearGradient(0, 0, 0, 512);
-  g.addColorStop(0, "#79aed6");
-  g.addColorStop(0.42, "#cfe0e9");
-  g.addColorStop(0.5, "#e8e4d8");
-  g.addColorStop(0.53, "#96a184");
-  g.addColorStop(1, "#5d6752");
+  g.addColorStop(0, "#87CEEB"); // Albastru cer
+  g.addColorStop(0.7, "#E0F6FF"); // Albastru foarte deschis spre orizont
+  g.addColorStop(1, "#F0F8FF"); // Ton neutru jos
+  
   x.fillStyle = g;
   x.fillRect(0, 0, 1024, 512);
-  const sun = x.createRadialGradient(772, 148, 6, 772, 148, 130);
-  sun.addColorStop(0, "rgba(255,247,226,1)");
-  sun.addColorStop(0.35, "rgba(255,242,214,0.45)");
-  sun.addColorStop(1, "rgba(255,242,214,0)");
-  x.fillStyle = sun;
-  x.fillRect(600, 0, 350, 300);
-  for (let i = 0; i < 22; i++) {
-    x.fillStyle = "rgba(255,255,255,0.16)";
-    x.beginPath();
-    x.ellipse(Math.random() * 1024, 60 + Math.random() * 150, 40 + Math.random() * 90, 9 + Math.random() * 16, 0, 0, 6.283);
-    x.fill();
-  }
+
   const t = new THREE.CanvasTexture(ec);
   t.mapping = THREE.EquirectangularReflectionMapping;
   try {
@@ -707,6 +698,7 @@ function mediu(renderer) {
   }
   return ENV;
 }
+
 
 let CACHE_COPACI = null;
 let CACHE_IARBA = null;
