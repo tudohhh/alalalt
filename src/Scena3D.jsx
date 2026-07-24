@@ -315,7 +315,7 @@ export default function Scena3D({ cfg }) {
     if ("outputColorSpace" in rnd) rnd.outputColorSpace = THREE.SRGBColorSpace;
     else rnd.outputEncoding = THREE.sRGBEncoding;
     rnd.toneMapping = THREE.ACESFilmicToneMapping;
-  rnd.toneMappingExposure = 1.4;
+  rnd.toneMappingExposure = 1.2; // expunere ușor redusă pentru contrast
     rnd.setClearColor(0xdce8f0);
     el.appendChild(rnd.domElement);
 
@@ -392,16 +392,24 @@ export default function Scena3D({ cfg }) {
         new THREE.MeshStandardMaterial({ color: "#66754f", roughness: 1 }));
       co.scale.y = 0.85; co.position.set(L / 2 + 5, 1.2 * s2 + 0.95 * s2, W / 2 + 1); co.castShadow = true; scene.add(co); }
 
-    scene.add(new THREE.HemisphereLight(0xfdf3e3, 0x8a9480, 0.75));
-    const key = new THREE.DirectionalLight(0xffe9cf, 2.1);
-    key.position.set(L * 1.7, hz + hRoof + 6.5, W * 0.3); key.castShadow = true;
+    scene.add(new THREE.HemisphereLight(0xffeedd, 0x4a5a4a, 0.45)); // ambientală redusă, tonuri calde
+    const key = new THREE.DirectionalLight(0xfff0e0, 2.8); // lumină caldă
+    key.position.set(L * 1.5, hz + hRoof + 10, W * 0.5); // poziție mai înaltă și lateral key.castShadow = true;
     key.shadow.mapSize.set(2048, 2048); key.shadow.radius = 8;
     const s = Math.max(L, W) * 1.5;
     key.shadow.camera.left = -s; key.shadow.camera.right = s;
-    key.shadow.camera.top = s; key.shadow.camera.bottom = -4; key.shadow.bias = -0.00015; key.shadow.normalBias = 0.04;
+    key.shadow.camera.top = s; key.shadow.camera.bottom = -4; key.shadow.bias = -0.0002;
+    key.shadow.normalBias = 0.02;
+    key.shadow.radius = 6; // umbre mai fine
     scene.add(key);
-    const fill = new THREE.DirectionalLight(0xd9e4f2, 0.5); fill.position.set(-L, hz, -W); scene.add(fill);
-    const rim = new THREE.DirectionalLight(0xfff0dd, 0.5); rim.position.set(-L * 0.6, hz + hRoof + 6, -W); scene.add(rim);
+    const fill = new THREE.DirectionalLight(0xaaccdd, 0.35); // lumină rece, difuză fill.position.set(-L * 1.2, hz + 2, -W * 1.2); scene.add(fill);
+    const rim = new THREE.DirectionalLight(0xfff5e6, 0.7); // rim mai puternic rim.position.set(-L * 0.8, hz + hRoof + 8, -W * 0.6); scene.add(rim);
+
+  // Lumină punctuală subtilă pentru fațadă
+  const fillFront = new THREE.PointLight(0xfff0e0, 0.3, 30);
+  fillFront.position.set(0, hz / 2, W / 2 + 2);
+  scene.add(fillFront);
+
 
     const zc = document.createElement("canvas"); zc.width = 64; zc.height = 256;
     const zx = zc.getContext("2d");
