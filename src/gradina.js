@@ -310,8 +310,8 @@ function faSol(latura, razaPlata) {
 
     sh.vertexShader = sh.vertexShader.replace(
       "#include <common>",
-      "#include <common>
- varying vec3 vWPos;"
+      "#include <common>",
+      "varying vec3 vWPos;"
     );
     sh.vertexShader = sh.vertexShader.replace(
       "#include <begin_vertex>",
