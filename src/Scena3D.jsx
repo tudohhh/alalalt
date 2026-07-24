@@ -4,7 +4,7 @@
 // Structura proiect: vezi acoperis-REPRODUCERE.txt
 import React, { useRef, useEffect } from "react";
 import * as THREE from "three";
-import { adaugaGradina } from "./gradina";
+// adaugaGradina eliminat
 import { CONFIG_ACOPERIS as C } from "../config/CONFIG";
 
 
@@ -132,20 +132,11 @@ function texInvelitoare(hex, tip) {
   return { map: srgb(t), bump: bt };
 }
 
-// texTeren eliminatx.globalAlpha = 1;
-  const t = new THREE.CanvasTexture(c);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(20, 20); t.anisotropy = 8;
-  return srgb(t);
-}
+// texTeren eliminat
 
-// texCer eliminatfunction umbraContact() {
-  const c = document.createElement("canvas"); c.width = c.height = 256;
-  const x = c.getContext("2d");
-  const g = x.createRadialGradient(128, 128, 20, 128, 128, 128);
-  g.addColorStop(0, "rgba(30,32,26,0.38)"); g.addColorStop(0.6, "rgba(30,32,26,0.14)"); g.addColorStop(1, "rgba(30,32,26,0)");
-  x.fillStyle = g; x.fillRect(0, 0, 256, 256);
-  return new THREE.CanvasTexture(c);
-}
+// texCer eliminat
+
+// umbraContact eliminat
 
 export default function Scena3D({ cfg }) {
   const mount = useRef(null);
@@ -204,7 +195,10 @@ export default function Scena3D({ cfg }) {
       new THREE.MeshStandardMaterial({ map: texTeren(), roughness: 1 }));
     teren.rotation.x = -Math.PI / 2; teren.receiveShadow = true; scene.add(teren);
   // Plan imens pentru continuitate
-  // bigGround eliminat (balta verde)
+  const bigGround = new THREE.Mesh(new THREE.PlaneGeometry(400, 400),
+    new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.95 }));
+  bigGround.rotation.x = -Math.PI / 2; bigGround.position.y = -0.02; bigGround.receiveShadow = true;
+  scene.add(bigGround);
     const apron = new THREE.Mesh(new THREE.PlaneGeometry(L + 3.2, W + 3.2),
       new THREE.MeshStandardMaterial({ color: "#c7c2b5", roughness: 0.95 }));
     apron.rotation.x = -Math.PI / 2; apron.position.y = 0.012; apron.receiveShadow = true; scene.add(apron);
