@@ -221,7 +221,9 @@ export default function Scena3D({ cfg }) {
   })();
     scene.fog = new THREE.Fog("#e6eae7", 55, 170);
 
-    // teren eliminat (TEST #4)
+    const teren = new THREE.Mesh(new THREE.PlaneGeometry(320, 320),
+      new THREE.MeshStandardMaterial({ map: texTeren(), roughness: 1 }));
+    teren.rotation.x = -Math.PI / 2; teren.receiveShadow = true; scene.add(teren);
   // Plan imens pentru continuitate
   const bigGround = new THREE.Mesh(new THREE.PlaneGeometry(400, 400),
     new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.95 }));
