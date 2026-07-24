@@ -315,8 +315,8 @@ function faSol(latura, razaPlata) {
     );
     sh.vertexShader = sh.vertexShader.replace(
       "#include <begin_vertex>",
-      "#include <begin_vertex>
- vWPos = (modelMatrix * vec4(transformed,1.0)).xyz;"
+      "#include <begin_vertex>",
+      "vWPos = (modelMatrix * vec4(transformed,1.0)).xyz;"
     );
 
     sh.fragmentShader = sh.fragmentShader.replace(
