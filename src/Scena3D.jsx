@@ -7,6 +7,92 @@ import * as THREE from "three";
 import { adaugaGradina } from "./gradina";
 import { CONFIG_ACOPERIS as C } from "../config/CONFIG";
 
+// Generează textură de pavaj (piatră cubică cu rosturi)
+function texPavaj() {
+  const S = 512;
+  const canvas = document.createElement('canvas');
+  canvas.width = S;
+  canvas.height = S;
+  const ctx = canvas.getContext('2d');
+  
+  // Fundal gri-piatră
+  const baseColor = [195, 185, 175];
+  ctx.fillStyle = `rgb(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]})`;
+  ctx.fillRect(0, 0, S, S);
+  
+  // Dimensiunea dalei în pixeli
+  const tileSize = 64;
+  const gap = 3;
+  
+  // Desenează dalele cu variație de culoare și textură
+  for (let y = 0; y < S; y += tileSize) {
+    for (let x = 0; x < S; x += tileSize) {
+      // Offset pentru aspect natural (rosturi decalate)
+      const offsetX = (Math.floor(y / tileSize) % 2) * (tileSize / 2);
+      const startX = x + offsetX;
+      
+      // Variație de culoare pentru fiecare dală
+      const variation = (Math.random() - 0.5) * 20;
+      const r = Math.max(0, Math.min(255, baseColor[0] + variation));
+      const g = Math.max(0, Math.min(255, baseColor[1] + variation * 1.1));
+      const b = Math.max(0, Math.min(255, baseColor[2] + variation * 0.9));
+      ctx.fillStyle = `rgb(${r|0}, ${g|0}, ${b|0})`;
+      
+      // Desenează dala cu colțuri ușor rotunjite
+      const radius = 2;
+      const x1 = startX + gap;
+      const y1 = y + gap;
+      const w = tileSize - gap * 2;
+      const h = tileSize - gap * 2;
+      
+      ctx.beginPath();
+      ctx.moveTo(x1 + radius, y1);
+      ctx.lineTo(x1 + w - radius, y1);
+      ctx.quadraticCurveTo(x1 + w, y1, x1 + w, y1 + radius);
+      ctx.lineTo(x1 + w, y1 + h - radius);
+      ctx.quadraticCurveTo(x1 + w, y1 + h, x1 + w - radius, y1 + h);
+      ctx.lineTo(x1 + radius, y1 + h);
+      ctx.quadraticCurveTo(x1, y1 + h, x1, y1 + h - radius);
+      ctx.lineTo(x1, y1 + radius);
+      ctx.quadraticCurveTo(x1, y1, x1 + radius, y1);
+      ctx.closePath();
+      ctx.fill();
+      
+      // Adaugă textură fină (granulație) pe dală
+      for (let i = 0; i < 20; i++) {
+        const px = startX + gap + Math.random() * (tileSize - gap * 2);
+        const py = y + gap + Math.random() * (tileSize - gap * 2);
+        const size = 1 + Math.random() * 2;
+        const brightness = 30 + Math.random() * 30;
+        ctx.fillStyle = `rgba(${brightness}, ${brightness}, ${brightness}, 0.12)`;
+        ctx.fillRect(px, py, size, size);
+      }
+    }
+  }
+  
+  // Adaugă rosturile (linii întunecate între dale)
+  ctx.strokeStyle = 'rgba(60, 55, 50, 0.4)';
+  ctx.lineWidth = 2;
+  for (let y = 0; y <= S; y += tileSize) {
+    for (let x = 0; x <= S; x += tileSize) {
+      const offsetX = (Math.floor(y / tileSize) % 2) * (tileSize / 2);
+      const startX = x + offsetX;
+      ctx.beginPath();
+      ctx.moveTo(startX, y);
+      ctx.lineTo(startX + tileSize, y);
+      ctx.stroke();
+    }
+  }
+  
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(6, 6);
+  texture.anisotropy = 8;
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+
 
 
 
@@ -43,140 +129,94 @@ function shade(hex, f) {
   return `rgb(${r | 0},${g | 0},${b | 0})`;
 }
 
-
 function texInvelitoare(hex, tip) {
-  const S = 1024; // rezoluție dublă
-  const c = document.createElement("canvas");
-  c.width = c.height = S;
+  const S = 512;
+  const c = document.createElement("canvas"); c.width = c.height = S;
   const x = c.getContext("2d");
   
-  // Fundal cu gradient fin și zgomot
+  // Noise simplu
+  const hash = (a, b) => { let h = a*374761393+b*668265263+1274126177; h=(h^(h>>13))*1274126177; return (h^(h>>16))/2147483648; };
+  
+  // Gradient de bază cu noise
   const img = x.getImageData(0, 0, S, S);
-  const data = img.data;
   for (let py = 0; py < S; py++) {
     for (let px = 0; px < S; px++) {
       const i = (py * S + px) * 4;
-      const noise = (Math.random() - 0.5) * 8;
+      const noise = (hash(px*0.3, py*0.3) - 0.5) * 12;
       const baseR = parseInt(hex.slice(1,3), 16) + noise;
       const baseG = parseInt(hex.slice(3,5), 16) + noise;
       const baseB = parseInt(hex.slice(5,7), 16) + noise;
-      data[i] = Math.max(0, Math.min(255, baseR));
-      data[i+1] = Math.max(0, Math.min(255, baseG));
-      data[i+2] = Math.max(0, Math.min(255, baseB));
-      data[i+3] = 255;
+      img.data[i] = Math.max(0, Math.min(255, baseR));
+      img.data[i+1] = Math.max(0, Math.min(255, baseG));
+      img.data[i+2] = Math.max(0, Math.min(255, baseB));
+      img.data[i+3] = 255;
     }
   }
   x.putImageData(img, 0, 0);
   
-  // Desenează dungi și detalii
   if (tip === "tabla") {
-    const stripeWidth = 24; // mai înguste pentru aspect mai fin
-    for (let px = 0; px < S; px += stripeWidth) {
-      const offset = (Math.random() - 0.5) * 2;
-      const x1 = px + offset;
-      // Umbră sub dungă
-      x.fillStyle = "rgba(0,0,0,0.25)";
-      x.fillRect(x1, 0, 2, S);
-      // Linie luminoasă pe dungă
-      x.fillStyle = "rgba(255,255,255,0.10)";
-      x.fillRect(x1 + 3, 0, 1, S);
-      // Linie de metalic
-      x.fillStyle = "rgba(200,200,200,0.08)";
-      x.fillRect(x1 + 8, 0, 4, S);
-      // Micro-zgârieturi
-      for (let i = 0; i < 3; i++) {
-        const y = Math.random() * S;
-        x.fillStyle = "rgba(255,255,255,0.03)";
-        x.fillRect(x1 + 2 + Math.random() * 6, y, 1 + Math.random() * 2, 1);
+    // Dungi de tabla cu variație
+    for (let px = 0; px < S; px += 32) {
+      const offset = (hash(px, 0) - 0.5) * 3;
+      x.fillStyle = "rgba(0,0,0,0.38)"; x.fillRect(px + offset, 0, 3, S);
+      x.fillStyle = "rgba(255,255,255,0.12)"; x.fillRect(px + offset + 3, 0, 2, S);
+      // Variație micro
+      for (let py = 0; py < S; py += 4) {
+        if (hash(px, py) > 0.7) {
+          x.fillStyle = "rgba(255,255,255,0.04)"; x.fillRect(px + offset + 10, py, 6, 2);
+        }
       }
     }
-    // Zgârieturi fine random
-    for (let i = 0; i < 200; i++) {
-      const x0 = Math.random() * S;
-      const y0 = Math.random() * S;
-      const len = 2 + Math.random() * 6;
-      x.strokeStyle = "rgba(0,0,0,0.05)";
-      x.lineWidth = 0.5;
-      x.beginPath();
-      x.moveTo(x0, y0);
-      x.lineTo(x0 + len, y0 + Math.random() * 2 - 1);
-      x.stroke();
-    }
   } else {
-    // Țiglă – desenează un model de țiglă ceramică mai detaliat
-    const tileH = 32;
-    const tileW = 48;
-    for (let row = 0; row < S / tileH; row++) {
-      const y = row * tileH;
-      const offsetX = (row % 2) * (tileW / 2);
-      for (let col = -1; col < S / tileW + 1; col++) {
-        const x = col * tileW + offsetX;
-        const shade = 0.85 + Math.random() * 0.3;
-        const r = Math.min(255, parseInt(hex.slice(1,3), 16) * shade);
-        const g = Math.min(255, parseInt(hex.slice(3,5), 16) * shade);
-        const b = Math.min(255, parseInt(hex.slice(5,7), 16) * shade);
-        x.fillStyle = `rgb(${r|0}, ${g|0}, ${b|0})`;
-        x.beginPath();
-        x.moveTo(x + 2, y + 2);
-        x.lineTo(x + tileW - 4, y + 4);
-        x.lineTo(x + tileW - 6, y + tileH - 4);
-        x.lineTo(x + 4, y + tileH - 2);
-        x.closePath();
-        x.fill();
-        // Umbrire ușoară sub țiglă
-        x.fillStyle = "rgba(0,0,0,0.12)";
-        x.fillRect(x + 2, y + tileH - 6, tileW - 6, 4);
-        // Margine luminoasă
-        x.fillStyle = "rgba(255,255,255,0.06)";
-        x.fillRect(x + 4, y + 4, tileW - 10, 2);
+    // Țiglă cu variație per rând
+    for (let py = 0; py < S; py += 26) {
+      const shade = 0.35 + hash(0, py) * 0.2;
+      x.fillStyle = `rgba(0,0,0,${shade})`; x.fillRect(0, py, S, 3);
+      x.fillStyle = "rgba(255,255,255,0.12)"; x.fillRect(0, py + 3, S, 2);
+      for (let px = ((Math.floor(py/26)) % 2) * 22; px < S; px += 44) {
+        const varX = (hash(px, py) - 0.5) * 4;
+        x.fillStyle = "rgba(0,0,0,0.08)"; x.fillRect(px + varX, py + 3, 2 + Math.abs(varX), 23);
       }
     }
   }
   
-  // Textura principală
-  const t = new THREE.CanvasTexture(c);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.anisotropy = 16;
+  // Micro-imperfecțiuni
+  for (let i = 0; i < 1200; i++) {
+    const r = Math.random();
+    x.fillStyle = r > 0.6 ? "rgba(255,255,255,0.02)" : r > 0.3 ? "rgba(0,0,0,0.025)" : "rgba(255,255,255,0.01)";
+    x.fillRect(Math.random() * S, Math.random() * S, 1 + Math.random() * 2, 1 + Math.random() * 2);
+  }
   
-  // Bump map – relief detaliat
-  const b = document.createElement("canvas");
-  b.width = b.height = S;
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8;
+  
+  // Bump map
+  const b = document.createElement("canvas"); b.width = b.height = S;
   const bx = b.getContext("2d");
   const bImg = bx.getImageData(0, 0, S, S);
-  const bData = bImg.data;
   for (let py = 0; py < S; py++) {
     for (let px = 0; px < S; px++) {
       const i = (py * S + px) * 4;
-      const v = 128 + (Math.random() - 0.5) * 40;
-      bData[i] = bData[i+1] = bData[i+2] = v;
-      bData[i+3] = 255;
+      const v = 128 + (hash(px*0.5, py*0.5) - 0.5) * 30;
+      bImg.data[i] = bImg.data[i+1] = bImg.data[i+2] = v;
+      bImg.data[i+3] = 255;
     }
   }
   bx.putImageData(bImg, 0, 0);
   
   if (tip === "tabla") {
-    for (let px = 0; px < S; px += 24) {
-      bx.fillStyle = "#ffffff";
-      bx.fillRect(px, 0, 4, S);
-      bx.fillStyle = "#555555";
-      bx.fillRect(px + 6, 0, 2, S);
-    }
+    for (let px = 0; px < S; px += 32) { bx.fillStyle = "#f0f0f0"; bx.fillRect(px, 0, 5, S); }
   } else {
-    for (let row = 0; row < S; row += 32) {
-      bx.fillStyle = "#eeeeee";
-      bx.fillRect(0, row, S, 3);
-      bx.fillStyle = "#666666";
-      bx.fillRect(0, row + 28, S, 4);
+    for (let py = 0; py < S; py += 26) { 
+      bx.fillStyle = "#f0f0f0"; bx.fillRect(0, py, S, 5); 
+      bx.fillStyle = "#6a6a6a"; bx.fillRect(0, py + 20, S, 6); 
     }
   }
   
   const bt = new THREE.CanvasTexture(b);
-  bt.wrapS = bt.wrapT = THREE.RepeatWrapping;
-  bt.anisotropy = 16;
-  
-  return { map: t, bump: bt };
+  bt.wrapS = bt.wrapT = THREE.RepeatWrapping; bt.anisotropy = 8;
+  return { map: srgb(t), bump: bt };
 }
-
 
 function texTeren() {
   const c = document.createElement("canvas"); c.width = c.height = 512;
@@ -214,76 +254,6 @@ function umbraContact() {
   return new THREE.CanvasTexture(c);
 }
 
-
-// ----- TEXTURĂ PAVAJ (adăugată pentru consistență) -----
-function texPavaj() {
-  const S = 512;
-  const canvas = document.createElement('canvas');
-  canvas.width = S;
-  canvas.height = S;
-  const ctx = canvas.getContext('2d');
-  const baseColor = [195, 185, 175];
-  ctx.fillStyle = `rgb(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]})`;
-  ctx.fillRect(0, 0, S, S);
-  const tileSize = 64;
-  const gap = 3;
-  for (let y = 0; y < S; y += tileSize) {
-    for (let x = 0; x < S; x += tileSize) {
-      const offsetX = (Math.floor(y / tileSize) % 2) * (tileSize / 2);
-      const startX = x + offsetX;
-      const variation = (Math.random() - 0.5) * 20;
-      const r = Math.max(0, Math.min(255, baseColor[0] + variation));
-      const g = Math.max(0, Math.min(255, baseColor[1] + variation * 1.1));
-      const b = Math.max(0, Math.min(255, baseColor[2] + variation * 0.9));
-      ctx.fillStyle = `rgb(${r|0}, ${g|0}, ${b|0})`;
-      const radius = 2;
-      const x1 = startX + gap;
-      const y1 = y + gap;
-      const w = tileSize - gap * 2;
-      const h = tileSize - gap * 2;
-      ctx.beginPath();
-      ctx.moveTo(x1 + radius, y1);
-      ctx.lineTo(x1 + w - radius, y1);
-      ctx.quadraticCurveTo(x1 + w, y1, x1 + w, y1 + radius);
-      ctx.lineTo(x1 + w, y1 + h - radius);
-      ctx.quadraticCurveTo(x1 + w, y1 + h, x1 + w - radius, y1 + h);
-      ctx.lineTo(x1 + radius, y1 + h);
-      ctx.quadraticCurveTo(x1, y1 + h, x1, y1 + h - radius);
-      ctx.lineTo(x1, y1 + radius);
-      ctx.quadraticCurveTo(x1, y1, x1 + radius, y1);
-      ctx.closePath();
-      ctx.fill();
-      for (let i = 0; i < 20; i++) {
-        const px = startX + gap + Math.random() * (tileSize - gap * 2);
-        const py = y + gap + Math.random() * (tileSize - gap * 2);
-        const size = 1 + Math.random() * 2;
-        const brightness = 30 + Math.random() * 30;
-        ctx.fillStyle = `rgba(${brightness}, ${brightness}, ${brightness}, 0.12)`;
-        ctx.fillRect(px, py, size, size);
-      }
-    }
-  }
-  ctx.strokeStyle = 'rgba(60, 55, 50, 0.4)';
-  ctx.lineWidth = 2;
-  for (let y = 0; y <= S; y += tileSize) {
-    for (let x = 0; x <= S; x += tileSize) {
-      const offsetX = (Math.floor(y / tileSize) % 2) * (tileSize / 2);
-      const startX = x + offsetX;
-      ctx.beginPath();
-      ctx.moveTo(startX, y);
-      ctx.lineTo(startX + tileSize, y);
-      ctx.stroke();
-    }
-  }
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(6, 6);
-  texture.anisotropy = 8;
-  texture.colorSpace = THREE.SRGBColorSpace;
-  return texture;
-}
-
-
 export default function Scena3D({ cfg }) {
   const mount = useRef(null);
   useEffect(() => {
@@ -315,7 +285,7 @@ export default function Scena3D({ cfg }) {
     if ("outputColorSpace" in rnd) rnd.outputColorSpace = THREE.SRGBColorSpace;
     else rnd.outputEncoding = THREE.sRGBEncoding;
     rnd.toneMapping = THREE.ACESFilmicToneMapping;
-  rnd.toneMappingExposure = 1.2; // expunere ușor redusă pentru contrast
+  rnd.toneMappingExposure = 1.4;
     rnd.setClearColor(0xdce8f0);
     el.appendChild(rnd.domElement);
 
@@ -392,24 +362,16 @@ export default function Scena3D({ cfg }) {
         new THREE.MeshStandardMaterial({ color: "#66754f", roughness: 1 }));
       co.scale.y = 0.85; co.position.set(L / 2 + 5, 1.2 * s2 + 0.95 * s2, W / 2 + 1); co.castShadow = true; scene.add(co); }
 
-    scene.add(new THREE.HemisphereLight(0xffeedd, 0x4a5a4a, 0.45)); // ambientală redusă, tonuri calde
-    const key = new THREE.DirectionalLight(0xfff0e0, 2.8); // lumină caldă
-    key.position.set(L * 1.5, hz + hRoof + 10, W * 0.5); // poziție mai înaltă și lateral key.castShadow = true;
+    scene.add(new THREE.HemisphereLight(0xfdf3e3, 0x8a9480, 0.75));
+    const key = new THREE.DirectionalLight(0xffe9cf, 2.1);
+    key.position.set(L * 1.7, hz + hRoof + 6.5, W * 0.3); key.castShadow = true;
     key.shadow.mapSize.set(2048, 2048); key.shadow.radius = 8;
     const s = Math.max(L, W) * 1.5;
     key.shadow.camera.left = -s; key.shadow.camera.right = s;
-    key.shadow.camera.top = s; key.shadow.camera.bottom = -4; key.shadow.bias = -0.0002;
-    key.shadow.normalBias = 0.02;
-    key.shadow.radius = 6; // umbre mai fine
+    key.shadow.camera.top = s; key.shadow.camera.bottom = -4; key.shadow.bias = -0.00015; key.shadow.normalBias = 0.04;
     scene.add(key);
-    const fill = new THREE.DirectionalLight(0xaaccdd, 0.35); // lumină rece, difuză fill.position.set(-L * 1.2, hz + 2, -W * 1.2); scene.add(fill);
-    const rim = new THREE.DirectionalLight(0xfff5e6, 0.7); // rim mai puternic rim.position.set(-L * 0.8, hz + hRoof + 8, -W * 0.6); scene.add(rim);
-
-  // Lumină punctuală subtilă pentru fațadă
-  const fillFront = new THREE.PointLight(0xfff0e0, 0.3, 30);
-  fillFront.position.set(0, hz / 2, W / 2 + 2);
-  scene.add(fillFront);
-
+    const fill = new THREE.DirectionalLight(0xd9e4f2, 0.5); fill.position.set(-L, hz, -W); scene.add(fill);
+    const rim = new THREE.DirectionalLight(0xfff0dd, 0.5); rim.position.set(-L * 0.6, hz + hRoof + 6, -W); scene.add(rim);
 
     const zc = document.createElement("canvas"); zc.width = 64; zc.height = 256;
     const zx = zc.getContext("2d");
@@ -418,110 +380,97 @@ export default function Scena3D({ cfg }) {
     zg.addColorStop(0, "rgba(45,40,32,0.42)"); zg.addColorStop(1, "rgba(45,40,32,0)");
     zx.fillStyle = zg; zx.fillRect(0, 0, 64, 70);
     const ztx = srgb(new THREE.CanvasTexture(zc));
-    
-  // Tencuiala procedurală îmbunătățită
-  const tencCanvas = document.createElement('canvas');
-  tencCanvas.width = tencCanvas.height = 1024; // rezoluție dublă
+    // Tencuiala procedurala
+  const tencCanvas = document.createElement('canvas'); tencCanvas.width = tencCanvas.height = 512;
   const tctx = tencCanvas.getContext('2d');
-  
-  // Baza: alb cald cu variație subtilă
-  const baseColor = [245, 240, 235];
-  tctx.fillStyle = `rgb(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]})`;
-  tctx.fillRect(0, 0, 1024, 1024);
-  
-  // Granulație fină cu mai multe straturi
-  for (let i = 0; i < 15000; i++) {
-    const x = Math.random() * 1024;
-    const y = Math.random() * 1024;
-    const size = 1.5 + Math.random() * 3;
-    const brightness = 220 + Math.random() * 35;
-    const alpha = 0.15 + Math.random() * 0.25;
-    tctx.fillStyle = `rgba(${brightness}, ${brightness}, ${brightness}, ${alpha})`;
-    tctx.fillRect(x, y, size, size);
+  // Baza: alb cald
+  tctx.fillStyle = '#f4f1ea'; tctx.fillRect(0, 0, 512, 512);
+  // Granule fine
+  for (let i = 0; i < 8000; i++) {
+    const g = 235 + Math.random() * 20;
+    tctx.fillStyle = `rgba(${g},${g},${g},0.25)`;
+    tctx.fillRect(Math.random()*512, Math.random()*512, 1.5, 1.5);
   }
-  
-  // Variații de culoare (petice mai întunecate sau mai deschise)
-  for (let i = 0; i < 800; i++) {
-    const x = Math.random() * 1024;
-    const y = Math.random() * 1024;
-    const radius = 20 + Math.random() * 60;
-    const gradient = tctx.createRadialGradient(x, y, 0, x, y, radius);
-    const brightness = 220 + Math.random() * 30;
-    const alpha = 0.06 + Math.random() * 0.12;
-    gradient.addColorStop(0, `rgba(${brightness}, ${brightness}, ${brightness}, ${alpha})`);
-    gradient.addColorStop(1, `rgba(${brightness}, ${brightness}, ${brightness}, 0)`);
-    tctx.fillStyle = gradient;
-    tctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
-  }
-  
-  // Imperfecțiuni fine (crăpături mici)
-  for (let i = 0; i < 100; i++) {
-    const x = Math.random() * 1024;
-    const y = Math.random() * 1024;
-    const len = 4 + Math.random() * 15;
-    const angle = Math.random() * Math.PI * 2;
-    tctx.strokeStyle = `rgba(180, 175, 170, ${0.05 + Math.random() * 0.08})`;
-    tctx.lineWidth = 0.5 + Math.random() * 0.8;
-    tctx.beginPath();
-    tctx.moveTo(x, y);
-    tctx.lineTo(x + Math.cos(angle) * len, y + Math.sin(angle) * len);
-    tctx.stroke();
-  }
-  
-  const tencTex = new THREE.CanvasTexture(tencCanvas);
-  tencTex.wrapS = tencTex.wrapT = THREE.RepeatWrapping;
-  tencTex.repeat.set(L * 1.5, hz * 1.5);
-  tencTex.colorSpace = THREE.SRGBColorSpace;
-  tencTex.anisotropy = 16;
-  
-  // Bump map pentru tencuială (relief)
-  const bumpCanvas = document.createElement('canvas');
-  bumpCanvas.width = bumpCanvas.height = 512;
-  const bctx = bumpCanvas.getContext('2d');
-  bctx.fillStyle = '#808080';
-  bctx.fillRect(0, 0, 512, 512);
-  
-  // Granulație pentru bump map
-  for (let i = 0; i < 6000; i++) {
-    const x = Math.random() * 512;
-    const y = Math.random() * 512;
-    const size = 1 + Math.random() * 3;
-    const value = 128 + (Math.random() - 0.5) * 50;
-    bctx.fillStyle = `rgb(${value}, ${value}, ${value})`;
-    bctx.fillRect(x, y, size, size);
-  }
-  
-  // Variații mari pentru bump (denivelări fine)
+  // Imperfectiuni
   for (let i = 0; i < 200; i++) {
-    const x = Math.random() * 512;
-    const y = Math.random() * 512;
-    const radius = 10 + Math.random() * 30;
-    const gradient = bctx.createRadialGradient(x, y, 0, x, y, radius);
-    const value = 110 + Math.random() * 60;
-    gradient.addColorStop(0, `rgb(${value}, ${value}, ${value})`);
-    gradient.addColorStop(1, `rgb(128, 128, 128)`);
-    bctx.fillStyle = gradient;
-    bctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+    tctx.fillStyle = `rgba(200,195,185,0.15)`;
+    tctx.fillRect(Math.random()*512, Math.random()*512, 3+Math.random()*5, 2+Math.random()*3);
   }
-  
-  const bumpTex = new THREE.CanvasTexture(bumpCanvas);
-  bumpTex.wrapS = bumpTex.wrapT = THREE.RepeatWrapping;
-  bumpTex.repeat.set(L * 1.5, hz * 1.5);
-  bumpTex.colorSpace = THREE.LinearSRGBColorSpace;
- bumpTex.colorSpace = THREE.LinearSRGBColorSpace;
-  
-  const matZid = new THREE.MeshPhysicalMaterial({
-    color: 0xffffff,
-    map: tencTex,
-    roughness: 0.92,
-    bumpMap: bumpTex,
-    bumpScale: 0.015,
-    metalness: 0.0,
-    clearcoat: 0.0,
-    clearcoatRoughness: 0.0,
-  });
+  const tencTex = new THREE.CanvasTexture(tencCanvas); tencTex.wrapS = tencTex.wrapT = THREE.RepeatWrapping;
+  tencTex.repeat.set(L*2, hz*2); tencTex.colorSpace = THREE.SRGBColorSpace;
+  // Bump map tencuiala
+  const bumpCanvas = document.createElement('canvas'); bumpCanvas.width = bumpCanvas.height = 256;
+  const bctx = bumpCanvas.getContext('2d');
+  bctx.fillStyle = '#808080'; bctx.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 4000; i++) {
+    const v = 128 + (Math.random()-0.5)*20;
+    bctx.fillStyle = `rgb(${v},${v},${v})`;
+    bctx.fillRect(Math.random()*256, Math.random()*256, 1.5, 1.5);
+  }
+  const bumpTex = new THREE.CanvasTexture(bumpCanvas); bumpTex.wrapS = bumpTex.wrapT = THREE.RepeatWrapping;
+  bumpTex.repeat.set(L*2, hz*2); bumpTex.colorSpace = THREE.LinearSRGBColorSpace;
+  const matZid = new THREE.MeshStandardMaterial({ color: '#f4f1ea', map: tencTex, roughness: 0.88,
+    bumpMap: bumpTex, bumpScale: 0.008 });
+      const casa = new THREE.Mesh(new THREE.BoxGeometry(L, hz, W), matZid);
+    casa.position.y = hz / 2; casa.castShadow = true; casa.receiveShadow = true; scene.add(casa);
+  // Ferestre + usa
+  // Ferestre + usa (PBR real)
+  const matToc = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.35, metalness: 0.7 });
+  const matGeam = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.05, metalness: 0.05, clearcoat: 1, clearcoatRoughness: 0.05, envMapIntensity: 1.2, transparent: true, opacity: 0.85 });
+  const matUsa = new THREE.MeshStandardMaterial({ color: 0x4a2a1a, roughness: 0.45 });
+  // Fereastra fata cu pervaz
+  const pervaz1 = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.06, 0.08), matToc);
+  pervaz1.position.set(L * 0.35, hz * 0.55 - 0.55, W / 2 + 0.03);
+  pervaz1.castShadow = true; scene.add(pervaz1);
+  const fereastra = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.1, 0.05), matToc);
+  fereastra.position.set(L * 0.35, hz * 0.55, W / 2 + 0.02);
+  fereastra.castShadow = true; scene.add(fereastra);
+  const geamFata = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.95, 0.01), matGeam);
+  geamFata.position.set(L * 0.35, hz * 0.55, W / 2 + 0.05);
+  scene.add(geamFata);
+  // Fereastra laterala cu pervaz
+  const pervaz2 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.08, 1.0), matToc);
+  pervaz2.position.set(L / 2 + 0.03, hz * 0.55 - 0.55, -W * 0.35);
+  pervaz2.castShadow = true; scene.add(pervaz2);
+  const fereastra2 = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.1, 0.9), matToc);
+  fereastra2.position.set(L / 2 + 0.02, hz * 0.55, -W * 0.35);
+  fereastra2.castShadow = true; scene.add(fereastra2);
+  const geamLat = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.95, 0.75), matGeam);
+  geamLat.position.set(L / 2 + 0.05, hz * 0.55, -W * 0.35);
+  scene.add(geamLat);
+    const soclu = new THREE.Mesh(new THREE.BoxGeometry(L + 0.18, 0.4, W + 0.18),
+      new THREE.MeshStandardMaterial({ color: 0x3a3632, roughness: 0.8, bumpMap: bumpTex, bumpScale: 0.01 }));
+    soclu.position.y = 0.175; soclu.receiveShadow = true; scene.add(soclu);
 
-
+    const M = C.materialeMp[material] || Object.values(C.materialeMp)[0];
+    const TX = texInvelitoare(M.hex, M.tex || "tabla");
+    // Normal map procedural pentru acoperis
+  const normalCanvas = document.createElement('canvas'); normalCanvas.width = normalCanvas.height = 256;
+  const nctx = normalCanvas.getContext('2d');
+  const nimg = nctx.getImageData(0, 0, 256, 256);
+  for (let y = 0; y < 256; y++) {
+    for (let x = 0; x < 256; x++) {
+      const i = (y * 256 + x) * 4;
+      const stripe = Math.sin(y / 256 * 60) * 0.5 + 0.5;
+      const noise = ((x * 374761393 + y * 668265263 + 1274126177) ^ ((x * 374761393 + y * 668265263 + 1274126177) >> 16)) / 2147483648;
+      nimg.data[i] = 128 + (stripe + noise - 0.5) * 180;
+      nimg.data[i+1] = 128 + noise * 35;
+      nimg.data[i+2] = 255;
+      nimg.data[i+3] = 255;
+    }
+  }
+  nctx.putImageData(nimg, 0, 0);
+  const normalTex = new THREE.CanvasTexture(normalCanvas);
+  normalTex.wrapS = normalTex.wrapT = THREE.RepeatWrapping;
+  normalTex.colorSpace = THREE.LinearSRGBColorSpace;
+  
+  const matInv = new THREE.MeshPhysicalMaterial({
+      color: 0xffffff, map: TX.map, bumpMap: TX.bump, bumpScale: M.tex === "tigla" ? 0.035 : 0.02,
+      roughness: M.tex === "tigla" ? 0.8 : 0.35, metalness: M.tex === "tigla" ? 0.02 : 0.5, side: THREE.DoubleSide,
+      normalMap: normalTex, normalScale: new THREE.Vector2(0.5, 0.5),
+      clearcoat: M.tex === "tabla" ? 0.3 : 0.0,
+      clearcoatRoughness: 0.25,
+    });
     const matSub = new THREE.MeshStandardMaterial({ color: "#33302c", roughness: 0.9, side: THREE.DoubleSide });
     const y0 = hz, x0 = L / 2 + ov, z0 = W / 2 + ov, yv = y0 + hRoof + (ov * Math.tan(rad(panta)));
     const tris = [], triF = [];
