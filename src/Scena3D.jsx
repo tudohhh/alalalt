@@ -7,10 +7,6 @@ import * as THREE from "three";
 import { adaugaGradina } from "./gradina";
 import { CONFIG_ACOPERIS as C } from "../config/CONFIG";
 
-// Generează textură de pavaj (piatră cubică cu rosturi)
-
-// Generează textură de pavaj cu dale mari, relief și contrast
-
 // Generează textură de pavaj cu dale mari, relief și contrast
 function texPavaj() {
   const S = 512;
@@ -19,7 +15,6 @@ function texPavaj() {
   canvas.height = S;
   const ctx = canvas.getContext('2d');
   
-  // Canvas pentru bump map
   const bumpCanvas = document.createElement('canvas');
   bumpCanvas.width = S;
   bumpCanvas.height = S;
@@ -27,27 +22,22 @@ function texPavaj() {
   bumpCtx.fillStyle = '#808080';
   bumpCtx.fillRect(0, 0, S, S);
   
-  // Dimensiunea dalei în pixeli (mai mare pentru vizibilitate)
   const tileSize = 128;
   const gap = 6;
-  const halfTile = tileSize / 2;
   
-  // Culori pentru dale (variație)
   const colors = [
-    [180, 170, 160], // gri deschis
-    [160, 150, 140], // gri mediu
-    [140, 130, 120], // gri închis
-    [190, 180, 165], // bej
-    [170, 160, 145], // ocru
+    [180, 170, 160],
+    [160, 150, 140],
+    [140, 130, 120],
+    [190, 180, 165],
+    [170, 160, 145],
   ];
   
   for (let y = 0; y < S; y += tileSize) {
     for (let x = 0; x < S; x += tileSize) {
-      // Offset pentru aspect natural (rosturi decalate)
       const offsetX = (Math.floor(y / tileSize) % 2) * (tileSize / 2);
       const startX = x + offsetX;
       
-      // Alege o culoare aleatorie pentru dală
       const col = colors[Math.floor(Math.random() * colors.length)];
       const variation = (Math.random() - 0.5) * 30;
       const r = Math.max(0, Math.min(255, col[0] + variation));
@@ -55,7 +45,6 @@ function texPavaj() {
       const b = Math.max(0, Math.min(255, col[2] + variation * 0.9));
       ctx.fillStyle = `rgb(${r|0}, ${g|0}, ${b|0})`;
       
-      // Desenează dala cu colțuri ușor rotunjite
       const radius = 4;
       const x1 = startX + gap;
       const y1 = y + gap;
@@ -75,7 +64,6 @@ function texPavaj() {
       ctx.closePath();
       ctx.fill();
       
-      // Bump map: rosturile sunt negre, dalele sunt albe
       bumpCtx.fillStyle = '#f0f0f0';
       bumpCtx.beginPath();
       bumpCtx.moveTo(x1 + radius, y1);
@@ -90,7 +78,6 @@ function texPavaj() {
       bumpCtx.closePath();
       bumpCtx.fill();
       
-      // Adaugă textură fină pe dală (granulație)
       for (let i = 0; i < 50; i++) {
         const px = startX + gap + Math.random() * (tileSize - gap * 2);
         const py = y + gap + Math.random() * (tileSize - gap * 2);
@@ -102,7 +89,6 @@ function texPavaj() {
     }
   }
   
-  // Desenează rosturile (linii întunecate)
   ctx.strokeStyle = 'rgba(40, 35, 30, 0.7)';
   ctx.lineWidth = 4;
   for (let y = 0; y <= S; y += tileSize) {
@@ -116,7 +102,6 @@ function texPavaj() {
     }
   }
   
-  // Bump map: rosturile sunt negre
   bumpCtx.strokeStyle = '#000000';
   bumpCtx.lineWidth = 6;
   for (let y = 0; y <= S; y += tileSize) {
@@ -143,6 +128,14 @@ function texPavaj() {
   
   return { map: texture, bump: bumpTexture };
 }
+
+
+// Generează textură de pavaj (piatră cubică cu rosturi)
+
+// Generează textură de pavaj cu dale mari, relief și contrast
+
+// Generează textură de pavaj cu dale mari, relief și contrast
+
 
 ctx.fillRect(0, 0, S, S);
   
