@@ -176,6 +176,17 @@ export default function Scena3D({ cfg }) {
     const hRoof = (W / 2) * Math.tan(rad(panta));
 
     const scene = new THREE.Scene();
+
+  // Plan de sol (iarbă) - înlocuiește balta
+  const bigGround = new THREE.Mesh(
+    new THREE.PlaneGeometry(400, 400),
+    new THREE.MeshStandardMaterial({ color: 0x6a8a5a, roughness: 1 })
+  );
+  bigGround.rotation.x = -Math.PI / 2;
+  bigGround.position.y = -0.02;
+  bigGround.receiveShadow = true;
+  scene.add(bigGround);
+
     // Cer cu gradient
   const skyCanvas = document.createElement('canvas'); skyCanvas.width = 512; skyCanvas.height = 512;
   const skyCtx = skyCanvas.getContext('2d');
