@@ -203,7 +203,7 @@ export default function Scena3D({ cfg }) {
     rnd.setClearColor(0xdce8f0);
     el.appendChild(rnd.domElement);
 
-        // Dealurile au fost eliminate la cerere
+        // Dealuri eliminate
   })();
     scene.fog = new THREE.Fog("#e6eae7", 55, 170);
 
