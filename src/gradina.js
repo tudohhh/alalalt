@@ -725,7 +725,7 @@ export function adaugaGradina(scene, renderer, L, W, optiuni = {}) {
   const grup = new THREE.Group();
   grup.name = "gradina";
 
-  if (o.envMap && renderer) scene.environment = mediu(renderer);
+  // if (o.envMap && renderer) scene.environment = mediu(renderer); // TEST #2 - eliminat
 
   if (o.sol) grup.add(faSol(o.latSol, Math.max(L, W) / 2 + 20));
 
