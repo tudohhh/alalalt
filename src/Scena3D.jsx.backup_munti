@@ -584,6 +584,6 @@ export default function Scena3D({ cfg }) {
 
 // FORȚARE SETĂRI CER (suprascrie orice altceva)
 const forcedSky = new THREE.Color(0x6ba3d6);
-scene.background = new THREE.Color(0x4a90d9); // Cer albastru simplu, fără texturi
+scene.background = forcedSky;
 console.log("✅ Scena3D: background forțat la albastru");
 console.log("✅ Scena3D: tonemapping ACESFilmic, Exposure 1.5");
