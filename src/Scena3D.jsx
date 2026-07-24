@@ -191,7 +191,7 @@ export default function Scena3D({ cfg }) {
     skyCtx.fill();
   }
   const skyTex = new THREE.CanvasTexture(skyCanvas); skyTex.colorSpace = THREE.SRGBColorSpace;
-  scene.background = skyTex; skyTex.minFilter = THREE.LinearFilter; skyTex.magFilter = THREE.LinearFilter;
+  scene.background = new THREE.Color(0x87CEEB); // cer albastru simplu (TEST)
     const cam = new THREE.PerspectiveCamera(38, Wpx / Hpx, 0.1, 400);
     const rnd = new THREE.WebGLRenderer({ antialias: true });
     rnd.setPixelRatio(Math.min(window.devicePixelRatio, 2)); rnd.setSize(Wpx, Hpx);
