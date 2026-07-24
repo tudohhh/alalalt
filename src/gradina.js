@@ -126,96 +126,6 @@ function texturaFrunza(tip, seed) {
   return new THREE.CanvasTexture(cv);
 }
 
-
-
-
-
-/* ---------- flori ---------- */
-function adaugaFlori(scene, L, W) {
-  const group = new THREE.Group();
-  const colors = [
-    0xff4d4d, // roșu
-    0xffd700, // galben
-    0x9b59b6, // mov
-    0xff69b4, // roz
-    0xffffff  // alb
-  ];
-  
-  const numFlori = 80 + Math.floor(Math.random() * 40);
-  
-  for (let i = 0; i < numFlori; i++) {
-    // Poziție aleatorie în curte (evită casa, pavajul și aleea)
-    const x = (Math.random() - 0.5) * (L + 14);
-    const z = (Math.random() - 0.5) * (W + 14);
-    
-    // 1. Exclude suprafața casei + pavajul lat de 2.5 unități în jur
-    if (Math.abs(x) < L / 2 + 2.5 && Math.abs(z) < W / 2 + 2.5) continue;
-    
-    // 2. Exclude aleea (dreptunghi în fața casei, de la z = W/2 - 0.5 până la W/2 + 6)
-    //    și pe toată lățimea aleii (x între -3 și 1)
-    if (z > W / 2 - 0.5 && z < W / 2 + 6 && x > -3.0 && x < 1.0) continue;
-    
-    // 3. Exclude zonele prea apropiate de gard (pentru a nu clipa)
-    if (Math.abs(x) > L / 2 + 6.0 || Math.abs(z) > W / 2 + 6.0) continue;
-    
-    const color = colors[Math.floor(Math.random() * colors.length)];
-    
-    // Tulpină
-    const stem = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.015, 0.02, 0.15 + Math.random() * 0.15, 4),
-      new THREE.MeshStandardMaterial({ color: 0x2d5a27, roughness: 1 })
-    );
-    stem.position.set(x, 0.08, z);
-    stem.rotation.x = (Math.random() - 0.5) * 0.2;
-    stem.rotation.z = (Math.random() - 0.5) * 0.2;
-    stem.castShadow = true;
-    group.add(stem);
-    
-    // Petale (4 petale simple)
-    const petalMat = new THREE.MeshStandardMaterial({ 
-      color: color, 
-      roughness: 0.6,
-      side: THREE.DoubleSide
-    });
-    const petalGeo = new THREE.SphereGeometry(0.04 + Math.random() * 0.02, 5, 4);
-    petalGeo.scale(1, 0.3, 1);
-    
-    for (let j = 0; j < 4; j++) {
-      const angle = (j / 4) * Math.PI * 2 + Math.random() * 0.2;
-      const petal = new THREE.Mesh(petalGeo, petalMat);
-      petal.position.set(
-        x + Math.cos(angle) * 0.04,
-        0.15 + Math.random() * 0.05,
-        z + Math.sin(angle) * 0.04
-      );
-      petal.rotation.x = (Math.random() - 0.5) * 0.3;
-      petal.rotation.y = angle;
-      petal.rotation.z = (Math.random() - 0.5) * 0.3;
-      petal.castShadow = true;
-      group.add(petal);
-    }
-    
-    // Centru
-    const center = new THREE.Mesh(
-      new THREE.SphereGeometry(0.02, 6, 4),
-      new THREE.MeshStandardMaterial({ 
-        color: 0xffcc00, 
-        roughness: 0.8,
-        emissive: 0xcc9900,
-        emissiveIntensity: 0.1
-      })
-    );
-    center.position.set(x, 0.18 + Math.random() * 0.04, z);
-    center.castShadow = true;
-    group.add(center);
-  }
-  
-  scene.add(group);
-  return group;
-}
-
-
-
 function texIarba() {
   const c = document.createElement("canvas");
   c.width = c.height = 128;
@@ -639,10 +549,10 @@ function generaCopac(p, seed) {
 
 /* ---------- specii si compozitie ---------- */
 const SPECII = {
-  Fag: { tip: "foios", inaltime: 5.5, latime: 1.8, grosime: 0.16, ramificatii: 5, deschidere: 42, umbrire: 0.55, frunzePerVarf: 16, marimeFrunza: 0.72, culoareFrunze: "#6d7d54", culoareTrunchi: "#6b5a48", variatieCuloare: 0.06 },
-  Brad: { tip: "brad", inaltime: 7, latime: 1.7, grosime: 0.13, ramificatii: 5, deschidere: 42, umbrire: 0.55, frunzePerVarf: 16, marimeFrunza: 0.57, culoareFrunze: "#3c4a3a", culoareTrunchi: "#4a3c30", variatieCuloare: 0.05 },
-  Plop: { tip: "plop", inaltime: 9, latime: 1.1, grosime: 0.15, ramificatii: 5, deschidere: 30, umbrire: 0.55, frunzePerVarf: 16, marimeFrunza: 0.70, culoareFrunze: "#78875e", culoareTrunchi: "#7a6a55", variatieCuloare: 0.07 },
-  Tufa: { tip: "tufa", inaltime: 1.6, latime: 0.9, grosime: 0.1, ramificatii: 4, deschidere: 55, umbrire: 0.55, frunzePerVarf: 20, marimeFrunza: 0.60, culoareFrunze: "#5f6e4c", culoareTrunchi: "#5a4a3a", variatieCuloare: 0.09 },
+  Fag: { tip: "foios", inaltime: 5.5, latime: 1.8, grosime: 0.16, ramificatii: 5, deschidere: 42, umbrire: 0.55, frunzePerVarf: 4, marimeFrunza: 0.42, culoareFrunze: "#6d7d54", culoareTrunchi: "#6b5a48", variatieCuloare: 0.06 },
+  Brad: { tip: "brad", inaltime: 7, latime: 1.7, grosime: 0.13, ramificatii: 5, deschidere: 42, umbrire: 0.55, frunzePerVarf: 4, marimeFrunza: 0.34, culoareFrunze: "#3c4a3a", culoareTrunchi: "#4a3c30", variatieCuloare: 0.05 },
+  Plop: { tip: "plop", inaltime: 9, latime: 1.1, grosime: 0.15, ramificatii: 5, deschidere: 30, umbrire: 0.55, frunzePerVarf: 4, marimeFrunza: 0.36, culoareFrunze: "#78875e", culoareTrunchi: "#7a6a55", variatieCuloare: 0.07 },
+  Tufa: { tip: "tufa", inaltime: 1.6, latime: 0.9, grosime: 0.1, ramificatii: 4, deschidere: 55, umbrire: 0.55, frunzePerVarf: 5, marimeFrunza: 0.26, culoareFrunze: "#5f6e4c", culoareTrunchi: "#5a4a3a", variatieCuloare: 0.09 },
 };
 
 // Soarele: key la (L*1.7, ..., W*0.3) => elevatie ~34 grade, umbrele cad spre -X.
@@ -653,12 +563,14 @@ const COMPOZITIE = [
   { specie: "Fag", x: -11.5, z: -4.5, scara: 0.75, rot: 2.1, seed: 5518 },
   { specie: "Fag", x: -10.5, z: 6.5, scara: 1.1, rot: 0.9, seed: 7734 },
   { specie: "Fag", x: -13.2, z: 9.5, scara: 0.62, rot: 3.4, seed: 1287 },
+  { specie: "Tufa", x: -7.9, z: 6.5, scara: 1, rot: 0.2, seed: 9021 },
   { specie: "Fag", x: 12.5, z: 8, scara: 0.85, rot: 1.7, seed: 4460 },
+  { specie: "Tufa", x: 7.6, z: 6.3, scara: 1, rot: 2.6, seed: 6103 },
   { specie: "Fag", x: 13.5, z: -9, scara: 0.7, rot: 4.2, seed: 8875 },
-  { specie: "Tufa", x: -4.0, z: -7.0, scara: 0.8, rot: 1.1, seed: 9021 },
-  { specie: "Tufa", x:  4.0, z: -7.0, scara: 0.8, rot: 4.2, seed: 8875 },
-  { specie: "Tufa", x: -5.5, z: 8.0, scara: 0.9, rot: 0.0, seed: 3741 },
-  { specie: "Tufa", x:  2.0, z: 8.0, scara: 0.9, rot: 3.14, seed: 5960 },
+  { specie: "Tufa", x: 8.2, z: -6.6, scara: 0.9, rot: 5.1, seed: 2298 },
+  { specie: "Tufa", x: -3.7, z: 7.2, scara: 0.85, rot: 1.1, seed: 3741 },
+  { specie: "Tufa", x: -0.7, z: 8.8, scara: 0.7, rot: 4.8, seed: 5960 },
+  { specie: "Tufa", x: -3.9, z: 11, scara: 1, rot: 2.2, seed: 7182 },
 ];
 
 /* ---------- iarba ---------- */
@@ -679,8 +591,6 @@ function geoIarba(L, W, dens, seed) {
       if (Math.abs(jx - ax) < 1.15 && jz > az0 && jz < az1) continue;
       const marg = Math.max(Math.abs(jx) / fx, Math.abs(jz) / fz);
       const hb = (0.085 + r() * 0.075) * (1 + Math.pow(marg, 5) * 2.4);
-        const variatieCuloare = (r() - 0.5) * 0.15;
-        const variatieInaltime = 0.7 + r() * 0.6;
       const d = Math.hypot(jx, jz);
       const cet = Math.min(0.3, Math.max(0, (d - 9) / 44));
       for (let q = 0; q < 3; q++) {
@@ -973,11 +883,6 @@ export function adaugaGradina(scene, renderer, L, W, optiuni = {}) {
     );
     m.receiveShadow = true;
     grup.add(m);
-  }
-    
-  // Adaugă flori
-  if (o.flori !== false) {
-    adaugaFlori(grup, L, W);
   }
 
   /* --- gard --- */
