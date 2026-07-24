@@ -203,21 +203,7 @@ export default function Scena3D({ cfg }) {
     rnd.setClearColor(0xdce8f0);
     el.appendChild(rnd.domElement);
 
-    // Dealuri cetoase in departare (se topesc in ceata)
-  (function(){
-    const c=document.createElement('canvas'); c.width=1024; c.height=256; const x=c.getContext('2d');
-    for(let layer=1;layer>=0;layer--){
-      const baseY=95+layer*38, amp=32-layer*12, col=layer===0?'#8ba06d':'#a3b090';
-      x.beginPath(); x.moveTo(0,256);
-      for(let px=0;px<=1024;px+=14){ const y=baseY+Math.sin(px*0.008+layer*2.3)*amp+Math.sin(px*0.021+layer)*11; x.lineTo(px,y); }
-      x.lineTo(1024,256); x.closePath();
-      const g=x.createLinearGradient(0,baseY-amp,0,256);
-      g.addColorStop(0,'rgba(230,234,231,0.95)'); g.addColorStop(1,col);
-      x.fillStyle=g; x.globalAlpha=layer===0?1:0.8; x.fill();
-    }
-    const t=new THREE.CanvasTexture(c); if("colorSpace" in t)t.colorSpace=THREE.SRGBColorSpace;
-    const m=new THREE.Mesh(new THREE.PlaneGeometry(320,80), new THREE.MeshBasicMaterial({map:t,transparent:true,depthWrite:false,fog:false}));
-    m.position.set(0,22,-95); scene.add(m);
+        // Dealurile au fost eliminate
   })();
     scene.fog = new THREE.Fog("#e6eae7", 55, 170);
 
