@@ -130,6 +130,10 @@ function texPavaj() {
 }
 
 
+// Generează textură de pavaj cu dale mari, relief și contrast
+
+
+
 // Generează textură de pavaj (piatră cubică cu rosturi)
 
 // Generează textură de pavaj cu dale mari, relief și contrast
