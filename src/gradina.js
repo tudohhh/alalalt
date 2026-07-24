@@ -332,8 +332,7 @@ function faSol(latura, razaPlata) {
 
 /* ---------- generator de copac ---------- */
 function generaCopac(p, seed) {
-  const r = rng(seed + 999); // generator local pentru variație
-  const r = rng(seed);
+    const r = rng(seed);
   const H = p.inaltime * (0.88 + r() * 0.24);
   const umbra = p.umbrire;
   const ace = p.tip === "brad";
