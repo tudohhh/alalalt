@@ -58,19 +58,7 @@ export default function App() {
 
   return (
     <div style={{ position: "relative", width: "100vw", height: "100vh", overflow: "hidden", fontFamily: "system-ui,sans-serif", color: "#22282e", background: "#dfe9ee" }}>
-      <div style={{ position: "absolute", inset: 0 }}><div style={{ width: "100%", height: "100%", background: "#1a1a2e", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
-      {(() => {
-        try {
-          return <Scena3D cfg={cfg} />;
-        } catch (e) {
-          return <div style={{ padding: 20, textAlign: "center" }}>
-            <h2>⚠️ Eroare la încărcarea scenei 3D</h2>
-            <p style={{ color: "#ff6b6b" }}>{e.message}</p>
-            <p style={{ fontSize: 12, color: "#aaa" }}>Verifică consola browserului (F12)</p>
-          </div>;
-        }
-      })()}
-    </div></div>
+      <div style={{ position: "absolute", inset: 0 }}><Scena3D cfg={cfg} /></div>
 
       <div className="fz-panel" style={{ position: "absolute", top: 16, left: 18 }}>
         <div style={{ fontFamily: DISPLAY, fontSize: 22, fontWeight: 700, textShadow: "0 1px 0 rgba(255,255,255,.6)" }}>{C.companyName}</div>
