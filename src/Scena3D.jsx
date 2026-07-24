@@ -300,7 +300,7 @@ export default function Scena3D({ cfg }) {
   bigGround.rotation.x = -Math.PI / 2; bigGround.position.y = -0.02; bigGround.receiveShadow = true;
   scene.add(bigGround);
     const apron = new THREE.Mesh(new THREE.PlaneGeometry(L + 3.2, W + 3.2),
-      new THREE.MeshStandardMaterial({ color: "#c7c2b5", roughness: 0.95 }));
+      new THREE.MeshStandardMaterial({ map: texPavaj(), roughness: 0.85, metalness: 0.05 }));
     apron.rotation.x = -Math.PI / 2; apron.position.y = 0.012; apron.receiveShadow = true; scene.add(apron);
     const bordT = new THREE.Mesh(new THREE.PlaneGeometry(L + 3.9, W + 3.9),
       (() => {
@@ -324,7 +324,7 @@ export default function Scena3D({ cfg }) {
   })());
     bordT.rotation.x = -Math.PI / 2; bordT.position.y = 0.008; bordT.receiveShadow = true; scene.add(bordT);
     const alee = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 7),
-      new THREE.MeshStandardMaterial({ color: "#bdb7a9", roughness: 0.95 }));
+      new THREE.MeshStandardMaterial({ map: texPavaj(), roughness: 0.85, metalness: 0.05 }));
     alee.rotation.x = -Math.PI / 2; alee.position.set(-L / 5, 0.013, W / 2 + 3.5 + 1.6); scene.add(alee);
     const uc = new THREE.Mesh(new THREE.PlaneGeometry(L + 5, W + 5),
       new THREE.MeshBasicMaterial({ map: umbraContact(), transparent: true, depthWrite: false }));
