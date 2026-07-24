@@ -1,4 +1,7 @@
+// BACKUP 20.07.2026 — src/Scena3D.jsx FINAL (configurator acoperis v1)
+// Include: texturi procedurale+bump, sRGB, UV pe linia pantei, ocluzie
 // streasina, pazii+hip ridges, horn, lumina laterala ierarhizata, vigneta.
+// Structura proiect: vezi acoperis-REPRODUCERE.txt
 import React, { useRef, useEffect } from "react";
 import * as THREE from "three";
 import { adaugaGradina } from "./gradina";
@@ -188,7 +191,7 @@ export default function Scena3D({ cfg }) {
     skyCtx.fill();
   }
   const skyTex = new THREE.CanvasTexture(skyCanvas); skyTex.colorSpace = THREE.SRGBColorSpace;
-  // background setat forțat mai jos skyTex.minFilter = THREE.LinearFilter; skyTex.magFilter = THREE.LinearFilter;
+  scene.background = skyTex; skyTex.minFilter = THREE.LinearFilter; skyTex.magFilter = THREE.LinearFilter;
     const cam = new THREE.PerspectiveCamera(38, Wpx / Hpx, 0.1, 400);
     const rnd = new THREE.WebGLRenderer({ antialias: true });
     rnd.setPixelRatio(Math.min(window.devicePixelRatio, 2)); rnd.setSize(Wpx, Hpx);
@@ -196,10 +199,10 @@ export default function Scena3D({ cfg }) {
     rnd.shadowMap.autoUpdate = false; rnd.shadowMap.autoUpdate = false;
     if ("outputColorSpace" in rnd) rnd.outputColorSpace = THREE.SRGBColorSpace;
     rnd.toneMapping = THREE.ACESFilmicToneMapping;
-    rnd.toneMappingExposure = 1.5;
-    // else rnd.outputEncoding = THREE.sRGBEncoding;
+    rnd.toneMappingExposure = 1.0;
+    else rnd.outputEncoding = THREE.sRGBEncoding;
     rnd.toneMapping = THREE.ACESFilmicToneMapping;
-  rnd.toneMappingExposure = 1.5;
+  rnd.toneMappingExposure = 1.4;
     rnd.setClearColor(0xdce8f0);
     el.appendChild(rnd.domElement);
 
@@ -581,9 +584,3 @@ export default function Scena3D({ cfg }) {
     </div>
   );
 }
-
-// FORȚARE SETĂRI CER (suprascrie orice altceva)
-const forcedSky = new THREE.Color(0x6ba3d6);
-scene.background = forcedSky;
-console.log("✅ Scena3D: background forțat la albastru");
-console.log("✅ Scena3D: tonemapping ACESFilmic, Exposure 1.5");
