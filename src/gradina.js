@@ -745,7 +745,7 @@ export function adaugaGradina(scene, renderer, L, W, optiuni = {}) {
         par.marimeFrunza *= Math.sqrt(c.scara);
         const d = Math.hypot(c.x, c.z);
         const cet = Math.min(0.28, Math.max(0, (d - 6) / 38));
-        const cf = new THREE.Color(par.culoareFrunze).lerp(new THREE.Color("#e6eae7"), cet);
+        const cf = new THREE.Color(par.culoareFrunze).lerp(new THREE.Color("#4a7a4a"), cet);
     // Variație individuală pentru fiecare plantă
     const hueShift = (r() - 0.5) *  0.15;
     const satShift = (r() - 0.5) *  0.8;
