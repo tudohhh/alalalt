@@ -224,10 +224,7 @@ export default function Scena3D({ cfg }) {
       new THREE.MeshStandardMaterial({ map: texTeren(), roughness: 1 }));
     teren.rotation.x = -Math.PI / 2; teren.receiveShadow = true; scene.add(teren);
   // Plan imens pentru continuitate
-  const bigGround = new THREE.Mesh(new THREE.PlaneGeometry(400, 400),
-    new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.95 }));
-  bigGround.rotation.x = -Math.PI / 2; bigGround.position.y = -0.02; bigGround.receiveShadow = true;
-  scene.add(bigGround);
+  // bigGround eliminat (balta)
     const apron = new THREE.Mesh(new THREE.PlaneGeometry(L + 3.2, W + 3.2),
       new THREE.MeshStandardMaterial({ map: texPavaj().map, bumpMap: texPavaj().bump, bumpScale: 0.04, roughness: 0.8, metalness: 0.05 }));
     apron.rotation.x = -Math.PI / 2; apron.position.y = 0.012; apron.receiveShadow = true; scene.add(apron);
