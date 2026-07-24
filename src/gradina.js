@@ -287,19 +287,92 @@ function texMacro() {
 
 /* ---------- solul: detaliu fin + macro + stingere spre orizont ---------- */
 
+
 function faSol(latura, razaPlata) {
-  // Înlocuiește textura de iarbă cu un plan simplu de culoare verde naturală
-  const geometry = new THREE.PlaneGeometry(latura, latura);
-  const material = new THREE.MeshStandardMaterial({ 
-    color: 0x6a8a5a, 
-    roughness: 1 
+  const G = texGazon();
+  const rep = latura / 12.0;
+  G.map.repeat.set(rep, rep);
+  G.bump.repeat.set(rep, rep);
+  const mac = texMacro();
+
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    map: G.map,
+    bumpMap: G.bump,
+    bumpScale: 0.12,
+    roughness: 1,
+    metalness: 0,
   });
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.rotation.x = -Math.PI / 2;
-  mesh.position.y = 0;
-  mesh.receiveShadow = true;
-  return mesh;
+
+  mat.onBeforeCompile = (sh) => {
+    sh.uniforms.uMacro = { value: mac };
+    sh.uniforms.uDet = { value: G.map };
+
+    sh.vertexShader = sh.vertexShader.replace(
+      "#include <common>",
+      "#include <common>
+ varying vec3 vWPos;"
+    );
+    sh.vertexShader = sh.vertexShader.replace(
+      "#include <begin_vertex>",
+      "#include <begin_vertex>
+ vWPos = (modelMatrix * vec4(transformed,1.0)).xyz;"
+    );
+
+    sh.fragmentShader = sh.fragmentShader.replace(
+      "#include <common>",
+      `#include <common>
+       uniform sampler2D uMacro;
+       uniform sampler2D uDet;
+       varying vec3 vWPos;`
+    );
+
+    sh.fragmentShader = sh.fragmentShader.replace(
+      "#include <map_fragment>",
+      `vec2 wxz = vWPos.xz;
+       float dOriz = length(wxz);
+
+       vec2 wp  = (vec2(texture2D(uMacro, wxz * 0.0090).r,
+                        texture2D(uMacro, wxz * 0.0090 + vec2(0.5)).r) - 0.5) * 3.4;
+       vec2 wp2 = (vec2(texture2D(uMacro, wxz * 0.0031).r,
+                        texture2D(uMacro, wxz * 0.0031 + vec2(0.5)).r) - 0.5) * 9.0;
+
+       vec3 baza = texture2D(uDet, (wxz + wp) / 12.0).rgb;
+       vec3 dep  = texture2D(uDet, (wxz + wp2) / 42.36).rgb;
+       baza = mix(baza, dep, smoothstep(18.0, 80.0, dOriz));
+
+       vec3 m1 = texture2D(uMacro, wxz * 0.03000).rgb;
+       vec3 m2 = texture2D(uMacro, wxz * 0.09000 + vec2(0.37, 0.61)).rgb;
+       baza *= (0.00 + m1 * 1.00) * (0.30 + m2 * 0.70);
+
+       baza = mix(baza, vec3(0.575, 0.60, 0.545), smoothstep(45.0, 260.0, dOriz));
+       diffuseColor.rgb *= baza;`
+    );
+    mat.userData.sh = sh;
+  };
+
+  // Geometrie cu denivelări (pentru smocuri)
+  const geo = new THREE.PlaneGeometry(latura, latura, 160, 160);
+  const po = geo.attributes.position;
+  for (let i = 0; i < po.count; i++) {
+    const px = po.getX(i), py = po.getY(i);
+    const d = Math.hypot(px, py);
+    const k = Math.min(1, Math.max(0, (d - razaPlata) / 45));
+    const h =
+      Math.sin(px * 0.035 + py * 0.021) * 1.35 +
+      Math.sin(px * 0.011 - py * 0.017) * 2.4 +
+      Math.sin(px * 0.083 + py * 0.061) * 0.42;
+    po.setZ(i, h * k * k);
+  }
+  geo.computeVertexNormals();
+
+  const m = new THREE.Mesh(geo, mat);
+  m.rotation.x = -Math.PI / 2;
+  m.position.y = 0.004;
+  m.receiveShadow = true;
+  return m;
 }
+
 
 
 /* ---------- generator de copac: intoarce ARRAYS, nu obiecte 3D ---------- */
