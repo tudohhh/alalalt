@@ -252,8 +252,78 @@ function texContact() {
 
 
 /* ---------- gazon: textura de detaliu, cusuta la margini ---------- */
-// texGazon eliminat (nu mai e folosit)
-function texGazon() { return { map: null, bump: null }; }
+function texGazon() {
+  const S = 1024;
+  const c = document.createElement("canvas");
+  c.width = c.height = S;
+  const x = c.getContext("2d");
+  // canvas separat pentru relief: alb = fir ridicat, negru = pamant
+  const b = document.createElement("canvas");
+  b.width = b.height = S;
+  const bx = b.getContext("2d");
+
+  x.fillStyle = "#55643f";
+  x.fillRect(0, 0, S, S);
+  bx.fillStyle = "#2a2a2a";
+  bx.fillRect(0, 0, S, S);
+
+  const tonuri = ["#6d7c50", "#586740", "#77865c", "#4d5a36", "#7f8d64", "#657449", "#8a976f", "#909d74"];
+
+  const fir = (px, py, ang, len, w, col, lum) => {
+    x.strokeStyle = col;
+    x.lineWidth = w;
+    x.lineCap = "round";
+    x.beginPath();
+    x.moveTo(px, py);
+    x.lineTo(px + Math.cos(ang) * len, py + Math.sin(ang) * len);
+    x.stroke();
+    bx.strokeStyle = "rgba(255,255,255," + lum + ")";
+    bx.lineWidth = w;
+    bx.lineCap = "round";
+    bx.beginPath();
+    bx.moveTo(px, py);
+    bx.lineTo(px + Math.cos(ang) * len, py + Math.sin(ang) * len);
+    bx.stroke();
+  };
+
+  for (let i = 0; i < 300; i++) {
+    const px = Math.random() * S, py = Math.random() * S;
+    const rr = 20 + Math.random() * 85;
+    const g = x.createRadialGradient(px, py, 0, px, py, rr);
+    const inchis = Math.random() < 0.55;
+    g.addColorStop(0, inchis ? "rgba(36,48,26,0.32)" : "rgba(165,180,130,0.24)");
+    g.addColorStop(1, "rgba(0,0,0,0)");
+    x.fillStyle = g;
+    x.fillRect(px - rr, py - rr, rr * 2, rr * 2);
+  }
+
+  // trei straturi: firele scurte umplu fundalul, cele lungi dau silueta
+  const straturi = [
+    { n: 26000, lmin: 3, lvar: 5, wmin: 0.7, wvar: 0.9, lum: 0.35 },
+    { n: 18000, lmin: 7, lvar: 9, wmin: 1.0, wvar: 1.3, lum: 0.6 },
+    { n: 8000, lmin: 12, lvar: 13, wmin: 1.3, wvar: 1.6, lum: 0.95 },
+  ];
+  for (const st of straturi)
+    for (let i = 0; i < st.n; i++) {
+      const px = Math.random() * S, py = Math.random() * S;
+      const ang = -Math.PI / 2 + (Math.random() - 0.5) * 1.8;
+      const len = st.lmin + Math.random() * st.lvar;
+      const w = st.wmin + Math.random() * st.wvar;
+      const col = tonuri[(Math.random() * tonuri.length) | 0];
+      if (px < 30 || px > S - 30 || py < 30 || py > S - 30) {
+        for (const dx of [-S, 0, S])
+          for (const dy of [-S, 0, S]) fir(px + dx, py + dy, ang, len, w, col, st.lum);
+      } else fir(px, py, ang, len, w, col, st.lum);
+    }
+
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.anisotropy = 16;
+  const tb = new THREE.CanvasTexture(b);
+  tb.wrapS = tb.wrapT = THREE.RepeatWrapping;
+  tb.anisotropy = 8;
+  return { map: srgb(t), bump: tb };
+}
 
 /* ---------- macro-variatie: sparge repetitia dalei ---------- */
 function texMacro() {
@@ -286,8 +356,6 @@ function texMacro() {
 }
 
 /* ---------- solul: detaliu fin + macro + stingere spre orizont ---------- */
-
-
 function faSol(latura, razaPlata) {
   const G = texGazon();
   const rep = latura / 12.0;
@@ -297,6 +365,8 @@ function faSol(latura, razaPlata) {
 
   const mat = new THREE.MeshStandardMaterial({
     color: 0xffffff,
+    // `map` trebuie sa existe ca three sa includa <map_fragment> in shader.
+    // Nu e citit direct: codul de mai jos il inlocuieste cu dala rotita.
     map: G.map,
     bumpMap: G.bump,
     bumpScale: 0.12,
@@ -308,15 +378,17 @@ function faSol(latura, razaPlata) {
     sh.uniforms.uMacro = { value: mac };
     sh.uniforms.uDet = { value: G.map };
 
+    // ATENTIE: uniformele si functiile NU se pun inaintea shaderului. Prefixul
+    // three contine `precision`, iar orice `float` declarat mai devreme e
+    // eroare de compilare — de aceea iesea o pata verde. Locul lor e dupa
+    // <include common>, unde precizia e deja declarata.
     sh.vertexShader = sh.vertexShader.replace(
       "#include <common>",
-      "#include <common>",
-      "varying vec3 vWPos;"
+      "#include <common>\n varying vec3 vWPos;"
     );
     sh.vertexShader = sh.vertexShader.replace(
       "#include <begin_vertex>",
-      "#include <begin_vertex>",
-      "vWPos = (modelMatrix * vec4(transformed,1.0)).xyz;"
+      "#include <begin_vertex>\n vWPos = (modelMatrix * vec4(transformed,1.0)).xyz;"
     );
 
     sh.fragmentShader = sh.fragmentShader.replace(
@@ -332,15 +404,23 @@ function faSol(latura, razaPlata) {
       `vec2 wxz = vWPos.xz;
        float dOriz = length(wxz);
 
+       // 1. DEFORMARE UV: coordonatele se deplaseaza cu un zgomot lent inainte
+       //    de citire. Grila nu mai e dreapta nicaieri, deci nu exista aliniere
+       //    de recunoscut. Spre deosebire de dalele rotite, deformarea e
+       //    continua, deci nu apar cusaturi la marginea zonelor.
        vec2 wp  = (vec2(texture2D(uMacro, wxz * 0.0090).r,
                         texture2D(uMacro, wxz * 0.0090 + vec2(0.5)).r) - 0.5) * 3.4;
        vec2 wp2 = (vec2(texture2D(uMacro, wxz * 0.0031).r,
                         texture2D(uMacro, wxz * 0.0031 + vec2(0.5)).r) - 0.5) * 9.0;
 
+       // 2. DOUA SCARI: dala de 12 m aproape, de 42 m departe. Perioadele nu
+       //    se divid una pe alta, deci nu se pot suprapune.
        vec3 baza = texture2D(uDet, (wxz + wp) / 12.0).rgb;
        vec3 dep  = texture2D(uDet, (wxz + wp2) / 42.36).rgb;
        baza = mix(baza, dep, smoothstep(18.0, 80.0, dOriz));
 
+       // 3. DOUA SCARI DE MACRO, la 33 m si 11 m, decalate. Cu una singura,
+       //    dalele se realiniaza cu ea si grila reapare in departare.
        vec3 m1 = texture2D(uMacro, wxz * 0.03000).rgb;
        vec3 m2 = texture2D(uMacro, wxz * 0.09000 + vec2(0.37, 0.61)).rgb;
        baza *= (0.00 + m1 * 1.00) * (0.30 + m2 * 0.70);
@@ -351,7 +431,9 @@ function faSol(latura, razaPlata) {
     mat.userData.sh = sh;
   };
 
-  // Geometrie cu denivelări (pentru smocuri)
+  // DENIVELARI. Un plan perfect orizontal nu poate avea relief: lumina cade
+  // identic peste tot. Ridic terenul cu unde line, dar numai in afara curtii,
+  // altfel casa, gardul si aleea ar ramane in aer.
   const geo = new THREE.PlaneGeometry(latura, latura, 160, 160);
   const po = geo.attributes.position;
   for (let i = 0; i < po.count; i++) {
@@ -372,8 +454,6 @@ function faSol(latura, razaPlata) {
   m.receiveShadow = true;
   return m;
 }
-
-
 
 /* ---------- generator de copac: intoarce ARRAYS, nu obiecte 3D ---------- */
 function generaCopac(p, seed) {
@@ -872,7 +952,28 @@ export function adaugaGradina(scene, renderer, L, W, optiuni = {}) {
   }
 
   /* --- iarba --- */
-  // if (o.iarba) { ... } // eliminat (iarba 3D)
+  if (o.iarba) {
+    const cheie = L + "x" + W + "x" + o.densIarba;
+    if (!CACHE_IARBA || CACHE_IARBA.cheie !== cheie)
+      CACHE_IARBA = { cheie, geo: geoIarba(L, W, o.densIarba, 4242) };
+    const m = new THREE.Mesh(
+      CACHE_IARBA.geo,
+      cuVant(
+        new THREE.MeshStandardMaterial({
+          color: "#6f7f57",
+          map: T.iarba,
+          alphaMap: T.iarba,
+          alphaTest: 0.35,
+          side: THREE.DoubleSide,
+          roughness: 1,
+          vertexColors: true,
+        }),
+        0.075
+      )
+    );
+    m.receiveShadow = true;
+    grup.add(m);
+  }
     
   // Adaugă flori
   if (o.flori !== false) {
