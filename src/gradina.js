@@ -822,7 +822,7 @@ function adaugaFlori(scene, L, W) {
 }
 
 
-function adaugaGradina(scene, renderer, L, W, optiuni = {}) {
+export function adaugaGradina(scene, renderer, L, W, optiuni = {}) {
   const o = Object.assign(
     { copaci: true, iarba: true, gard: true, sol: true, densIarba: 9000, latSol: 400, envMap: true },
     optiuni
