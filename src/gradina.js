@@ -567,7 +567,7 @@ const COMPOZITIE = [
   { specie: "Fag", x: 13.5, z: -9, scara: 0.7, rot: 4.2, seed: 8875 },
   { specie: "Tufa", x: -4.0, z: -7.0, scara: 0.8, rot: 1.1, seed: 9021 },
   { specie: "Tufa", x:  4.0, z: -7.0, scara: 0.8, rot: 4.2, seed: 8875 },
-  { specie: "Tufa", x: -2.0, z: 8.0, scara: 0.9, rot: 0.0, seed: 3741 },
+  { specie: "Tufa", x: -5.5, z: 8.0, scara: 0.9, rot: 0.0, seed: 3741 },
   { specie: "Tufa", x:  2.0, z: 8.0, scara: 0.9, rot: 3.14, seed: 5960 },
 ];
 
