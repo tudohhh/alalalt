@@ -178,14 +178,7 @@ export default function Scena3D({ cfg }) {
     const scene = new THREE.Scene();
 
   // Plan de sol (iarbă) - înlocuiește balta
-  const bigGround = new THREE.Mesh(
-    new THREE.PlaneGeometry(400, 400),
-    new THREE.MeshStandardMaterial({ color: 0x6a8a5a, roughness: 1 })
-  );
-  bigGround.rotation.x = -Math.PI / 2;
-  bigGround.position.y = -0.02;
-  bigGround.receiveShadow = true;
-  scene.add(bigGround);
+  // bigGround eliminat
 
     // Cer cu gradient
   const skyCanvas = document.createElement('canvas'); skyCanvas.width = 512; skyCanvas.height = 512;
@@ -231,7 +224,16 @@ export default function Scena3D({ cfg }) {
   })();
     scene.fog = new THREE.Fog("#e6eae7", 55, 170);
 
-    const teren = new THREE.Mesh(new THREE.PlaneGeometry(320, 320),
+  // Plan de sol principal
+  const teren = new THREE.Mesh(
+    new THREE.PlaneGeometry(320, 320),
+    new THREE.MeshStandardMaterial({ color: 0x6a8a5a, roughness: 1 })
+  );
+  teren.rotation.x = -Math.PI / 2;
+  teren.position.y = 0;
+  teren.receiveShadow = true;
+  scene.add(teren);
+const teren = new THREE.Mesh(new THREE.PlaneGeometry(320, 320),
       new THREE.MeshStandardMaterial({ map: texTeren(), roughness: 1 }));
     teren.rotation.x = -Math.PI / 2; teren.receiveShadow = true; scene.add(teren);
   // Plan imens pentru continuitate
