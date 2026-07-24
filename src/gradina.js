@@ -749,7 +749,7 @@ export function adaugaGradina(scene, renderer, L, W, optiuni = {}) {
         const cf = new THREE.Color(par.culoareFrunze).lerp(new THREE.Color("#e6eae7"), cet);
     // Variație aleatorie de culoare (verde mai deschis/închis)
     const cVar = (r() - 0.5) * 0.1;
-    cf.offsetHSL(0, cVar * 0.3, cVar * 0.15);
+    cf.offsetHSL(0, cVar * 0.5, cVar * 0.25);
         return Object.assign({}, c, {
           date: generaCopac(par, c.seed),
           culoareFrunze: cf.getHex(),
