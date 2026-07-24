@@ -43,94 +43,140 @@ function shade(hex, f) {
   return `rgb(${r | 0},${g | 0},${b | 0})`;
 }
 
+
 function texInvelitoare(hex, tip) {
-  const S = 512;
-  const c = document.createElement("canvas"); c.width = c.height = S;
+  const S = 1024; // rezoluție dublă
+  const c = document.createElement("canvas");
+  c.width = c.height = S;
   const x = c.getContext("2d");
   
-  // Noise simplu
-  const hash = (a, b) => { let h = a*374761393+b*668265263+1274126177; h=(h^(h>>13))*1274126177; return (h^(h>>16))/2147483648; };
-  
-  // Gradient de bază cu noise
+  // Fundal cu gradient fin și zgomot
   const img = x.getImageData(0, 0, S, S);
+  const data = img.data;
   for (let py = 0; py < S; py++) {
     for (let px = 0; px < S; px++) {
       const i = (py * S + px) * 4;
-      const noise = (hash(px*0.3, py*0.3) - 0.5) * 12;
+      const noise = (Math.random() - 0.5) * 8;
       const baseR = parseInt(hex.slice(1,3), 16) + noise;
       const baseG = parseInt(hex.slice(3,5), 16) + noise;
       const baseB = parseInt(hex.slice(5,7), 16) + noise;
-      img.data[i] = Math.max(0, Math.min(255, baseR));
-      img.data[i+1] = Math.max(0, Math.min(255, baseG));
-      img.data[i+2] = Math.max(0, Math.min(255, baseB));
-      img.data[i+3] = 255;
+      data[i] = Math.max(0, Math.min(255, baseR));
+      data[i+1] = Math.max(0, Math.min(255, baseG));
+      data[i+2] = Math.max(0, Math.min(255, baseB));
+      data[i+3] = 255;
     }
   }
   x.putImageData(img, 0, 0);
   
+  // Desenează dungi și detalii
   if (tip === "tabla") {
-    // Dungi de tabla cu variație
-    for (let px = 0; px < S; px += 32) {
-      const offset = (hash(px, 0) - 0.5) * 3;
-      x.fillStyle = "rgba(0,0,0,0.38)"; x.fillRect(px + offset, 0, 3, S);
-      x.fillStyle = "rgba(255,255,255,0.12)"; x.fillRect(px + offset + 3, 0, 2, S);
-      // Variație micro
-      for (let py = 0; py < S; py += 4) {
-        if (hash(px, py) > 0.7) {
-          x.fillStyle = "rgba(255,255,255,0.04)"; x.fillRect(px + offset + 10, py, 6, 2);
-        }
+    const stripeWidth = 24; // mai înguste pentru aspect mai fin
+    for (let px = 0; px < S; px += stripeWidth) {
+      const offset = (Math.random() - 0.5) * 2;
+      const x1 = px + offset;
+      // Umbră sub dungă
+      x.fillStyle = "rgba(0,0,0,0.25)";
+      x.fillRect(x1, 0, 2, S);
+      // Linie luminoasă pe dungă
+      x.fillStyle = "rgba(255,255,255,0.10)";
+      x.fillRect(x1 + 3, 0, 1, S);
+      // Linie de metalic
+      x.fillStyle = "rgba(200,200,200,0.08)";
+      x.fillRect(x1 + 8, 0, 4, S);
+      // Micro-zgârieturi
+      for (let i = 0; i < 3; i++) {
+        const y = Math.random() * S;
+        x.fillStyle = "rgba(255,255,255,0.03)";
+        x.fillRect(x1 + 2 + Math.random() * 6, y, 1 + Math.random() * 2, 1);
       }
+    }
+    // Zgârieturi fine random
+    for (let i = 0; i < 200; i++) {
+      const x0 = Math.random() * S;
+      const y0 = Math.random() * S;
+      const len = 2 + Math.random() * 6;
+      x.strokeStyle = "rgba(0,0,0,0.05)";
+      x.lineWidth = 0.5;
+      x.beginPath();
+      x.moveTo(x0, y0);
+      x.lineTo(x0 + len, y0 + Math.random() * 2 - 1);
+      x.stroke();
     }
   } else {
-    // Țiglă cu variație per rând
-    for (let py = 0; py < S; py += 26) {
-      const shade = 0.35 + hash(0, py) * 0.2;
-      x.fillStyle = `rgba(0,0,0,${shade})`; x.fillRect(0, py, S, 3);
-      x.fillStyle = "rgba(255,255,255,0.12)"; x.fillRect(0, py + 3, S, 2);
-      for (let px = ((Math.floor(py/26)) % 2) * 22; px < S; px += 44) {
-        const varX = (hash(px, py) - 0.5) * 4;
-        x.fillStyle = "rgba(0,0,0,0.08)"; x.fillRect(px + varX, py + 3, 2 + Math.abs(varX), 23);
+    // Țiglă – desenează un model de țiglă ceramică mai detaliat
+    const tileH = 32;
+    const tileW = 48;
+    for (let row = 0; row < S / tileH; row++) {
+      const y = row * tileH;
+      const offsetX = (row % 2) * (tileW / 2);
+      for (let col = -1; col < S / tileW + 1; col++) {
+        const x = col * tileW + offsetX;
+        const shade = 0.85 + Math.random() * 0.3;
+        const r = Math.min(255, parseInt(hex.slice(1,3), 16) * shade);
+        const g = Math.min(255, parseInt(hex.slice(3,5), 16) * shade);
+        const b = Math.min(255, parseInt(hex.slice(5,7), 16) * shade);
+        x.fillStyle = `rgb(${r|0}, ${g|0}, ${b|0})`;
+        x.beginPath();
+        x.moveTo(x + 2, y + 2);
+        x.lineTo(x + tileW - 4, y + 4);
+        x.lineTo(x + tileW - 6, y + tileH - 4);
+        x.lineTo(x + 4, y + tileH - 2);
+        x.closePath();
+        x.fill();
+        // Umbrire ușoară sub țiglă
+        x.fillStyle = "rgba(0,0,0,0.12)";
+        x.fillRect(x + 2, y + tileH - 6, tileW - 6, 4);
+        // Margine luminoasă
+        x.fillStyle = "rgba(255,255,255,0.06)";
+        x.fillRect(x + 4, y + 4, tileW - 10, 2);
       }
     }
   }
   
-  // Micro-imperfecțiuni
-  for (let i = 0; i < 1200; i++) {
-    const r = Math.random();
-    x.fillStyle = r > 0.6 ? "rgba(255,255,255,0.02)" : r > 0.3 ? "rgba(0,0,0,0.025)" : "rgba(255,255,255,0.01)";
-    x.fillRect(Math.random() * S, Math.random() * S, 1 + Math.random() * 2, 1 + Math.random() * 2);
-  }
-  
+  // Textura principală
   const t = new THREE.CanvasTexture(c);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.anisotropy = 16;
   
-  // Bump map
-  const b = document.createElement("canvas"); b.width = b.height = S;
+  // Bump map – relief detaliat
+  const b = document.createElement("canvas");
+  b.width = b.height = S;
   const bx = b.getContext("2d");
   const bImg = bx.getImageData(0, 0, S, S);
+  const bData = bImg.data;
   for (let py = 0; py < S; py++) {
     for (let px = 0; px < S; px++) {
       const i = (py * S + px) * 4;
-      const v = 128 + (hash(px*0.5, py*0.5) - 0.5) * 30;
-      bImg.data[i] = bImg.data[i+1] = bImg.data[i+2] = v;
-      bImg.data[i+3] = 255;
+      const v = 128 + (Math.random() - 0.5) * 40;
+      bData[i] = bData[i+1] = bData[i+2] = v;
+      bData[i+3] = 255;
     }
   }
   bx.putImageData(bImg, 0, 0);
   
   if (tip === "tabla") {
-    for (let px = 0; px < S; px += 32) { bx.fillStyle = "#f0f0f0"; bx.fillRect(px, 0, 5, S); }
+    for (let px = 0; px < S; px += 24) {
+      bx.fillStyle = "#ffffff";
+      bx.fillRect(px, 0, 4, S);
+      bx.fillStyle = "#555555";
+      bx.fillRect(px + 6, 0, 2, S);
+    }
   } else {
-    for (let py = 0; py < S; py += 26) { 
-      bx.fillStyle = "#f0f0f0"; bx.fillRect(0, py, S, 5); 
-      bx.fillStyle = "#6a6a6a"; bx.fillRect(0, py + 20, S, 6); 
+    for (let row = 0; row < S; row += 32) {
+      bx.fillStyle = "#eeeeee";
+      bx.fillRect(0, row, S, 3);
+      bx.fillStyle = "#666666";
+      bx.fillRect(0, row + 28, S, 4);
     }
   }
   
   const bt = new THREE.CanvasTexture(b);
-  bt.wrapS = bt.wrapT = THREE.RepeatWrapping; bt.anisotropy = 8;
-  return { map: srgb(t), bump: bt };
+  bt.wrapS = bt.wrapT = THREE.RepeatWrapping;
+  bt.anisotropy = 16;
+  
+  return { map: t, bump: bt };
 }
+
 
 function texTeren() {
   const c = document.createElement("canvas"); c.width = c.height = 512;
@@ -448,13 +494,24 @@ export default function Scena3D({ cfg }) {
   normalTex.wrapS = normalTex.wrapT = THREE.RepeatWrapping;
   normalTex.colorSpace = THREE.LinearSRGBColorSpace;
   
+  
   const matInv = new THREE.MeshPhysicalMaterial({
-      color: 0xffffff, map: TX.map, bumpMap: TX.bump, bumpScale: M.tex === "tigla" ? 0.035 : 0.02,
-      roughness: M.tex === "tigla" ? 0.8 : 0.35, metalness: M.tex === "tigla" ? 0.02 : 0.5, side: THREE.DoubleSide,
-      normalMap: normalTex, normalScale: new THREE.Vector2(0.5, 0.5),
-      clearcoat: M.tex === "tabla" ? 0.3 : 0.0,
-      clearcoatRoughness: 0.25,
+      color: 0xffffff,
+      map: TX.map,
+      bumpMap: TX.bump,
+      bumpScale: M.tex === "tigla" ? 0.045 : 0.035,
+      roughness: M.tex === "tigla" ? 0.75 : 0.25,
+      metalness: M.tex === "tigla" ? 0.02 : 0.7,
+      side: THREE.DoubleSide,
+      normalMap: normalTex,
+      normalScale: new THREE.Vector2(0.6, 0.6),
+      clearcoat: M.tex === "tabla" ? 0.4 : 0.0,
+      clearcoatRoughness: 0.2,
+      envMapIntensity: 0.8,
+      emissive: new THREE.Color(0x000000),
+      emissiveIntensity: 0,
     });
+
     const matSub = new THREE.MeshStandardMaterial({ color: "#33302c", roughness: 0.9, side: THREE.DoubleSide });
     const y0 = hz, x0 = L / 2 + ov, z0 = W / 2 + ov, yv = y0 + hRoof + (ov * Math.tan(rad(panta)));
     const tris = [], triF = [];
