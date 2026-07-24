@@ -144,8 +144,7 @@ function texPavaj() {
   return { map: texture, bump: bumpTexture };
 }
 
-, ${baseColor[1]}, ${baseColor[2]})`;
-  ctx.fillRect(0, 0, S, S);
+ctx.fillRect(0, 0, S, S);
   
   // Dimensiunea dalei în pixeli
   const tileSize = 64;
