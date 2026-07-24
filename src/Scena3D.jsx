@@ -169,7 +169,7 @@ export default function Scena3D({ cfg }) {
     if ("outputColorSpace" in rnd) rnd.outputColorSpace = THREE.SRGBColorSpace;
     else rnd.outputEncoding = THREE.sRGBEncoding;
     rnd.toneMapping = THREE.ACESFilmicToneMapping;
-  rnd.toneMappingExposure = 1.5;
+  rnd.toneMappingExposure = 1.4;
     rnd.setClearColor(0xdce8f0);
     el.appendChild(rnd.domElement);
 
@@ -189,7 +189,7 @@ export default function Scena3D({ cfg }) {
     const m=new THREE.Mesh(new THREE.PlaneGeometry(320,80), new THREE.MeshBasicMaterial({map:t,transparent:true,depthWrite:false,fog:false}));
     m.position.set(0,22,-95); scene.add(m);
   })();
-    // scene.fog eliminat pentru claritate
+    // scene.fog eliminat
 
     const teren = new THREE.Mesh(new THREE.PlaneGeometry(320, 320),
       new THREE.MeshStandardMaterial({ map: texTeren(), roughness: 1 }));
@@ -539,7 +539,7 @@ export default function Scena3D({ cfg }) {
     loop();
     const onR = () => { const w = el.clientWidth, h = el.clientHeight; cam.aspect = w / h; cam.updateProjectionMatrix(); rnd.setSize(w, h); };
     window.addEventListener("resize", onR);
-    adaugaGradina(scene, rnd, L, W);
+    // adaugaGradina eliminat
 
     return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", onR); window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); rnd.dispose(); el.removeChild(rnd.domElement); };
   }, [cfg]);
