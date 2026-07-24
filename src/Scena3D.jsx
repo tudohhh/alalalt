@@ -161,7 +161,7 @@ export default function Scena3D({ cfg }) {
     skyCtx.fill();
   }
   const skyTex = new THREE.CanvasTexture(skyCanvas); skyTex.colorSpace = THREE.SRGBColorSpace;
-  scene.background = skyTex; skyTex.minFilter = THREE.LinearFilter; skyTex.magFilter = THREE.LinearFilter;
+  scene.background = new THREE.Color(0x87CEEB); skyTex.minFilter = THREE.LinearFilter; skyTex.magFilter = THREE.LinearFilter;
     const cam = new THREE.PerspectiveCamera(38, Wpx / Hpx, 0.1, 400);
     const rnd = new THREE.WebGLRenderer({ antialias: true });
     rnd.setPixelRatio(Math.min(window.devicePixelRatio, 2)); rnd.setSize(Wpx, Hpx);
@@ -169,7 +169,7 @@ export default function Scena3D({ cfg }) {
     if ("outputColorSpace" in rnd) rnd.outputColorSpace = THREE.SRGBColorSpace;
     else rnd.outputEncoding = THREE.sRGBEncoding;
     rnd.toneMapping = THREE.ACESFilmicToneMapping;
-  rnd.toneMappingExposure = 1.4;
+  rnd.toneMappingExposure = 1.2;
     rnd.setClearColor(0xdce8f0);
     el.appendChild(rnd.domElement);
 
@@ -189,7 +189,7 @@ export default function Scena3D({ cfg }) {
     const m=new THREE.Mesh(new THREE.PlaneGeometry(320,80), new THREE.MeshBasicMaterial({map:t,transparent:true,depthWrite:false,fog:false}));
     m.position.set(0,22,-95); scene.add(m);
   })();
-    scene.fog = new THREE.Fog("#e6eae7", 55, 170);
+    // scene.fog eliminat pentru claritate
 
     const teren = new THREE.Mesh(new THREE.PlaneGeometry(320, 320),
       new THREE.MeshStandardMaterial({ map: texTeren(), roughness: 1 }));
