@@ -264,6 +264,32 @@ export default function Scena3D({ cfg }) {
 
     const scene = new THREE.Scene();
 
+  // Iarbă DOAR în interiorul gardului (L+7, W+7)
+  const iarbaInterior = new THREE.Mesh(
+    new THREE.PlaneGeometry(L + 7, W + 7),
+    new THREE.MeshStandardMaterial({
+      map: texGazon().map,
+      bumpMap: texGazon().bump,
+      bumpScale: 0.12,
+      roughness: 1
+    })
+  );
+  iarbaInterior.rotation.x = -Math.PI / 2;
+  iarbaInterior.position.y = 0;
+  iarbaInterior.receiveShadow = true;
+  scene.add(iarbaInterior);
+
+  // Sol simplu în exterior (gri-maro)
+  const solExterior = new THREE.Mesh(
+    new THREE.PlaneGeometry(400, 400),
+    new THREE.MeshStandardMaterial({ color: 0x8a7f72, roughness: 1 })
+  );
+  solExterior.rotation.x = -Math.PI / 2;
+  solExterior.position.y = -0.01;
+  solExterior.receiveShadow = true;
+  scene.add(solExterior);
+
+
   // NOU PLAN DE SOL (înlocuiește balta)
   const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(400, 400),
