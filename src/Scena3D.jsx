@@ -594,15 +594,55 @@ export default function Scena3D({ cfg }) {
   // Spate — 2 ferestre
   adaugaFereastra(L * 0.28, hz * 0.58, -W / 2 - 0.03, Math.PI);
   adaugaFereastra(-L * 0.28, hz * 0.58, -W / 2 - 0.03, Math.PI);
-  // Fronton decorativ — culoare caldă lemn
-  const frontonMat = new THREE.MeshStandardMaterial({ color: 0xc8b898, roughness: 0.65 });
+  // Fronton — textură lemn cu UV-uri proprii
+  const fs2 = 1024;
+  const fc2 = document.createElement('canvas'); fc2.width = fc2.height = fs2;
+  const fx2 = fc2.getContext('2d');
+  const fh = (a,b)=>{let h=a*374761393+b*668265263+1274126177;h=(h^(h>>13))*1274126177;return(h^(h>>16))/2147483648;};
+  fx2.fillStyle = '#c8b898'; fx2.fillRect(0, 0, fs2, fs2);
+  const bH = 82, fg2 = 3;
+  for (let row = 0; row < fs2; row += bH + fg2) {
+    const br2 = 195+(fh(row,0.1)-0.5)*30, bg2=178+(fh(row,0.2)-0.5)*25, bb2=145+(fh(row,0.3)-0.5)*20;
+    fx2.fillStyle = 'rgb('+[br2|0,bg2|0,bb2|0].join(',')+')';
+    fx2.fillRect(0, row, fs2, bH);
+    for (let fy=row+3; fy<row+bH-3; fy+=1.5+fh(row,fy)*3) {
+      const fv=8+fh(fy,row)*14;
+      fx2.fillStyle='rgba('+[(br2-fv)|0,(bg2-fv-2)|0,(bb2-fv-4)|0]+',0.25)';
+      fx2.fillRect(4+fh(fy,0.5)*6, fy, fs2-8, 0.7);
+    }
+    for (let n=0; n<4; n++) {
+      const nx=30+fh(row+n,0.7)*(fs2-60), ny=row+10+fh(row+n,0.8)*(bH-20), nr=3+fh(row+n,0.9)*6;
+      fx2.fillStyle='rgba('+[(br2-25)|0,(bg2-30)|0,(bb2-25)|0]+',0.5)';
+      fx2.beginPath(); fx2.ellipse(nx,ny,nr,nr*0.7,0,0,Math.PI*2); fx2.fill();
+    }
+    fx2.fillStyle='rgba(0,0,0,0.22)'; fx2.fillRect(0,row+bH,fs2,fg2);
+    fx2.fillStyle='rgba(255,255,255,0.08)'; fx2.fillRect(0,row,fs2,1.5);
+  }
+  for (let i=0; i<6000; i++) {
+    fx2.fillStyle='rgba(0,0,0,'+(0.02+Math.random()*0.03)+')';
+    fx2.fillRect(Math.random()*fs2,Math.random()*fs2,1,0.5+Math.random());
+  }
+  const frontTex = new THREE.CanvasTexture(fc2);
+  frontTex.wrapS=frontTex.wrapT=THREE.RepeatWrapping; frontTex.colorSpace=THREE.SRGBColorSpace; frontTex.anisotropy=8;
+  const frontonMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.72, metalness: 0.02, color: 0xffffff });
   [-1, 1].forEach(function(sx) {
-    var fg = new THREE.Group();
-    var shape2 = new THREE.Shape();
-    shape2.moveTo(-W/2, 0); shape2.lineTo(W/2, 0);
-    shape2.lineTo(0, hRoof); shape2.closePath();
-    var fGeo = new THREE.ExtrudeGeometry(shape2, {steps:1, depth:0.08, bevelEnabled:false});
-    var fPanou = new THREE.Mesh(fGeo, frontonMat);
+    // BufferGeometry cu UV-uri proprii pentru textură corectă
+    var hw = W/2, hh = hRoof;
+    var fGeo2 = new THREE.BufferGeometry();
+    var verts = new Float32Array([
+      -hw,0,0.04,  hw,0,0.04,  0,hh,0.04,  // front face
+      hw,0,-0.04,  -hw,0,-0.04,  0,hh,-0.04, // back face
+    ]);
+    var uvs = new Float32Array([
+      0,1, 1,1, 0.5,0,  // front UV
+      0,1, 1,1, 0.5,0,  // back UV
+    ]);
+    var idx = new Uint16Array([0,1,2, 3,4,5]);
+    fGeo2.setAttribute('position', new THREE.BufferAttribute(verts, 3));
+    fGeo2.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+    fGeo2.setIndex(new THREE.BufferAttribute(idx, 1));
+    fGeo2.computeVertexNormals();
+    var fPanou = new THREE.Mesh(fGeo2, frontonMat);
     fPanou.position.set(sx * (L/2 + 0.02), hz, 0);
     fPanou.rotation.y = sx > 0 ? -Math.PI/2 : Math.PI/2;
     fPanou.castShadow = true; fPanou.receiveShadow = true;
@@ -975,52 +1015,6 @@ export default function Scena3D({ cfg }) {
     }
 
 
-    // --- Horn tencuit modern ---
-    { const hx = -L / 4, hzp = -W / 5;
-      const roofY = y0 + hRoof - Math.abs(hzp) * Math.tan(rad(panta));
-      const chW = 0.48, chD = 0.38, chH = 1.30;
-      const chBase = roofY + 0.03;
-
-      // Tencuială în ton cu pereții
-      const hornMat = new THREE.MeshStandardMaterial({
-        color: 0xf2efe8, roughness: 0.82, bumpMap: tencTex, bumpScale: 0.006
-      });
-
-      // Corp horn
-      const horn = new THREE.Mesh(new THREE.BoxGeometry(chW, chH, chD), hornMat);
-      horn.position.set(hx, chBase + chH / 2, hzp);
-      horn.castShadow = true; horn.receiveShadow = true;
-      scene.add(horn);
-
-      // Capac beton cu surplus
-      const capMat = new THREE.MeshStandardMaterial({ color: 0xd5cfc6, roughness: 0.7 });
-      const capBase = new THREE.Mesh(new THREE.BoxGeometry(chW + 0.18, 0.06, chD + 0.18), capMat);
-      capBase.position.set(hx, chBase + chH + 0.04, hzp);
-      capBase.castShadow = true; scene.add(capBase);
-      const capTop = new THREE.Mesh(new THREE.BoxGeometry(chW + 0.08, 0.04, chD + 0.08), capMat);
-      capTop.position.set(hx, chBase + chH + 0.09, hzp);
-      capTop.castShadow = true; scene.add(capTop);
-
-      // Șorț de tablă (flashing)
-      const flashExt = 0.20;
-      const flashMat = new THREE.MeshStandardMaterial({ color: 0x4a4a50, roughness: 0.24, metalness: 0.95 });
-      const roofAng = rad(panta) * (hzp < 0 ? -1 : 1);
-
-      const addFlash = (w, d, px, py, pz) => {
-        const g = new THREE.BoxGeometry(w, 0.012, d);
-        const m = new THREE.Mesh(g, flashMat);
-        m.position.set(px, py, pz);
-        m.rotation.x = roofAng;
-        m.castShadow = true;
-        scene.add(m);
-      };
-
-      const fY = roofY + 0.015;
-      addFlash(chW + 0.06, flashExt, hx, fY, hzp + chD/2 + flashExt/2);
-      addFlash(chW + 0.06, flashExt, hx, fY, hzp - chD/2 - flashExt/2);
-      addFlash(flashExt, chD + 0.04, hx - chW/2 - flashExt/2, fY, hzp);
-      addFlash(flashExt, chD + 0.04, hx + chW/2 + flashExt/2, fY, hzp);
-      }
 
     const target = new THREE.Vector3(0, (hz + hRoof) / 2 + 0.6, 0);
     const rRest = Math.max(L, W) * 1.8 + 8;
