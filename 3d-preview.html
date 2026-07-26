@@ -233,13 +233,13 @@ const amb = new THREE.AmbientLight(0xdce8f0, 0.7); scene.add(amb);
 const fill = new THREE.DirectionalLight(0xd9e4f2, 0.5); fill.position.set(-10, 4, -8); scene.add(fill);
 
 // Fog
-scene.fog = new THREE.Fog('#e6eae7', 55, 170);
+scene.fog = new THREE.Fog('#e6eae7', 35, 110);
 
 // ── TERRAIN ──
 // Big ground base
 const bigGround = new THREE.Mesh(
-  new THREE.PlaneGeometry(400, 400),
-  new THREE.MeshStandardMaterial({color:0xe8e4dc, roughness:0.95})
+  new THREE.PlaneGeometry(200, 200),
+  new THREE.MeshStandardMaterial({color:0x9d9588, roughness:0.95})
 );
 bigGround.rotation.x=-Math.PI/2; bigGround.position.y=-0.02; bigGround.receiveShadow=true;
 scene.add(bigGround);
@@ -256,14 +256,9 @@ for (let i=0;i<2200;i++) {
 }
 gctx.globalAlpha=1;
 const grassTex = new THREE.CanvasTexture(grassCanvas);
-grassTex.wrapS=grassTex.wrapT=THREE.RepeatWrapping; grassTex.repeat.set(20,20);
+grassTex.wrapS=grassTex.wrapT=THREE.RepeatWrapping; grassTex.repeat.set(4,4);
 grassTex.colorSpace=THREE.SRGBColorSpace; grassTex.anisotropy=8;
-
-const teren = new THREE.Mesh(
-  new THREE.PlaneGeometry(320, 320),
-  new THREE.MeshStandardMaterial({map:grassTex, roughness:1})
-);
-teren.rotation.x=-Math.PI/2; teren.receiveShadow=true; scene.add(teren);
+// grass patch is created inside buildHouse(), sized to house
 
 // Stone paving around house
 const pavCanvas = document.createElement('canvas'); pavCanvas.width=pavCanvas.height=1024;
@@ -365,6 +360,15 @@ function buildHouse(cfg) {
     new THREE.MeshStandardMaterial({color:'#d0c8bc', roughness:0.65})
   );
   soclu.position.y=0.175; soclu.receiveShadow=true; group.add(soclu);
+
+  // ── GRASS PATCH (centered on house, extends beyond apron) ──
+  const grassW = L + 14, grassD = W + 14;
+  const grassPatch = new THREE.Mesh(
+    new THREE.PlaneGeometry(grassW, grassD),
+    new THREE.MeshStandardMaterial({map:grassTex, roughness:1})
+  );
+  grassPatch.rotation.x=-Math.PI/2; grassPatch.position.y=0.003; grassPatch.receiveShadow=true;
+  group.add(grassPatch);
 
   // ── PAVING APRON (around house, resizes with dimensions) ──
   const apronGeom = new THREE.PlaneGeometry(L+3.2, W+3.2);
