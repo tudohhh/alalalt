@@ -589,10 +589,24 @@ export default function Scena3D({ cfg }) {
   }
 
   // 4 ferestre
-  adaugaFereastra(L * 0.35, hz * 0.58, W / 2 + 0.03, 0);                    // față
-  adaugaFereastra(L / 2 + 0.03, hz * 0.58, -W * 0.35, Math.PI / 2);          // dreapta
-  adaugaFereastra(-L * 0.35, hz * 0.58, -W / 2 - 0.03, Math.PI);             // spate
-  adaugaFereastra(-L / 2 - 0.03, hz * 0.58, W * 0.35, -Math.PI / 2);         // stânga
+  // Fațadă — 4 ferestre
+  adaugaFereastra(L * 0.42, hz * 0.58, W / 2 + 0.03, 0);
+  adaugaFereastra(L * 0.14, hz * 0.58, W / 2 + 0.03, 0);
+  adaugaFereastra(-L * 0.14, hz * 0.58, W / 2 + 0.03, 0);
+  adaugaFereastra(-L * 0.42, hz * 0.58, W / 2 + 0.03, 0);
+  // Spate — 4 ferestre
+  adaugaFereastra(L * 0.42, hz * 0.58, -W / 2 - 0.03, Math.PI);
+  adaugaFereastra(L * 0.14, hz * 0.58, -W / 2 - 0.03, Math.PI);
+  adaugaFereastra(-L * 0.14, hz * 0.58, -W / 2 - 0.03, Math.PI);
+  adaugaFereastra(-L * 0.42, hz * 0.58, -W / 2 - 0.03, Math.PI);
+  // Lateral dreapta — 3 ferestre
+  adaugaFereastra(L / 2 + 0.03, hz * 0.58, -W * 0.42, Math.PI / 2);
+  adaugaFereastra(L / 2 + 0.03, hz * 0.58, 0, Math.PI / 2);
+  adaugaFereastra(L / 2 + 0.03, hz * 0.58, W * 0.42, Math.PI / 2);
+  // Lateral stânga — 3 ferestre
+  adaugaFereastra(-L / 2 - 0.03, hz * 0.58, -W * 0.42, -Math.PI / 2);
+  adaugaFereastra(-L / 2 - 0.03, hz * 0.58, 0, -Math.PI / 2);
+  adaugaFereastra(-L / 2 - 0.03, hz * 0.58, W * 0.42, -Math.PI / 2);
 
 
   // --- Ușă intrare (aliniată cu aleea) ---
@@ -988,6 +1002,37 @@ export default function Scena3D({ cfg }) {
       addFlash(flashExt, chD + 0.04, hx - chW/2 - flashExt/2, fY, hzp);
       addFlash(flashExt, chD + 0.04, hx + chW/2 + flashExt/2, fY, hzp);
       }
+
+    // --- Lucarne pe acoperiș (dormer windows) ---
+    if (tip === "doua_ape") {
+      const lucarnaMat = new THREE.MeshStandardMaterial({ color: 0xf4f1ea, roughness: 0.84 });
+      const lucarnaAcopMat = new THREE.MeshStandardMaterial({ color: shade(M.hex, 0.72), roughness: 0.6 });
+      const lucarnaGeamMat = new THREE.MeshStandardMaterial({ color: 0x7a9ab0, roughness: 0.2, metalness: 0.3 });
+      const dw = 0.85, dh = 0.90, dd = 0.70;
+      [L * 0.38, -L * 0.38].forEach(function(dx) {
+        var roofYd = y0 + hRoof - Math.abs(dx) * Math.tan(rad(panta)) * 0.15;
+        var lg = new THREE.Group();
+        lg.position.set(dx, roofYd, 0);
+        // Pereți lucarnă
+        var lf = new THREE.Mesh(new THREE.BoxGeometry(dw, dh, 0.08), lucarnaMat);
+        lf.position.set(0, dh/2, z0 + dd/2); lf.castShadow = true; lg.add(lf);
+        var ls1 = new THREE.Mesh(new THREE.BoxGeometry(0.08, dh, dd), lucarnaMat);
+        ls1.position.set(-dw/2, dh/2, z0 + 0.02); ls1.castShadow = true; lg.add(ls1);
+        var ls2 = new THREE.Mesh(new THREE.BoxGeometry(0.08, dh, dd), lucarnaMat);
+        ls2.position.set(dw/2, dh/2, z0 + 0.02); ls2.castShadow = true; lg.add(ls2);
+        // Geam
+        var lgGeam = new THREE.Mesh(new THREE.PlaneGeometry(dw - 0.16, dh - 0.22), lucarnaGeamMat);
+        lgGeam.position.set(0, dh/2 + 0.02, z0 + dd + 0.01); lg.add(lgGeam);
+        // Acoperiș lucarnă (mic triunghi)
+        var ls = new THREE.Shape();
+        ls.moveTo(-dw/2 - 0.10, dh); ls.lineTo(dw/2 + 0.10, dh);
+        ls.lineTo(0, dh + 0.35); ls.closePath();
+        var lsGeom = new THREE.ExtrudeGeometry(ls, {steps:1, depth: dd + 0.16, bevelEnabled: false});
+        var lsRoof = new THREE.Mesh(lsGeom, lucarnaAcopMat);
+        lsRoof.position.set(0, 0, z0 - 0.08); lsRoof.castShadow = true; lg.add(lsRoof);
+        scene.add(lg);
+      });
+    }
 
     const target = new THREE.Vector3(0, (hz + hRoof) / 2 + 0.6, 0);
     const rRest = Math.max(L, W) * 1.8 + 8;
