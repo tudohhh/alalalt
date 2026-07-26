@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configurator Acoperișuri 3D — Preview</title>
+<style>
+:root {
+  --acc: #4a6e8a;
+  --bg: #e4eaef;
+  --panel: rgba(255,255,255,.92);
+  --shadow: 0 6px 28px rgba(20,35,45,.14);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:system-ui,-apple-system,sans-serif; overflow:hidden; background:var(--bg); }
+#canvas { position:fixed; inset:0; z-index:1; }
+#ui { position:fixed; inset:0; z-index:2; pointer-events:none; }
+#ui > * { pointer-events:auto; }
+
+/* LEFT PANEL */
+.panel {
+  position:absolute; background:var(--panel); backdrop-filter:blur(14px);
+  border-radius:18px; padding:15px 17px; box-shadow:var(--shadow);
+  animation: fadeUp .45s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
+
+#left {
+  left:16px; top:64px; bottom:14px; width:264px; overflow-y:auto;
+  animation-delay:80ms;
+}
+#left::-webkit-scrollbar { width:4px; }
+#left::-webkit-scrollbar-thumb { background:#c5cfd8; border-radius:99px; }
+
+#right {
+  right:16px; top:64px; width:284px; animation-delay:140ms;
+}
+
+h1 { font-family:'Fraunces',Georgia,serif; font-size:21px; font-weight:700; text-shadow:0 1px 0 rgba(255,255,255,.6); margin-bottom:2px; }
+.sub { font-size:11px; color:#5c6a75; margin-bottom:12px; }
+
+.sec { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--acc); margin:14px 0 7px; }
+
+.btn-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; margin-bottom:4px; }
+.btn {
+  padding:9px 2px; border-radius:9px; cursor:pointer; font-size:11px; font-weight:600;
+  border:1px solid #d5dde2; background:#fff; color:#22282e; transition:all .15s;
+}
+.btn.active { border:2px solid var(--acc); background:#eef4f8; }
+.btn:hover { border-color:#8aa8be; }
+
+.slider-wrap { margin-bottom:10px; }
+.slider-row { display:flex; justify-content:space-between; margin-bottom:3px; font-size:12px; }
+.slider-row span:last-child { color:#5c6a75; }
+.slider-ctrl { display:flex; align-items:center; gap:6px; }
+.slider-btn { width:26px; height:26px; border-radius:7px; border:none; background:#e4ebf0; font-size:15px; cursor:pointer; }
+input[type=range] { flex:1; accent-color:var(--acc); }
+
+.stats { font-size:11px; color:#5c6a75; background:#eef4f8; border-radius:8px; padding:7px 9px; margin:4px 0; }
+.stats b { color:#22282e; }
+
+/* RIGHT PANEL - price */
+.price { font-family:'Fraunces',Georgia,serif; font-size:29px; font-weight:800; color:var(--acc); letter-spacing:-0.5px; margin:4px 0 0; tabular-nums:lining-nums; }
+.price-sub { font-size:10.5px; color:#8a949c; margin:2px 0 10px; }
+.detail-btn { width:100%; background:#eef4f8; border:1px solid #d3e2ec; border-radius:9px; padding:8px 0; font-size:11.5px; font-weight:600; color:var(--acc); cursor:pointer; margin-bottom:6px; }
+.detail-table { width:100%; font-size:11px; border-collapse:collapse; margin:6px 0; }
+.detail-table td { padding:4px 0; border-top:1px solid #edf1f4; }
+.detail-table td:last-child { text-align:right; white-space:nowrap; font-weight:600; }
+
+.cta {
+  width:100%; margin-top:10px; padding:13px 0; border-radius:12px; border:none;
+  background:var(--acc); color:#fff; font-size:14px; font-weight:700; cursor:pointer;
+  box-shadow:0 6px 18px rgba(74,110,138,.35); transition:transform .15s;
+}
+.cta:hover { transform:scale(1.02); }
+.cta:active { transform:scale(.98); }
+
+#brand { position:absolute; top:14px; left:16px; animation-delay:0ms; }
+
+#footer-bar {
+  position:absolute; left:50%; bottom:12px; transform:translateX(-50%);
+  font-size:11px; color:#5c6a75; background:rgba(255,255,255,.7);
+  backdrop-filter:blur(6px); padding:6px 14px; border-radius:20px;
+  white-space:nowrap; max-width:70vw; overflow:hidden; text-overflow:ellipsis;
+}
+
+input[type=checkbox] { accent-color:var(--acc); }
+label { display:flex; gap:7px; font-size:12px; margin-bottom:6px; cursor:pointer; align-items:center; }
+
+/* Mobile */
+@media (max-width:900px) {
+  #left { width:220px; left:8px; top:52px; font-size:11px; }
+  #right { width:240px; right:8px; top:52px; }
+  .price { font-size:22px; }
+  #footer-bar { font-size:10px; }
+}
+</style>
+</head>
+<body>
+
+<div id="canvas"></div>
+
+<!-- BRAND -->
+<div id="brand" class="panel">
+  <h1>Acoperișuri & Montaj Pro</h1>
+  <div class="sub">Configurează, vezi în 3D, primești estimarea pe loc.</div>
+</div>
+
+<!-- LEFT PANEL — Config -->
+<div id="left" class="panel">
+  <div class="sec">Tip acoperiș</div>
+  <div class="btn-grid" id="tipBtns"></div>
+
+  <div class="sec">Dimensiuni casă</div>
+  <div id="sliders"></div>
+  <div class="stats" id="stats"></div>
+
+  <div class="sec">Învelitoare</div>
+  <div id="matBtns"></div>
+
+  <div class="sec">Lucrare</div>
+  <div id="lucrOpts"></div>
+
+  <div class="sec">Opționale</div>
+  <label><input type="checkbox" id="demontare"> Demontare acoperiș vechi</label>
+  <label><input type="checkbox" id="jgheaburi" checked> Jgheaburi + burlane (<span id="streasinaMl">~28 ml</span>)</label>
+</div>
+
+<!-- RIGHT PANEL — Price -->
+<div id="right" class="panel">
+  <div style="font-size:10.5px;color:#5c6a75;letter-spacing:1px;text-transform:uppercase">Estimare</div>
+  <div class="price" id="priceDisplay">—</div>
+  <div class="price-sub" id="priceMeta">Prețurile includ TVA (19%)</div>
+  <button class="detail-btn" id="detailBtn">Vezi detaliile estimării ▾</button>
+  <table class="detail-table hidden" id="detailTable"></table>
+  <button class="cta">Programează vizită de măsurători</button>
+</div>
+
+<div id="footer-bar">10×8 m · pantă 30° · 2 ape · ~80 mp</div>
+
+<!-- Three.js -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ═══════════════════════════════════════════
+// CONFIG & STATE
+// ═══════════════════════════════════════════
+const CONFIG = {
+  materialeMp: {
+    "Tablă Bilka Standard (0.45mm)":      { pret:45,  hex:"#4a332c" },
+    "Tablă Bilka Premium (0.50mm GrandeMat)": { pret:75, hex:"#3a4045" },
+    "Țiglă Ceramică Premium":            { pret:110, hex:"#9c5a42" },
+  },
+  manoperaMp: {
+    "Montaj simplu":                 35,
+    "Reparație dulgherie + montaj":  65,
+  },
+  taxeFixe: { deplasareTransport:300, comandaMinima:2500 },
+  pierderiTaieturi: 1.10,
+  intervalToleranta: 0.10,
+  limiteDim: {
+    lungime:{min:5,max:30,step:0.5},
+    latime:{min:4,max:20,step:0.5},
+    panta:{min:15,max:55,step:1},
+  },
+  tipuriAcoperis: {
+    doua_ape:  {nume:"2 ape",   factorMp:1.00},
+    patru_ape: {nume:"4 ape",   factorMp:1.00},
+    mansardat: {nume:"Mansardat", factorMp:1.15},
+  },
+};
+
+let state = {
+  lungime:10, latime:8, panta:30, tip:"doua_ape",
+  material:"Tablă Bilka Standard (0.45mm)",
+  lucrare:"Montaj simplu",
+  demontare:false, jgheaburi:true,
+};
+
+// ═══════════════════════════════════════════
+// THREE.JS SCENE
+// ═══════════════════════════════════════════
+const container = document.getElementById('canvas');
+const Wpx = container.clientWidth, Hpx = container.clientHeight;
+
+const scene = new THREE.Scene();
+
+// Sky
+const skyCanvas = document.createElement('canvas'); skyCanvas.width=512; skyCanvas.height=512;
+const skyCtx = skyCanvas.getContext('2d');
+const skyGrad = skyCtx.createLinearGradient(0,0,0,512);
+skyGrad.addColorStop(0,'#b8d4f0'); skyGrad.addColorStop(0.4,'#dce8f0'); skyGrad.addColorStop(0.7,'#e8e4d8'); skyGrad.addColorStop(1,'#d5cec0');
+skyCtx.fillStyle=skyGrad; skyCtx.fillRect(0,0,512,512);
+const skyTex = new THREE.CanvasTexture(skyCanvas); skyTex.colorSpace=THREE.SRGBColorSpace;
+scene.background=skyTex;
+
+const camera = new THREE.PerspectiveCamera(42, Wpx/Hpx, 0.1, 300);
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(Wpx,Hpx);
+renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.35;
+container.appendChild(renderer.domElement);
+
+// Controls
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 3, 0); controls.enableDamping=true; controls.dampingFactor=0.12;
+controls.minPolarAngle=0.4; controls.maxPolarAngle=1.5; controls.minDistance=8; controls.maxDistance=50;
+controls.maxPolarAngle=1.3;
+camera.position.set(16, 10, 18);
+
+// Lighting
+const sun = new THREE.DirectionalLight(0xffe9cf, 2.0);
+sun.position.set(20, 16, 8); sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);
+sun.shadow.camera.near=0.5; sun.shadow.camera.far=80;
+sun.shadow.camera.left=-25; sun.shadow.camera.right=25;
+sun.shadow.camera.top=25; sun.shadow.camera.bottom=-25;
+sun.shadow.bias=-0.0004;
+scene.add(sun);
+
+const amb = new THREE.AmbientLight(0xdce8f0, 0.7); scene.add(amb);
+const fill = new THREE.DirectionalLight(0xd9e4f2, 0.5); fill.position.set(-10, 4, -8); scene.add(fill);
+
+// Fog
+scene.fog = new THREE.Fog('#e6eae7', 55, 170);
+
+// ── TERRAIN ──
+// Big ground base
+const bigGround = new THREE.Mesh(
+  new THREE.PlaneGeometry(400, 400),
+  new THREE.MeshStandardMaterial({color:0xe8e4dc, roughness:0.95})
+);
+bigGround.rotation.x=-Math.PI/2; bigGround.position.y=-0.02; bigGround.receiveShadow=true;
+scene.add(bigGround);
+
+// Procedural grass texture (from Scena3D.jsx)
+const grassCanvas = document.createElement('canvas'); grassCanvas.width=grassCanvas.height=512;
+const gctx = grassCanvas.getContext('2d');
+gctx.fillStyle='#87927a'; gctx.fillRect(0,0,512,512);
+const grassColors = ['#7d8a6f','#8f9a80','#79856d','#93a086'];
+for (let i=0;i<2200;i++) {
+  gctx.fillStyle=grassColors[i%4];
+  gctx.globalAlpha=0.25;
+  gctx.fillRect(Math.random()*512,Math.random()*512,2+Math.random()*8,2+Math.random()*5);
+}
+gctx.globalAlpha=1;
+const grassTex = new THREE.CanvasTexture(grassCanvas);
+grassTex.wrapS=grassTex.wrapT=THREE.RepeatWrapping; grassTex.repeat.set(20,20);
+grassTex.colorSpace=THREE.SRGBColorSpace; grassTex.anisotropy=8;
+
+const teren = new THREE.Mesh(
+  new THREE.PlaneGeometry(320, 320),
+  new THREE.MeshStandardMaterial({map:grassTex, roughness:1})
+);
+teren.rotation.x=-Math.PI/2; teren.receiveShadow=true; scene.add(teren);
+
+// Stone paving around house
+const pavCanvas = document.createElement('canvas'); pavCanvas.width=pavCanvas.height=1024;
+const pctx = pavCanvas.getContext('2d');
+const hash = (a,b)=>{let h=a*374761393+b*668265263+1274126177;h=(h^(h>>13))*1274126177;return(h^(h>>16))/2147483648;};
+pctx.fillStyle='#6b6058'; pctx.fillRect(0,0,1024,1024);
+for (let i=0;i<4000;i++){
+  const v=100+hash(i,0.1)*20;
+  pctx.fillStyle=`rgba(${v|0},${(v-3)|0},${(v-8)|0},0.35)`;
+  pctx.fillRect(hash(0.2,i)*1024,hash(0.4,i)*1024,2+hash(0.6,i)*4,1.5);
+}
+const tileW=92,tileH=72,gap=5,radius=6;
+const rows=Math.ceil(1024/(tileH+gap))+1;
+for(let row=0;row<rows;row++){
+  const y=row*(tileH+gap),off=(row%2)*(tileW+gap)/2;
+  const cols=Math.ceil(1024/(tileW+gap))+2;
+  for(let col=-1;col<cols;col++){
+    const x0=col*(tileW+gap)+off,tx=x0+gap,ty=y+gap,tw=tileW-gap*2,th=tileH-gap*2;
+    const r=185+(hash(row,col)-0.5)*35,g=175+(hash(row+0.3,col)-0.5)*30,b=160+(hash(row+0.6,col)-0.5)*25;
+    pctx.fillStyle=`rgb(${r|0},${g|0},${b|0})`;
+    pctx.beginPath();
+    pctx.moveTo(tx+radius,ty);pctx.lineTo(tx+tw-radius,ty);
+    pctx.quadraticCurveTo(tx+tw,ty,tx+tw,ty+radius);
+    pctx.lineTo(tx+tw,ty+th-radius);pctx.quadraticCurveTo(tx+tw,ty+th,tx+tw-radius,ty+th);
+    pctx.lineTo(tx+radius,ty+th);pctx.quadraticCurveTo(tx,ty+th,tx,ty+th-radius);
+    pctx.lineTo(tx,ty+radius);pctx.quadraticCurveTo(tx,ty,tx+radius,ty);
+    pctx.closePath();pctx.fill();
+    pctx.fillStyle='rgba(255,255,255,0.08)';pctx.fillRect(tx+3,ty,tw-6,3);
+    pctx.fillStyle='rgba(0,0,0,0.06)';pctx.fillRect(tx+2,ty+th-3,tw-4,3);
+  }
+}
+const pavTex = new THREE.CanvasTexture(pavCanvas);
+pavTex.wrapS=pavTex.wrapT=THREE.RepeatWrapping;pavTex.repeat.set(2,2);
+pavTex.colorSpace=THREE.SRGBColorSpace;pavTex.anisotropy=16;
+
+// apron is now inside buildHouse() — adapts to house dimensions
+
+// ═══════════════════════════════════════════
+// BUILDING GEOMETRY
+// ═══════════════════════════════════════════
+let buildingGroup = new THREE.Group();
+scene.add(buildingGroup);
+
+function deg2rad(d) { return d * Math.PI / 180; }
+
+function buildHouse(cfg) {
+  // Clear
+  while(buildingGroup.children.length) buildingGroup.remove(buildingGroup.children[0]);
+
+  const {lungime:L, latime:W, panta, tip, material} = cfg;
+  const hz = 2.8, ov = 0.5; // eaves overhang
+  const hRoof = (W/2) * Math.tan(deg2rad(panta));
+  const roofColor = CONFIG.materialeMp[material]?.hex || '#4a332c';
+
+  const group = new THREE.Group();
+
+  // ── WALLS ──
+  const wallGeom = new THREE.BoxGeometry(L, hz, W);
+  const wallMat = new THREE.MeshStandardMaterial({color:'#f5f0e8', roughness:0.85, metalness:0.02});
+  const walls = new THREE.Mesh(wallGeom, wallMat);
+  walls.position.y = hz/2; walls.castShadow=true; walls.receiveShadow=true;
+  group.add(walls);
+
+  // ── WINDOWS ──
+  function addWindow(cx, cy, cz, ry, w=0.9, h=1.1) {
+    const wGroup = new THREE.Group();
+    const frame = new THREE.Mesh(
+      new THREE.BoxGeometry(w, h, 0.06),
+      new THREE.MeshStandardMaterial({color:'#e8e4dc', roughness:0.6})
+    );
+    wGroup.add(frame);
+    const glass = new THREE.Mesh(
+      new THREE.PlaneGeometry(w-0.12, h-0.12),
+      new THREE.MeshStandardMaterial({color:'#b0c8d8', roughness:0.2, metalness:0.3})
+    );
+    glass.position.z=0.035; glass.renderOrder=1; wGroup.add(glass);
+    wGroup.position.set(cx, cy, cz); wGroup.rotation.y=ry;
+    group.add(wGroup);
+  }
+  // Front windows
+  addWindow(-L*0.3, hz*0.62, W/2+0.02, 0, 0.85, 1.05);
+  addWindow(L*0.3, hz*0.62, W/2+0.02, 0, 0.85, 1.05);
+  // Side window
+  addWindow(L/2+0.02, hz*0.58, 0, Math.PI/2, 0.7, 0.9);
+
+  // ── DOOR ──
+  const doorGroup = new THREE.Group();
+  const door = new THREE.Mesh(
+    new THREE.BoxGeometry(1.05, 2.2, 0.06),
+    new THREE.MeshStandardMaterial({color:'#6b5544', roughness:0.5})
+  );
+  door.position.y=0; doorGroup.add(door);
+  doorGroup.position.set(0, 1.1, W/2+0.02);
+  group.add(doorGroup);
+
+  // ── BASE/SOCLE ──
+  const soclu = new THREE.Mesh(
+    new THREE.BoxGeometry(L+0.15, 0.35, W+0.15),
+    new THREE.MeshStandardMaterial({color:'#d0c8bc', roughness:0.65})
+  );
+  soclu.position.y=0.175; soclu.receiveShadow=true; group.add(soclu);
+
+  // ── PAVING APRON (around house, resizes with dimensions) ──
+  const apronGeom = new THREE.PlaneGeometry(L+3.2, W+3.2);
+  const apronMesh = new THREE.Mesh(apronGeom,
+    new THREE.MeshStandardMaterial({map:pavTex, roughness:0.78, metalness:0.03, color:0xffffff})
+  );
+  apronMesh.rotation.x=-Math.PI/2; apronMesh.position.y=0.013; apronMesh.receiveShadow=true;
+  group.add(apronMesh);
+
+  // ── CONTACT SHADOW ──
+  const shadowCanvas = document.createElement('canvas'); shadowCanvas.width=shadowCanvas.height=256;
+  const sctx = shadowCanvas.getContext('2d');
+  const sg = sctx.createRadialGradient(128,128,20,128,128,128);
+  sg.addColorStop(0,'rgba(30,32,26,0.38)'); sg.addColorStop(0.6,'rgba(30,32,26,0.14)'); sg.addColorStop(1,'rgba(30,32,26,0)');
+  sctx.fillStyle=sg; sctx.fillRect(0,0,256,256);
+  const shadowTex = new THREE.CanvasTexture(shadowCanvas);
+  const shadow = new THREE.Mesh(new THREE.PlaneGeometry(L+5,W+5),
+    new THREE.MeshBasicMaterial({map:shadowTex, transparent:true, depthWrite:false})
+  );
+  shadow.rotation.x=-Math.PI/2; shadow.position.y=0.02; group.add(shadow);
+
+  // ── ROOF ──
+  if (tip === 'doua_ape') {
+    // Two slopes
+    for (let sx = -1; sx <= 1; sx += 2) {
+      const shape = new THREE.Shape();
+      const rx = L/2 + ov, ry = hz + hRoof + ov/Math.cos(deg2rad(panta));
+      shape.moveTo(-rx, hz); shape.lineTo(-rx + (sx>0?0:L+2*ov), hz);
+      shape.lineTo(sx * L/2, ry); shape.closePath();
+      const extrudeSettings = {steps:1, depth:W+2*ov, bevelEnabled:false};
+      const geom = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+      const mat = new THREE.MeshStandardMaterial({color:roofColor, roughness:0.6, metalness:0.1});
+      const slope = new THREE.Mesh(geom, mat);
+      slope.position.set(-L/2-ov, 0, -W/2-ov);
+      slope.castShadow=true; slope.receiveShadow=true;
+      group.add(slope);
+    }
+  } else if (tip === 'patru_ape') {
+    // Four slopes — simplified pyramid with ridge
+    const ridgeLen = Math.max(L - W, 0.5);
+    // Gable slopes (front & back)
+    for (let sz = -1; sz <= 1; sz += 2) {
+      const shape = new THREE.Shape();
+      const gx = L/2 + ov;
+      shape.moveTo(0, hz); shape.lineTo(gx, hz);
+      shape.lineTo(ridgeLen/2, hz + hRoof); shape.closePath();
+      const geom = new THREE.ExtrudeGeometry(shape, {steps:1, depth:W+2*ov, bevelEnabled:false});
+      const mat = new THREE.MeshStandardMaterial({color:roofColor, roughness:0.6});
+      const slope = new THREE.Mesh(geom, mat);
+      slope.position.set(-gx, 0, -W/2-ov);
+      if (sz > 0) {
+        slope.rotation.y = Math.PI;
+        slope.position.set(gx, 0, W/2+ov);
+      }
+      slope.castShadow=true; group.add(slope);
+    }
+    // Hip slopes (sides)
+    for (let sz = -1; sz <= 1; sz += 2) {
+      const shape = new THREE.Shape();
+      shape.moveTo(-ridgeLen/2, hz+hRoof); shape.lineTo(ridgeLen/2, hz+hRoof);
+      shape.lineTo(0, hz); shape.closePath();
+      const geom = new THREE.ExtrudeGeometry(shape, {steps:1, depth:W/2+ov, bevelEnabled:false});
+      const mat = new THREE.MeshStandardMaterial({color:roofColor, roughness:0.6});
+      const slope = new THREE.Mesh(geom, mat);
+      slope.rotation.x = -Math.atan2(hRoof, W/2);
+      slope.position.set(0, hz, sz * (W/2 + ov));
+      slope.castShadow=true; group.add(slope);
+    }
+  } else {
+    // Mansard — simpler version
+    buildGableRoof(group, L, W, hz, hRoof, ov, roofColor);
+  }
+
+  // ── CHIMNEY ──
+  const chimneyGeom = new THREE.BoxGeometry(0.5, hRoof+1.2, 0.5);
+  const chimneyMat = new THREE.MeshStandardMaterial({color:'#c4b8a8', roughness:0.7});
+  const chimney = new THREE.Mesh(chimneyGeom, chimneyMat);
+  chimney.position.set(L*0.25, hz+hRoof/2+0.6, W*0.15);
+  chimney.castShadow=true; group.add(chimney);
+
+  buildingGroup.add(group);
+}
+
+function buildGableRoof(group, L, W, hz, hRoof, ov, color) {
+  for (let sx = -1; sx <= 1; sx += 2) {
+    const shape = new THREE.Shape();
+    shape.moveTo(-L/2-ov, hz); shape.lineTo(L/2+ov, hz);
+    shape.lineTo(0, hz+hRoof+0.5); shape.closePath();
+    const geom = new THREE.ExtrudeGeometry(shape, {steps:1, depth:W+2*ov, bevelEnabled:false});
+    const mat = new THREE.MeshStandardMaterial({color:color, roughness:0.5});
+    const roof = new THREE.Mesh(geom, mat);
+    roof.position.set(0, 0, -W/2-ov);
+    roof.castShadow=true; group.add(roof);
+  }
+}
+
+// ═══════════════════════════════════════════
+// CALCULATIONS
+// ═══════════════════════════════════════════
+function calcCantitati({lungime:L, latime:W, panta, tip}) {
+  const cosVal = Math.cos(deg2rad(panta));
+  const mpAmprenta = L * W;
+  const factor = CONFIG.tipuriAcoperis[tip]?.factorMp ?? 1;
+  const mp = (mpAmprenta / cosVal) * factor;
+  let coama, streasina;
+  if (tip === 'patru_ape') {
+    coama = Math.max(L-W, 0);
+    streasina = 2*(L+W);
+  } else {
+    coama = L;
+    streasina = 2*L;
+  }
+  return {mp, coama, streasina, mpAmprenta};
+}
+
+function calcDeviz(cfg) {
+  const q = calcCantitati(cfg);
+  const {material, lucrare, demontare, jgheaburi} = cfg;
+  const C = CONFIG;
+  if (q.mp < 20 || q.mp > 1500) {
+    return {status:'REQUIRES_CONFIRMATION', q, message:`Suprafața ~${Math.round(q.mp)} mp iese din interval.`};
+  }
+  const pMat = C.materialeMp[material]?.pret ?? 45;
+  const pMan = C.manoperaMp[lucrare] ?? 35;
+  const pierd = C.pierderiTaieturi;
+  const linii = [
+    {desc:`Învelitoare ${material}`, cant:q.mp*pierd, um:'mp', total:q.mp*pierd*pMat, nota:'+10% pierderi'},
+    {desc:`Manoperă — ${lucrare}`, cant:q.mp, um:'mp', total:q.mp*pMan},
+  ];
+  if (demontare) linii.push({desc:'Demontare acoperiș vechi', cant:q.mp, um:'mp', total:q.mp*15});
+  if (jgheaburi) linii.push({desc:'Jgheaburi+burlane', cant:q.streasina, um:'ml', total:q.streasina*25});
+  linii.push({desc:'Deplasare+transport', cant:1, um:'buc', total:C.taxeFixe.deplasareTransport});
+  let total = linii.reduce((s,l)=>s+l.total,0);
+  const subMinim = total < C.taxeFixe.comandaMinima;
+  if (subMinim) total = C.taxeFixe.comandaMinima;
+  const t = C.intervalToleranta;
+  return {status:'SUCCESS', q, linii, subMinim, min:Math.round(total*(1-t)), max:Math.round(total*(1+t))};
+}
+
+// ═══════════════════════════════════════════
+// UI BINDING
+// ═══════════════════════════════════════════
+const $ = id => document.getElementById(id);
+
+function renderUI() {
+  const C = CONFIG;
+  const s = state;
+
+  // Tip buttons
+  $('tipBtns').innerHTML = Object.entries(C.tipuriAcoperis).map(([k,t]) =>
+    `<button class="btn ${s.tip===k?'active':''}" data-tip="${k}">${t.nume}</button>`
+  ).join('');
+  $('tipBtns').querySelectorAll('button').forEach(b =>
+    b.onclick = () => { state.tip = b.dataset.tip; updateAll(); }
+  );
+
+  // Sliders
+  $('sliders').innerHTML = '';
+  [
+    {label:'Lungime', key:'lungime', v:s.lungime, min:5, max:30, step:0.5, unit:'m'},
+    {label:'Lățime', key:'latime', v:s.latime, min:4, max:20, step:0.5, unit:'m'},
+    {label:'Pantă', key:'panta', v:s.panta, min:15, max:55, step:1, unit:'°'},
+  ].forEach(sl => {
+    const div = document.createElement('div'); div.className='slider-wrap';
+    div.innerHTML = `<div class="slider-row"><span>${sl.label}</span><span>${sl.v} ${sl.unit}</span></div>
+    <div class="slider-ctrl">
+      <button class="slider-btn" data-dir="-">−</button>
+      <input type="range" min="${sl.min}" max="${sl.max}" step="${sl.step}" value="${sl.v}">
+      <button class="slider-btn" data-dir="+">+</button></div>`;
+    const range = div.querySelector('input');
+    range.oninput = () => {
+      state[sl.key] = Number(range.value);
+      updateAll();
+    };
+    div.querySelectorAll('.slider-btn').forEach(b => {
+      b.onclick = () => {
+        const d = b.dataset.dir==='-' ? -sl.step : sl.step;
+        state[sl.key] = Math.max(sl.min, Math.min(sl.max, +(state[sl.key]+d).toFixed(1)));
+        updateAll();
+      };
+    });
+    $('sliders').appendChild(div);
+  });
+
+  // Material buttons
+  $('matBtns').innerHTML = Object.entries(C.materialeMp).map(([n,m]) =>
+    `<button class="btn ${s.material===n?'active':''}" style="display:flex;align-items:center;gap:8px;width:100%;margin-bottom:5px;text-align:left;padding:8px;">
+      <span style="width:24px;height:16px;border-radius:4px;background:${m.hex};border:1px solid rgba(0,0,0,.15);flex-shrink:0"></span>
+      <span style="flex:1;font-size:11px;white-space:normal">${n}</span>
+      <span style="font-size:10px;color:#5c6a75;white-space:nowrap">${m.pret} lei/mp</span>
+    </button>`
+  ).join('');
+  $('matBtns').querySelectorAll('button').forEach((b,i) => {
+    b.onclick = () => { state.material = Object.keys(C.materialeMp)[i]; updateAll(); };
+  });
+
+  // Lucrare options
+  $('lucrOpts').innerHTML = Object.entries(C.manoperaMp).map(([n,p]) =>
+    `<label><input type="radio" name="lucrare" value="${n}" ${s.lucrare===n?'checked':''}> ${n} — <span style="font-size:10px;color:#5c6a75">${p} lei/mp</span></label>`
+  ).join('');
+  $('lucrOpts').querySelectorAll('input').forEach(inp => {
+    inp.onchange = () => { state.lucrare = inp.value; updateAll(); };
+  });
+
+  // Optionals
+  $('demontare').checked = s.demontare;
+  $('demontare').onchange = e => { state.demontare = e.target.checked; updateAll(); };
+  $('jgheaburi').checked = s.jgheaburi;
+  $('jgheaburi').onchange = e => { state.jgheaburi = e.target.checked; updateAll(); };
+}
+
+function updateStats() {
+  const q = calcCantitati(state);
+  $('stats').innerHTML = `Din model: <b>~${Math.round(q.mp)} mp</b> învelitoare · coamă <b>${Math.round(q.coama)} ml</b> · streașină <b>${Math.round(q.streasina)} ml</b>`;
+  $('streasinaMl').textContent = `~${Math.round(q.streasina)} ml`;
+  $('footer-bar').textContent = `${state.lungime}×${state.latime} m · pantă ${state.panta}° · ${CONFIG.tipuriAcoperis[state.tip].nume} · ~${Math.round(q.mp)} mp`;
+}
+
+function updatePrice() {
+  const dv = calcDeviz(state);
+  if (dv.status === 'SUCCESS') {
+    const lei = n => Math.round(n).toLocaleString('ro-RO') + ' lei';
+    $('priceDisplay').textContent = `${lei(dv.min)} – ${lei(dv.max)}`;
+    $('priceMeta').textContent = CONFIG.taxeFixe.comandaMinima ? `Prețurile includ TVA (19%)${dv.subMinim?' · sub comanda minimă — se aplică valoarea minimă':''}` : '';
+    // Detail table
+    $('detailTable').innerHTML = dv.linii.map(l =>
+      `<tr><td>${l.desc}${l.nota?` <span style="color:#8a949c;font-size:10px">(${l.nota})</span>`:''}</td>
+       <td style="text-align:right;color:#5c6a75;padding-left:6px">${l.cant.toFixed(l.um==='buc'?0:1)} ${l.um}</td>
+       <td style="text-align:right;padding-left:6px;font-weight:600">${lei(l.total)}</td></tr>`
+    ).join('');
+  } else {
+    $('priceDisplay').textContent = '—';
+    $('priceMeta').textContent = dv.message;
+  }
+}
+
+const lei = n => Math.round(n).toLocaleString('ro-RO') + ' lei';
+
+let showDetails = false;
+$('detailBtn').onclick = () => {
+  showDetails = !showDetails;
+  $('detailTable').style.display = showDetails ? '' : 'none';
+  $('detailBtn').textContent = showDetails ? 'Ascunde detaliile ▴' : 'Vezi detaliile estimării ▾';
+};
+
+function updateAll() {
+  buildHouse(state);
+  updateStats();
+  updatePrice();
+  renderUI();
+}
+
+// ═══════════════════════════════════════════
+// ANIMATION LOOP
+// ═══════════════════════════════════════════
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+// Handle resize
+window.addEventListener('resize', () => {
+  const w = container.clientWidth, h = container.clientHeight;
+  camera.aspect = w/h; camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+});
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+renderUI();
+updateAll();
+animate();
+
+console.log('🏠 Configurator Acoperișuri 3D — Ready');
+console.log('  Drag to rotate | Scroll to zoom | Right-drag to pan');
+console.log('  Lungime:', state.lungime, 'Lățime:', state.latime, 'Pantă:', state.panta+'°');
+</script>
+</body>
+</html>
