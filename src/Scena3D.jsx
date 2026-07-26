@@ -605,8 +605,7 @@ export default function Scena3D({ cfg }) {
     var fGeo = new THREE.ExtrudeGeometry(shape2, {steps:1, depth:0.08, bevelEnabled:false});
     var fPanou = new THREE.Mesh(fGeo, frontonMat);
     fPanou.position.set(sx * (L/2 + 0.02), hz, 0);
-    if (sx > 0) fPanou.rotation.y = Math.PI;
-    else fPanou.rotation.y = 0;
+    fPanou.rotation.y = sx > 0 ? -Math.PI/2 : Math.PI/2;
     fPanou.castShadow = true; fPanou.receiveShadow = true;
     scene.add(fPanou);
 
@@ -619,6 +618,7 @@ export default function Scena3D({ cfg }) {
           frontonTrim
         );
         scandura.position.set(sx * (L/2 + 0.06), sy, 0);
+        scandura.rotation.y = sx > 0 ? -Math.PI/2 : Math.PI/2;
         scandura.castShadow = true; scene.add(scandura);
       }
     }
@@ -630,12 +630,14 @@ export default function Scena3D({ cfg }) {
       new THREE.MeshStandardMaterial({ color: 0x3d3d3d, roughness: 0.3, metalness: 0.6 })
     );
     ocFrame.position.set(sx * (L/2 + 0.10), ocY, 0);
+    ocFrame.rotation.y = sx > 0 ? -Math.PI/2 : Math.PI/2;
     ocFrame.castShadow = true; scene.add(ocFrame);
     var ocGlass = new THREE.Mesh(
       new THREE.CircleGeometry(ocR - 0.02, 16),
       new THREE.MeshStandardMaterial({ color: 0x8ab0c8, roughness: 0.15, metalness: 0.2 })
     );
     ocGlass.position.set(sx * (L/2 + 0.11), ocY, 0);
+    ocGlass.rotation.y = sx > 0 ? -Math.PI/2 : Math.PI/2;
     scene.add(ocGlass);
   });
 
