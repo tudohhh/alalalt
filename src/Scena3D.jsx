@@ -485,37 +485,67 @@ export default function Scena3D({ cfg }) {
     zg.addColorStop(0, "rgba(45,40,32,0.42)"); zg.addColorStop(1, "rgba(45,40,32,0)");
     zx.fillStyle = zg; zx.fillRect(0, 0, 64, 70);
     const ztx = srgb(new THREE.CanvasTexture(zc));
-    // Tencuiala procedurala
-  const tencCanvas = document.createElement('canvas'); tencCanvas.width = tencCanvas.height = 512;
+    // Tencuială decorativă — textură 1024px, granulație + urme de glet
+  const tencCanvas = document.createElement('canvas'); tencCanvas.width = tencCanvas.height = 1024;
   const tctx = tencCanvas.getContext('2d');
-  // Baza: alb cald
-  tctx.fillStyle = '#f4f1ea'; tctx.fillRect(0, 0, 512, 512);
-  // Granule fine
-  for (let i = 0; i < 8000; i++) {
-    const g = 235 + Math.random() * 20;
-    tctx.fillStyle = `rgba(${g},${g},${g},0.25)`;
-    tctx.fillRect(Math.random()*512, Math.random()*512, 1.5, 1.5);
+  tctx.fillStyle = '#f2ede4'; tctx.fillRect(0, 0, 1024, 1024);
+  // Granulație fină (nisip)
+  for (let i = 0; i < 25000; i++) {
+    const g = 225 + Math.random() * 30;
+    tctx.fillStyle = `rgba(${g},${g-3},${g-8},0.28)`;
+    const s = 2 + Math.random() * 4;
+    tctx.fillRect(Math.random() * 1024, Math.random() * 1024, s, s);
   }
-  // Imperfectiuni
-  for (let i = 0; i < 200; i++) {
-    tctx.fillStyle = `rgba(200,195,185,0.15)`;
-    tctx.fillRect(Math.random()*512, Math.random()*512, 3+Math.random()*5, 2+Math.random()*3);
+  // Granule mai mari (pietricele decorative)
+  for (let i = 0; i < 3000; i++) {
+    const g = 185 + Math.random() * 35;
+    tctx.fillStyle = `rgba(${g},${g-4},${g-10},0.22)`;
+    const s = 3 + Math.random() * 7;
+    tctx.fillRect(Math.random() * 1024, Math.random() * 1024, s, s);
   }
-  const tencTex = new THREE.CanvasTexture(tencCanvas); tencTex.wrapS = tencTex.wrapT = THREE.RepeatWrapping;
-  tencTex.repeat.set(L*2, hz*2); tencTex.colorSpace = THREE.SRGBColorSpace;
-  // Bump map tencuiala
-  const bumpCanvas = document.createElement('canvas'); bumpCanvas.width = bumpCanvas.height = 256;
+  // Urme de gletieră (mișcări orizontale)
+  for (let y = 0; y < 1024; y += 70 + Math.random() * 55) {
+    const a = 0.025 + Math.random() * 0.04;
+    tctx.fillStyle = `rgba(255,255,255,${a})`; tctx.fillRect(0, y, 1024, 3 + Math.random() * 10);
+    tctx.fillStyle = `rgba(0,0,0,${a * 0.6})`; tctx.fillRect(0, y + 10, 1024, 2 + Math.random() * 5);
+  }
+  // Pete de umiditate / intemperii
+  for (let i = 0; i < 25; i++) {
+    const px = Math.random() * 1024, py = Math.random() * 1024;
+    const r = 35 + Math.random() * 90;
+    const g = tctx.createRadialGradient(px, py, 0, px, py, r);
+    g.addColorStop(0, 'rgba(195,188,178,0.07)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    tctx.fillStyle = g; tctx.fillRect(px - r, py - r, r * 2, r * 2);
+  }
+  const tencTex = new THREE.CanvasTexture(tencCanvas);
+  tencTex.wrapS = tencTex.wrapT = THREE.RepeatWrapping; tencTex.anisotropy = 16;
+  tencTex.repeat.set(L * 0.6, hz * 0.6); tencTex.colorSpace = THREE.SRGBColorSpace;
+  tencTex.minFilter = THREE.LinearMipmapLinearFilter; tencTex.magFilter = THREE.LinearFilter;
+  tencTex.generateMipmaps = true;
+
+  // Bump map — relief pronunțat (granule + glet)
+  const bumpCanvas = document.createElement('canvas'); bumpCanvas.width = bumpCanvas.height = 1024;
   const bctx = bumpCanvas.getContext('2d');
-  bctx.fillStyle = '#808080'; bctx.fillRect(0, 0, 256, 256);
-  for (let i = 0; i < 4000; i++) {
-    const v = 128 + (Math.random()-0.5)*20;
+  bctx.fillStyle = '#808080'; bctx.fillRect(0, 0, 1024, 1024);
+  for (let i = 0; i < 20000; i++) {
+    const v = 128 + (Math.random() - 0.5) * 55;
     bctx.fillStyle = `rgb(${v},${v},${v})`;
-    bctx.fillRect(Math.random()*256, Math.random()*256, 1.5, 1.5);
+    const s = 2 + Math.random() * 5;
+    bctx.fillRect(Math.random() * 1024, Math.random() * 1024, s, s);
   }
-  const bumpTex = new THREE.CanvasTexture(bumpCanvas); bumpTex.wrapS = bumpTex.wrapT = THREE.RepeatWrapping;
-  bumpTex.repeat.set(L*2, hz*2); bumpTex.colorSpace = THREE.LinearSRGBColorSpace;
-  const matZid = new THREE.MeshStandardMaterial({ color: '#f4f1ea', map: tencTex, roughness: 0.88,
-    bumpMap: bumpTex, bumpScale: 0.008 });
+  // Urme glet în bump (mai deschise = ies în relief)
+  for (let y = 0; y < 1024; y += 70 + Math.random() * 55) {
+    bctx.fillStyle = '#b0b0b0'; bctx.fillRect(0, y, 1024, 3 + Math.random() * 8);
+    bctx.fillStyle = '#505050'; bctx.fillRect(0, y + 8, 1024, 2 + Math.random() * 4);
+  }
+  const bumpTex = new THREE.CanvasTexture(bumpCanvas);
+  bumpTex.wrapS = bumpTex.wrapT = THREE.RepeatWrapping; bumpTex.anisotropy = 16;
+  bumpTex.repeat.set(L * 0.6, hz * 0.6); bumpTex.colorSpace = THREE.LinearSRGBColorSpace;
+  bumpTex.minFilter = THREE.LinearMipmapLinearFilter; bumpTex.magFilter = THREE.LinearFilter;
+  bumpTex.generateMipmaps = true;
+
+  const matZid = new THREE.MeshStandardMaterial({ color: '#f4f1ea', map: tencTex, roughness: 0.85,
+    bumpMap: bumpTex, bumpScale: 0.06 });
       const casa = new THREE.Mesh(new THREE.BoxGeometry(L, hz, W), matZid);
     casa.position.y = hz / 2; casa.castShadow = true; casa.receiveShadow = true; scene.add(casa);
   // --- Tâmplărie (ferestre + ușă) ---
