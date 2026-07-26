@@ -382,7 +382,7 @@ export default function Scena3D({ cfg }) {
   const FOG_COL = "#ddd8cf";
   scene.background = new THREE.Color(FOG_COL);
   {
-    const domeGeo = new THREE.SphereGeometry(380, 48, 32);
+    const domeGeo = new THREE.SphereGeometry(380, 96, 48);
     const pos = domeGeo.attributes.position;
     const cols = new Float32Array(pos.count * 3);
     const cJos = new THREE.Color(FOG_COL);
@@ -391,9 +391,9 @@ export default function Scena3D({ cfg }) {
     const tmp = new THREE.Color();
     for (let i = 0; i < pos.count; i++) {
       const e = Math.max(0, pos.getY(i) / 380);
-      if (e < 0.06) tmp.copy(cJos);
-      else if (e < 0.35) tmp.lerpColors(cJos, cMij, (e - 0.06) / 0.29);
-      else tmp.lerpColors(cMij, cSus, Math.min(1, (e - 0.35) / 0.5));
+      if (e < 0.02) tmp.copy(cJos);
+      else if (e < 0.30) tmp.lerpColors(cJos, cMij, (e - 0.02) / 0.28);
+      else tmp.lerpColors(cMij, cSus, Math.min(1, (e - 0.30) / 0.5));
       cols[i * 3] = tmp.r; cols[i * 3 + 1] = tmp.g; cols[i * 3 + 2] = tmp.b;
     }
     domeGeo.setAttribute("color", new THREE.BufferAttribute(cols, 3));
