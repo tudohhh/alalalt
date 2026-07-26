@@ -847,7 +847,7 @@ export default function Scena3D({ cfg }) {
       const ht = new THREE.CanvasTexture(hc);
       ht.wrapS = ht.wrapT = THREE.RepeatWrapping;
       // ~2.5 cărămizi pe lățimea hornului (0.62m / 0.24m per cărămidă ≈ 2.6)
-      ht.repeat.set(0.38, 1.0);
+      ht.repeat.set(0.29, 0.45);
       ht.colorSpace = THREE.SRGBColorSpace; ht.anisotropy = 8;
 
       // Bump map
@@ -863,7 +863,7 @@ export default function Scena3D({ cfg }) {
         }
       }
       const bt2 = new THREE.CanvasTexture(bc);
-      bt2.wrapS = bt2.wrapT = THREE.RepeatWrapping; bt2.repeat.set(0.38, 1.0);
+      bt2.wrapS = bt2.wrapT = THREE.RepeatWrapping; bt2.repeat.set(0.29, 0.45);
 
       const brickMat = new THREE.MeshStandardMaterial({
         map: ht, bumpMap: bt2, bumpScale: 0.06, roughness: 0.78, color: 0xffffff
