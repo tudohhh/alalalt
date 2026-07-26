@@ -172,12 +172,12 @@ function texGazon() {
   b.width = b.height = S;
   const bx = b.getContext("2d");
 
-  x.fillStyle = "#55643f";
+  x.fillStyle = "#6b6a5e";
   x.fillRect(0, 0, S, S);
   bx.fillStyle = "#2a2a2a";
   bx.fillRect(0, 0, S, S);
 
-  const tonuri = ["#6d7c50", "#586740", "#77865c", "#4d5a36", "#7f8d64", "#657449", "#8a976f", "#909d74"];
+  const tonuri = ["#7a7a6a", "#6e6d5e", "#828270", "#5e5d4e", "#8a8978", "#727160", "#949380", "#9a997e"];
 
   const fir = (px, py, ang, len, w, col, lum) => {
     x.strokeStyle = col;
@@ -820,7 +820,7 @@ function adaugaFlori(scene, L, W) {
 
 export function adaugaGradina(scene, renderer, L, W, optiuni = {}) {
   const o = Object.assign(
-    { copaci: true, iarba: true, gard: true, sol: true, densIarba: 9000, latSol: 80, envMap: true },
+    { copaci: true, iarba: true, gard: true, sol: true, densIarba: 9000, latSol: 0, envMap: true },
     optiuni
   );
   const T = texturi();
@@ -830,7 +830,9 @@ export function adaugaGradina(scene, renderer, L, W, optiuni = {}) {
   if (o.envMap && renderer) scene.environment = mediu(renderer);
 
   /* --- solul --- */
-  if (o.sol) grup.add(faSol(o.latSol, Math.max(L, W) / 2 + 20));
+  const raza = Math.max(L, W) / 2 + 20;
+  const latimeSol = o.latSol > 0 ? o.latSol : 2 * raza + 10;
+  if (o.sol) grup.add(faSol(latimeSol, raza));
 
   /* --- copaci --- */
   if (o.copaci) {
