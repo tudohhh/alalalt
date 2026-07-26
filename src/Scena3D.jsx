@@ -419,14 +419,14 @@ export default function Scena3D({ cfg }) {
     const m=new THREE.Mesh(new THREE.PlaneGeometry(320,80), new THREE.MeshBasicMaterial({map:t,transparent:true,depthWrite:false,fog:false}));
     m.position.set(0,22,-95); scene.add(m);
   })();
-    scene.fog = new THREE.Fog("#e6eae7", 55, 170);
+    scene.fog = new THREE.Fog("#e6eae7", 30, 95);
 
-    const teren = new THREE.Mesh(new THREE.PlaneGeometry(320, 320),
+    const teren = new THREE.Mesh(new THREE.PlaneGeometry(100, 100),
       new THREE.MeshStandardMaterial({ map: texTeren(), roughness: 1 }));
     teren.rotation.x = -Math.PI / 2; teren.receiveShadow = true; scene.add(teren);
-  // Plan imens pentru continuitate
-  const bigGround = new THREE.Mesh(new THREE.PlaneGeometry(400, 400),
-    new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.95 }));
+  // Plan de continuitate — culoare pamantie, ascuns de ceata
+  const bigGround = new THREE.Mesh(new THREE.PlaneGeometry(140, 140),
+    new THREE.MeshStandardMaterial({ color: 0x9d9588, roughness: 0.95 }));
   bigGround.rotation.x = -Math.PI / 2; bigGround.position.y = -0.02; bigGround.receiveShadow = true;
   scene.add(bigGround);
     const pv = texPavaj();
