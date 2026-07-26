@@ -520,7 +520,7 @@ export default function Scena3D({ cfg }) {
     casa.position.y = hz / 2; casa.castShadow = true; casa.receiveShadow = true; scene.add(casa);
   // --- Tâmplărie (ferestre + ușă) ---
   const matToc = new THREE.MeshStandardMaterial({ color: 0x1f1f1f, roughness: 0.3, metalness: 0.75 });
-  const matGeam = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.04, metalness: 0.03, clearcoat: 1, clearcoatRoughness: 0.03, envMapIntensity: 1.4, transparent: true, opacity: 0.82 });
+  const matGeam = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.02, metalness: 0.08, envMapIntensity: 1.6, transparent: true, opacity: 0.80, depthWrite: false });
 
   // Helper: creează o fereastră cu pervaz și obloane
   function adaugaFereastra(cx, cy, cz, rotY, w = 0.9, h = 1.1) {
@@ -531,8 +531,8 @@ export default function Scena3D({ cfg }) {
     const toc = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.06), matToc);
     toc.castShadow = true; grup.add(toc);
     // Geam
-    const geam = new THREE.Mesh(new THREE.BoxGeometry(w - 0.18, h - 0.18, 0.01), matGeam);
-    geam.position.z = 0.035; grup.add(geam);
+    const geam = new THREE.Mesh(new THREE.BoxGeometry(w - 0.18, h - 0.18, 0.02), matGeam);
+    geam.position.z = 0.04; geam.renderOrder = 1; grup.add(geam);
     // Pervaz
     const pervaz = new THREE.Mesh(new THREE.BoxGeometry(w + 0.1, 0.06, 0.10), matToc);
     pervaz.position.set(0, -h/2 - 0.04, 0.04); pervaz.castShadow = true; grup.add(pervaz);
@@ -581,8 +581,8 @@ export default function Scena3D({ cfg }) {
     new THREE.MeshStandardMaterial({ color: 0x2c2c2c, roughness: 0.25, metalness: 0.85 }));
   panouJos.position.set(0, -doorH * 0.22, 0.02); panouJos.castShadow = true; doorGroup.add(panouJos);
   // Panou superior (geam)
-  const panouSus = new THREE.Mesh(new THREE.BoxGeometry(doorW - 0.06, doorH * 0.38, 0.01), matGeam);
-  panouSus.position.set(0, doorH * 0.18, 0.035); doorGroup.add(panouSus);
+  const panouSus = new THREE.Mesh(new THREE.BoxGeometry(doorW - 0.06, doorH * 0.38, 0.02), matGeam);
+  panouSus.position.set(0, doorH * 0.18, 0.045); panouSus.renderOrder = 1; doorGroup.add(panouSus);
   // Mâner
   const maner = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.22, 8),
     new THREE.MeshStandardMaterial({ color: 0xc0c0c0, roughness: 0.2, metalness: 0.95 }));
