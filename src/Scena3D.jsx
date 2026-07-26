@@ -403,11 +403,11 @@ export default function Scena3D({ cfg }) {
     rnd.setClearColor(0xdce8f0);
     el.appendChild(rnd.domElement);
 
-    scene.fog = new THREE.Fog("#e0dcd0", 50, 180);
+    scene.fog = new THREE.Fog("#d1ccc6", 50, 180);
 
   // Fundal imens — se topeste in ceata, culoarea identica cu fog-ul
   const bgGround = new THREE.Mesh(new THREE.PlaneGeometry(800, 800),
-    new THREE.MeshStandardMaterial({ color: 0xd5cec0, roughness: 0.95 }));
+    new THREE.MeshStandardMaterial({ color: 0xd1ccc6, roughness: 0.95 }));
   bgGround.rotation.x = -Math.PI / 2; bgGround.position.y = -0.04; bgGround.receiveShadow = true;
   scene.add(bgGround);
     const pv = texPavaj();
