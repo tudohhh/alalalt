@@ -595,48 +595,42 @@ export default function Scena3D({ cfg }) {
   adaugaFereastra(-L / 2 - 0.03, hz * 0.58, W * 0.35, -Math.PI / 2);         // stânga
 
   // --- Ghivece flori sub ferestre față ---
-  const flColors = [0xe85d5d, 0xe8a85d, 0xf0d860, 0xe86d8c, 0xf5a0a0, 0xfff0b0, 0xff8080, 0xffd070];
+  const flColors = [0xe85d5d, 0xe8a85d, 0xf0d860, 0xe86d8c, 0xf5a0a0, 0xfff0b0];
   const matGhiveci = new THREE.MeshStandardMaterial({ color: 0x8b6f5e, roughness: 0.7 });
-  const matFloare = new THREE.MeshStandardMaterial({ roughness: 0.8 });
   const matFrunza = new THREE.MeshStandardMaterial({ color: 0x5a7a3a, roughness: 0.8 });
-  function adaugaGhiveci(cx, cz, ry) {
+  [L * 0.35, -L * 0.35].forEach(function(cx) {
     const g = new THREE.Group();
-    g.position.set(cx, 0.55, cz); g.rotation.y = ry;
+    g.position.set(cx, 0.55, W / 2 + 0.22);
     const gh = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.18, 0.35, 12), matGhiveci);
     gh.position.y = 0.17; gh.castShadow = true; g.add(gh);
-    // Flori — bile colorate
-    for (let i = 0; i < 5; i++) {
-      const col = flColors[Math.floor(Math.random() * flColors.length)];
-      const fm = matFloare.clone(); fm.color = new THREE.Color(col);
-      const fl = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 4), fm);
+    for (var i = 0; i < 5; i++) {
+      var col = flColors[i % flColors.length];
+      var fm = new THREE.MeshStandardMaterial({ color: col, roughness: 0.8 });
+      var fl = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 4), fm);
       fl.position.set((Math.random()-0.5)*0.2, 0.38 + Math.random()*0.15, (Math.random()-0.5)*0.2);
       fl.castShadow = true; g.add(fl);
     }
-    // Frunze
-    for (let i = 0; i < 3; i++) {
-      const fr = new THREE.Mesh(new THREE.SphereGeometry(0.04, 4, 2), matFrunza);
+    for (var j = 0; j < 3; j++) {
+      var fr = new THREE.Mesh(new THREE.SphereGeometry(0.04, 4, 2), matFrunza);
       fr.position.set((Math.random()-0.5)*0.25, 0.30, (Math.random()-0.5)*0.25);
       fr.scale.set(1, 0.4, 1); g.add(fr);
     }
     scene.add(g);
-  }
-  adaugaGhiveci(L * 0.35, W / 2 + 0.22, 0);
-  adaugaGhiveci(-L * 0.35, W / 2 + 0.22, 0);
+  });
 
   // --- Tufe decorative lângă ușă ---
-  function adaugaTufa(px, pz, sc = 1) {
-    const g = new THREE.Group(); g.position.set(px, 0, pz);
-    for (let i = 0; i < 3; i++) {
-      const s = sc * (0.5 + Math.random() * 0.5);
-      const b = new THREE.Mesh(new THREE.SphereGeometry(0.30 * s, 7, 5),
-        new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(0.22 + Math.random()*0.08, 0.5, 0.30 + Math.random()*0.15), roughness: 0.9 }));
-      b.position.set((Math.random()-0.5)*0.4, 0.25 * s, (Math.random()-0.5)*0.4);
-      b.castShadow = true; g.add(b);
+  [doorX - 0.9, doorX + 0.9].forEach(function(px, idx) {
+    var sc2 = idx === 0 ? 1 : 0.85;
+    var g2 = new THREE.Group(); g2.position.set(px, 0, doorZ + 0.7);
+    for (var k = 0; k < 3; k++) {
+      var s3 = sc2 * (0.5 + Math.random() * 0.5);
+      var bushMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(0.22 + Math.random()*0.08, 0.5, 0.30 + Math.random()*0.15), roughness: 0.9 });
+      var bush = new THREE.Mesh(new THREE.SphereGeometry(0.30 * s3, 7, 5), bushMat);
+      bush.position.set((Math.random()-0.5)*0.4, 0.25 * s3, (Math.random()-0.5)*0.4);
+      bush.castShadow = true; g2.add(bush);
     }
-    scene.add(g);
-  }
-  adaugaTufa(doorX - 0.9, doorZ + 0.7, 1);
-  adaugaTufa(doorX + 0.9, doorZ + 0.7, 0.85);
+    scene.add(g2);
+  });
 
   // --- Ușă intrare (aliniată cu aleea) ---
   const doorX = -L / 5, doorZ = W / 2 + 0.02, doorW = 0.92, doorH = 2.15;
