@@ -130,91 +130,196 @@ function shade(hex, f) {
 }
 
 function texInvelitoare(hex, tip) {
-  const S = 512;
+  const S = 1024;
   const c = document.createElement("canvas"); c.width = c.height = S;
   const x = c.getContext("2d");
-  
-  // Noise simplu
   const hash = (a, b) => { let h = a*374761393+b*668265263+1274126177; h=(h^(h>>13))*1274126177; return (h^(h>>16))/2147483648; };
-  
-  // Gradient de bază cu noise
-  const img = x.getImageData(0, 0, S, S);
-  for (let py = 0; py < S; py++) {
-    for (let px = 0; px < S; px++) {
-      const i = (py * S + px) * 4;
-      const noise = (hash(px*0.3, py*0.3) - 0.5) * 12;
-      const baseR = parseInt(hex.slice(1,3), 16) + noise;
-      const baseG = parseInt(hex.slice(3,5), 16) + noise;
-      const baseB = parseInt(hex.slice(5,7), 16) + noise;
-      img.data[i] = Math.max(0, Math.min(255, baseR));
-      img.data[i+1] = Math.max(0, Math.min(255, baseG));
-      img.data[i+2] = Math.max(0, Math.min(255, baseB));
-      img.data[i+3] = 255;
-    }
-  }
-  x.putImageData(img, 0, 0);
-  
+  const r0 = parseInt(hex.slice(1,3), 16), g0 = parseInt(hex.slice(3,5), 16), b0 = parseInt(hex.slice(5,7), 16);
+
   if (tip === "tabla") {
-    // Dungi de tabla cu variație
-    for (let px = 0; px < S; px += 32) {
-      const offset = (hash(px, 0) - 0.5) * 3;
-      x.fillStyle = "rgba(0,0,0,0.38)"; x.fillRect(px + offset, 0, 3, S);
-      x.fillStyle = "rgba(255,255,255,0.12)"; x.fillRect(px + offset + 3, 0, 2, S);
-      // Variație micro
-      for (let py = 0; py < S; py += 4) {
-        if (hash(px, py) > 0.7) {
-          x.fillStyle = "rgba(255,255,255,0.04)"; x.fillRect(px + offset + 10, py, 6, 2);
+    // --- METAL STANDING SEAM ---
+    const seamSpacing = 48; // pixels between seams (~40cm at roof scale)
+    const seamWidth = 7;
+    // Gradient base: darker at bottom of each panel
+    const img = x.getImageData(0, 0, S, S);
+    for (let py = 0; py < S; py++) {
+      for (let px = 0; px < S; px++) {
+        const i = (py * S + px) * 4;
+        const panel = Math.floor(px / seamSpacing);
+        const pos = px % seamSpacing;
+        const seam = pos < seamWidth;
+        const seamR = pos < 1 ? 1 : (pos > seamSpacing - 1 ? 1 : 0);
+        const n = (hash(px * 0.13, py * 0.13) - 0.5) * 8;
+        let rr = r0 + n, gg = g0 + n, bb = b0 + n;
+        if (seam) {
+          const sd = Math.min(pos + 1, seamSpacing - pos);
+          const f = sd <= 0 ? 1 : Math.max(0, 1 - sd / seamWidth);
+          rr -= 18 * f; gg -= 18 * f; bb -= 18 * f;
+        }
+        // Highlight on seam ridge
+        if (pos >= 0 && pos <= 2) { rr += 22; gg += 22; bb += 22; }
+        if (pos >= seamSpacing - 2 && pos <= seamSpacing - 1) { rr += 22; gg += 22; bb += 22; }
+        // Subtle panel wave
+        const wv = Math.sin(pos / seamSpacing * Math.PI) * 5;
+        rr += wv; gg += wv; bb += wv;
+        // Micro grain
+        const grain = (hash(px * 1.7, py * 1.7) - 0.5) * 5;
+        rr += grain; gg += grain; bb += grain;
+        img.data[i] = Math.max(0, Math.min(255, rr));
+        img.data[i+1] = Math.max(0, Math.min(255, gg));
+        img.data[i+2] = Math.max(0, Math.min(255, bb));
+        img.data[i+3] = 255;
+      }
+    }
+    x.putImageData(img, 0, 0);
+    // Horizontal overlaps
+    for (let py = 0; py < S; py += 120) {
+      const oy = py + (hash(0, py) - 0.5) * 4;
+      x.fillStyle = "rgba(0,0,0,0.15)"; x.fillRect(0, oy, S, 2);
+      x.fillStyle = "rgba(255,255,255,0.08)"; x.fillRect(0, oy + 2, S, 2);
+      x.fillStyle = "rgba(0,0,0,0.06)"; x.fillRect(0, oy - 1, S, 1);
+    }
+    // Oxidation spots
+    for (let i = 0; i < 500; i++) {
+      const ox = Math.random() * S, oy = Math.random() * S;
+      const r = 3 + Math.random() * 12;
+      const g = x.createRadialGradient(ox, oy, 0, ox, oy, r);
+      g.addColorStop(0, "rgba(255,255,255,0.06)"); g.addColorStop(1, "rgba(255,255,255,0)");
+      x.fillStyle = g; x.fillRect(ox - r, oy - r, r * 2, r * 2);
+    }
+  } else {
+    // --- CERAMIC TILE ---
+    const tileH = 46, tileW = 78, gap = 4, curveRad = 18;
+    // Mortar base
+    x.fillStyle = "#332e29"; x.fillRect(0, 0, S, S);
+    // Mortar texture
+    for (let i = 0; i < 3000; i++) {
+      const mx = Math.random() * S, my = Math.random() * S;
+      x.fillStyle = `rgba(${50+Math.random()*20},${45+Math.random()*15},${40+Math.random()*15},0.5)`;
+      x.fillRect(mx, my, 2 + Math.random() * 4, 2 + Math.random() * 3);
+    }
+    const rows = Math.ceil(S / (tileH + gap)) + 1;
+    for (let row = 0; row < rows; row++) {
+      const y = row * (tileH + gap);
+      const off = (row % 2) * (tileW / 2 + gap / 2);
+      const cols = Math.ceil(S / (tileW + gap)) + 2;
+      for (let col = -1; col < cols; col++) {
+        const x0 = col * (tileW + gap) + off;
+        // Per-tile color (warm terracotta variation)
+        const tSeed = row * 137 + col * 251;
+        const tH = (hash(tSeed, tSeed * 0.3) - 0.5) * 34;
+        const tS = (hash(tSeed * 0.7, tSeed * 1.1) - 0.5) * 16;
+        const tL = (hash(tSeed * 1.3, tSeed * 0.5) - 0.5) * 8;
+        const tr = Math.max(0, Math.min(255, r0 + tH));
+        const tg = Math.max(0, Math.min(255, g0 + tH * 0.7 + tS));
+        const tb = Math.max(0, Math.min(255, b0 + tH * 0.4 + tS));
+        // Tile body (rounded rectangle with curved top)
+        x.fillStyle = `rgb(${tr},${tg},${tb})`;
+        const tx = x0 + gap, ty = y + gap, tw = tileW - gap * 2, th = tileH - gap * 2;
+        x.beginPath();
+        x.moveTo(tx + curveRad, ty);
+        x.lineTo(tx + tw - curveRad, ty);
+        x.quadraticCurveTo(tx + tw, ty, tx + tw, ty + curveRad);
+        x.lineTo(tx + tw, ty + th);
+        x.lineTo(tx, ty + th);
+        x.lineTo(tx, ty + curveRad);
+        x.quadraticCurveTo(tx, ty, tx + curveRad, ty);
+        x.closePath();
+        x.fill();
+        // Top highlight (curved edge catches light)
+        const hlGrad = x.createLinearGradient(0, ty, 0, ty + curveRad + 4);
+        hlGrad.addColorStop(0, "rgba(255,255,255,0.28)");
+        hlGrad.addColorStop(0.5, "rgba(255,255,255,0.10)");
+        hlGrad.addColorStop(1, "rgba(0,0,0,0)");
+        x.fillStyle = hlGrad;
+        x.fillRect(tx, ty, tw, curveRad + 4);
+        // Bottom shadow (tile curves into the one below)
+        const shGrad = x.createLinearGradient(0, ty + th - 8, 0, ty + th + 2);
+        shGrad.addColorStop(0, "rgba(0,0,0,0)");
+        shGrad.addColorStop(0.5, "rgba(0,0,0,0.08)");
+        shGrad.addColorStop(1, "rgba(0,0,0,0.28)");
+        x.fillStyle = shGrad;
+        x.fillRect(tx, ty + th - 8, tw, 10);
+        // Left/right edge darkening
+        x.fillStyle = "rgba(0,0,0,0.06)";
+        x.fillRect(tx, ty, 3, th);
+        x.fillRect(tx + tw - 3, ty, 3, th);
+        // Surface grain
+        for (let g = 0; g < 35; g++) {
+          const gx = tx + 4 + Math.random() * (tw - 8);
+          const gy = ty + curveRad + 4 + Math.random() * (th - curveRad - 8);
+          x.fillStyle = `rgba(${tr + 15},${tg + 10},${tb + 5},0.12)`;
+          x.fillRect(gx, gy, 1.5 + Math.random() * 2, 1 + Math.random() * 1.5);
+        }
+        // Occasional darker spot (fired clay variation)
+        if (hash(row, col) > 0.78) {
+          const sx = tx + 6 + hash(row + 0.5, col) * (tw - 16);
+          const sy = ty + curveRad + 6 + hash(row, col + 0.5) * (th - curveRad - 12);
+          const sr = 4 + hash(row, col) * 8;
+          const sg = x.createRadialGradient(sx, sy, 0, sx, sy, sr);
+          sg.addColorStop(0, "rgba(0,0,0,0.10)"); sg.addColorStop(1, "rgba(0,0,0,0)");
+          x.fillStyle = sg; x.fillRect(sx - sr, sy - sr, sr * 2, sr * 2);
         }
       }
     }
+    // Micro imperfections over whole surface
+    for (let i = 0; i < 2000; i++) {
+      const r = Math.random();
+      x.fillStyle = r > 0.6 ? "rgba(255,255,255,0.015)" : r > 0.3 ? "rgba(0,0,0,0.02)" : "rgba(255,255,255,0.008)";
+      x.fillRect(Math.random() * S, Math.random() * S, 1 + Math.random() * 3, 1 + Math.random() * 2);
+    }
+  }
+
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 16;
+  t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter;
+  t.generateMipmaps = true;
+
+  // --- BUMP MAP aligned with texture geometry ---
+  const b = document.createElement("canvas"); b.width = b.height = S;
+  const bx = b.getContext("2d");
+  if (tip === "tabla") {
+    bx.fillStyle = "#808080"; bx.fillRect(0, 0, S, S);
+    const seamSpacing = 48, seamWidth = 7;
+    for (let px = 0; px < S; px += seamSpacing) {
+      bx.fillStyle = "#ffffff"; bx.fillRect(px, 0, seamWidth, S);
+      bx.fillStyle = "#707070"; bx.fillRect(px + seamWidth, 0, 2, S);
+      bx.fillStyle = "#c0c0c0"; bx.fillRect(px - 1, 0, 1, S);
+    }
+    for (let py = 0; py < S; py += 120) {
+      bx.fillStyle = "#e0e0e0"; bx.fillRect(0, py, S, 2);
+      bx.fillStyle = "#606060"; bx.fillRect(0, py + 2, S, 1);
+    }
   } else {
-    // Țiglă cu variație per rând
-    for (let py = 0; py < S; py += 26) {
-      const shade = 0.35 + hash(0, py) * 0.2;
-      x.fillStyle = `rgba(0,0,0,${shade})`; x.fillRect(0, py, S, 3);
-      x.fillStyle = "rgba(255,255,255,0.12)"; x.fillRect(0, py + 3, S, 2);
-      for (let px = ((Math.floor(py/26)) % 2) * 22; px < S; px += 44) {
-        const varX = (hash(px, py) - 0.5) * 4;
-        x.fillStyle = "rgba(0,0,0,0.08)"; x.fillRect(px + varX, py + 3, 2 + Math.abs(varX), 23);
+    // Tile bump: bright tile bodies, dark mortar gaps
+    bx.fillStyle = "#181818"; bx.fillRect(0, 0, S, S);
+    const tileH = 46, tileW = 78, gap = 4;
+    const rows = Math.ceil(S / (tileH + gap)) + 1;
+    for (let row = 0; row < rows; row++) {
+      const y = row * (tileH + gap), off = (row % 2) * (tileW / 2 + gap / 2);
+      const cols = Math.ceil(S / (tileW + gap)) + 2;
+      for (let col = -1; col < cols; col++) {
+        const x0 = col * (tileW + gap) + off;
+        const tx = x0 + gap, ty = y + gap, tw = tileW - gap * 2, th = tileH - gap * 2;
+        // Tile body = raised (bright)
+        bx.fillStyle = "#f0f0f0"; bx.fillRect(tx, ty, tw, th);
+        // Top edge = brightest (catches light)
+        bx.fillStyle = "#ffffff"; bx.fillRect(tx, ty, tw, 5);
+        // Bottom edge = slightly darker (curves away)
+        bx.fillStyle = "#d0d0d0"; bx.fillRect(tx, ty + th - 4, tw, 4);
       }
     }
   }
-  
-  // Micro-imperfecțiuni
-  for (let i = 0; i < 1200; i++) {
-    const r = Math.random();
-    x.fillStyle = r > 0.6 ? "rgba(255,255,255,0.02)" : r > 0.3 ? "rgba(0,0,0,0.025)" : "rgba(255,255,255,0.01)";
-    x.fillRect(Math.random() * S, Math.random() * S, 1 + Math.random() * 2, 1 + Math.random() * 2);
+  // Grain layer on bump
+  for (let i = 0; i < 5000; i++) {
+    const v = 128 + (Math.random() - 0.5) * 16;
+    bx.fillStyle = `rgb(${v},${v},${v})`;
+    bx.fillRect(Math.random() * S, Math.random() * S, 1.5, 1.5);
   }
-  
-  const t = new THREE.CanvasTexture(c);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8;
-  
-  // Bump map
-  const b = document.createElement("canvas"); b.width = b.height = S;
-  const bx = b.getContext("2d");
-  const bImg = bx.getImageData(0, 0, S, S);
-  for (let py = 0; py < S; py++) {
-    for (let px = 0; px < S; px++) {
-      const i = (py * S + px) * 4;
-      const v = 128 + (hash(px*0.5, py*0.5) - 0.5) * 30;
-      bImg.data[i] = bImg.data[i+1] = bImg.data[i+2] = v;
-      bImg.data[i+3] = 255;
-    }
-  }
-  bx.putImageData(bImg, 0, 0);
-  
-  if (tip === "tabla") {
-    for (let px = 0; px < S; px += 32) { bx.fillStyle = "#f0f0f0"; bx.fillRect(px, 0, 5, S); }
-  } else {
-    for (let py = 0; py < S; py += 26) { 
-      bx.fillStyle = "#f0f0f0"; bx.fillRect(0, py, S, 5); 
-      bx.fillStyle = "#6a6a6a"; bx.fillRect(0, py + 20, S, 6); 
-    }
-  }
-  
   const bt = new THREE.CanvasTexture(b);
-  bt.wrapS = bt.wrapT = THREE.RepeatWrapping; bt.anisotropy = 8;
+  bt.wrapS = bt.wrapT = THREE.RepeatWrapping; bt.anisotropy = 16;
+  bt.minFilter = THREE.LinearMipmapLinearFilter; bt.magFilter = THREE.LinearFilter;
+  bt.generateMipmaps = true;
   return { map: srgb(t), bump: bt };
 }
 
@@ -443,35 +548,105 @@ export default function Scena3D({ cfg }) {
     soclu.position.y = 0.175; soclu.receiveShadow = true; scene.add(soclu);
 
     const M = C.materialeMp[material] || Object.values(C.materialeMp)[0];
-    const TX = texInvelitoare(M.hex, M.tex || "tabla");
-    // Normal map procedural pentru acoperis
-  const normalCanvas = document.createElement('canvas'); normalCanvas.width = normalCanvas.height = 256;
+    const tipMat = M.tex || "tabla";
+    const TX = texInvelitoare(M.hex, tipMat);
+
+  // --- Normal map: derivat din aceeași geometrie ca textura ---
+  const nmS = 512;
+  const normalCanvas = document.createElement('canvas'); normalCanvas.width = normalCanvas.height = nmS;
   const nctx = normalCanvas.getContext('2d');
-  const nimg = nctx.getImageData(0, 0, 256, 256);
-  for (let y = 0; y < 256; y++) {
-    for (let x = 0; x < 256; x++) {
-      const i = (y * 256 + x) * 4;
-      const stripe = Math.sin(y / 256 * 60) * 0.5 + 0.5;
-      const noise = ((x * 374761393 + y * 668265263 + 1274126177) ^ ((x * 374761393 + y * 668265263 + 1274126177) >> 16)) / 2147483648;
-      nimg.data[i] = 128 + (stripe + noise - 0.5) * 180;
-      nimg.data[i+1] = 128 + noise * 35;
-      nimg.data[i+2] = 255;
-      nimg.data[i+3] = 255;
+  const nimg = nctx.getImageData(0, 0, nmS, nmS);
+  const hashN = (a, b) => { let h = a*374761393+b*668265263+1274126177; h=(h^(h>>13))*1274126177; return (h^(h>>16))/2147483648; };
+
+  if (tipMat === "tabla") {
+    // Standing seam normals: raised ridges with flat panels
+    const seamSp = 48 * (nmS / 1024);
+    for (let y = 0; y < nmS; y++) {
+      for (let x = 0; x < nmS; x++) {
+        const i = (y * nmS + x) * 4;
+        const pos = x % seamSp;
+        const seamW = 7 * (nmS / 1024);
+        let nx = 128, ny = 128, nz = 255;
+        if (pos < 1) nx = 80;  // left edge of ridge, tilts left
+        else if (pos < seamW) nx = 176; // ridge top, tilts right
+        else if (pos > seamSp - 1) nx = 80;
+        // Horizontal overlap wave
+        const hoY = y % (120 * nmS / 1024);
+        if (hoY < 2) ny = 144;
+        else if (hoY < 4) ny = 112;
+        // Micro grain
+        const gn = (hashN(x * 3, y * 3) - 0.5) * 20;
+        nx += gn; ny += gn;
+        nimg.data[i] = Math.max(0, Math.min(255, nx));
+        nimg.data[i+1] = Math.max(0, Math.min(255, ny));
+        nimg.data[i+2] = nz;
+        nimg.data[i+3] = 255;
+      }
+    }
+  } else {
+    // Ceramic tile normals: curved tile surface
+    const tileH = 46 * (nmS / 1024), tileW = 78 * (nmS / 1024), gap = 4 * (nmS / 1024);
+    const rows = Math.ceil(nmS / (tileH + gap)) + 1;
+    for (let y = 0; y < nmS; y++) {
+      for (let x = 0; x < nmS; x++) {
+        const i = (y * nmS + x) * 4;
+        let nx = 128, ny = 128, nz = 255;
+        // Determine which tile this pixel belongs to
+        const row = Math.floor(y / (tileH + gap));
+        const rowY = y % (tileH + gap);
+        const off = (row % 2) * (tileW / 2 + gap / 2);
+        const col = Math.floor((x - off) / (tileW + gap));
+        const colX = ((x - off) % (tileW + gap) + tileW + gap) % (tileW + gap);
+        const inGapX = colX < gap || colX > tileW;
+        const inGapY = rowY < gap || rowY > tileH;
+        if (inGapX || inGapY) {
+          // Mortar gap: recessed, dark
+          ny = 112; // tilts away
+        } else {
+          const tx = colX - gap, ty = rowY - gap;
+          // Top curve: normals tilt upward
+          const curveTop = Math.min(1, ty / 18);
+          ny = Math.round(128 + curveTop * 48); // tilt forward at top
+          // Bottom curve: normals tilt downward
+          const curveBot = Math.max(0, 1 - (tileH - gap * 2 - ty) / 10);
+          ny = Math.round(ny - curveBot * 36);
+          // Left/right edges tilt out
+          if (tx < 5) nx = Math.round(128 - 20);
+          else if (tx > tileW - gap * 2 - 5) nx = Math.round(128 + 20);
+          // Surface grain
+          nx += Math.round((hashN(x, y) - 0.5) * 18);
+          ny += Math.round((hashN(x + 0.5, y + 0.5) - 0.5) * 14);
+        }
+        nimg.data[i] = Math.max(0, Math.min(255, nx));
+        nimg.data[i+1] = Math.max(0, Math.min(255, ny));
+        nimg.data[i+2] = nz;
+        nimg.data[i+3] = 255;
+      }
     }
   }
   nctx.putImageData(nimg, 0, 0);
   const normalTex = new THREE.CanvasTexture(normalCanvas);
   normalTex.wrapS = normalTex.wrapT = THREE.RepeatWrapping;
   normalTex.colorSpace = THREE.LinearSRGBColorSpace;
-  
+  normalTex.minFilter = THREE.LinearMipmapLinearFilter;
+  normalTex.magFilter = THREE.LinearFilter;
+  normalTex.generateMipmaps = true;
+
+  // --- Material îmbunătățit ---
   const matInv = new THREE.MeshPhysicalMaterial({
-      color: 0xffffff, map: TX.map, bumpMap: TX.bump, bumpScale: M.tex === "tigla" ? 0.035 : 0.02,
-      roughness: M.tex === "tigla" ? 0.8 : 0.35, metalness: M.tex === "tigla" ? 0.02 : 0.5, side: THREE.DoubleSide,
-      normalMap: normalTex, normalScale: new THREE.Vector2(0.5, 0.5),
-      clearcoat: M.tex === "tabla" ? 0.3 : 0.0,
-      clearcoatRoughness: 0.25,
+      color: 0xffffff, map: TX.map, bumpMap: TX.bump,
+      bumpScale: tipMat === "tigla" ? 0.06 : 0.03,
+      roughness: tipMat === "tigla" ? 0.75 : 0.30,
+      metalness: tipMat === "tigla" ? 0.0 : 0.55,
+      side: THREE.DoubleSide,
+      normalMap: normalTex,
+      normalScale: new THREE.Vector2(tipMat === "tigla" ? 1.0 : 0.6, tipMat === "tigla" ? 1.0 : 0.6),
+      clearcoat: tipMat === "tabla" ? 0.25 : 0.0,
+      clearcoatRoughness: 0.2,
+      envMapIntensity: tipMat === "tabla" ? 0.6 : 0.3,
+      specularIntensity: tipMat === "tabla" ? 0.4 : 0.15,
     });
-    const matSub = new THREE.MeshStandardMaterial({ color: "#33302c", roughness: 0.9, side: THREE.DoubleSide });
+    const matSub = new THREE.MeshStandardMaterial({ color: "#e8e0d5", roughness: 0.85, side: THREE.DoubleSide });
     const y0 = hz, x0 = L / 2 + ov, z0 = W / 2 + ov, yv = y0 + hRoof + (ov * Math.tan(rad(panta)));
     const tris = [], triF = [];
     const A = [-x0, y0, z0], B = [x0, y0, z0], Cc = [x0, y0, -z0], D = [-x0, y0, -z0];
@@ -504,7 +679,8 @@ export default function Scena3D({ cfg }) {
     const sub = meshTri(tris, matSub); sub.position.y = -0.05; sub.castShadow = false; scene.add(sub);
     if (triF.length) scene.add(meshTri(triF, matZid));
 
-    const matPazie = new THREE.MeshStandardMaterial({ color: "#4d443a", roughness: 0.8 });
+    const matPazie = new THREE.MeshStandardMaterial({ color: "#e8e0d5", roughness: 0.75 });
+    const matPazieFront = new THREE.MeshStandardMaterial({ color: "#d5cdc0", roughness: 0.72 });
     const rake = (p1, p2) => {
       const a = new THREE.Vector3(...p1), b = new THREE.Vector3(...p2);
       const dir = b.clone().sub(a), len = dir.length();
@@ -514,46 +690,83 @@ export default function Scena3D({ cfg }) {
       m.castShadow = true; scene.add(m);
     };
 
-  // Coamă
-  const matCoama = new THREE.MeshStandardMaterial({ color: shade(M.hex, 0.5), roughness: 0.45, metalness: 0.2 });
-  const coamaGeo = new THREE.CylinderGeometry(0.05, 0.05, L, 8);
-  coamaGeo.rotateZ(Math.PI / 2);
-  const coamaMesh = new THREE.Mesh(coamaGeo, matCoama);
-  coamaMesh.position.set(0, yv + 0.03, 0);
-  coamaMesh.castShadow = true;
-  scene.add(coamaMesh);
+  // --- Coamă îmbunătățită ---
+  const matCoama = new THREE.MeshStandardMaterial({ color: shade(M.hex, tipMat === "tigla" ? 0.55 : 0.68), roughness: tipMat === "tigla" ? 0.7 : 0.4, metalness: tipMat === "tabla" ? 0.35 : 0.05 });
+  // Ridged cap: wider, with a flat base and rounded top
+  const coamaGroup = new THREE.Group();
+  // Base flange
+  const coamaBaza = new THREE.Mesh(new THREE.BoxGeometry(L + 0.3, 0.04, 0.32), matCoama);
+  coamaBaza.position.y = yv + 0.02; coamaBaza.castShadow = true;
+  coamaGroup.add(coamaBaza);
+  // Main ridge body (rounded top simulated with stacked boxes)
+  const coamaCorp = new THREE.Mesh(new THREE.BoxGeometry(L + 0.16, 0.10, 0.22), matCoama);
+  coamaCorp.position.y = yv + 0.09; coamaCorp.castShadow = true;
+  coamaGroup.add(coamaCorp);
+  const coamaTop = new THREE.Mesh(new THREE.BoxGeometry(L + 0.08, 0.05, 0.12), matCoama);
+  coamaTop.position.y = yv + 0.16; coamaTop.castShadow = true;
+  coamaGroup.add(coamaTop);
+  // Ridge cap top highlight
+  const matCoamaHL = new THREE.MeshStandardMaterial({ color: shade(M.hex, 0.82), roughness: 0.35, metalness: tipMat === "tabla" ? 0.4 : 0.08 });
+  const coamaHL = new THREE.Mesh(new THREE.BoxGeometry(L + 0.02, 0.02, 0.07), matCoamaHL);
+  coamaHL.position.y = yv + 0.20; coamaGroup.add(coamaHL);
+  scene.add(coamaGroup);
 
-  // Jgheaburi + burlane
-  const matJgheab = new THREE.MeshStandardMaterial({ color: 0x4a4a4a, roughness: 0.35, metalness: 0.9 });
+  // Jgheaburi + burlane (îmbunătățite)
+  const matJgheab = new THREE.MeshStandardMaterial({ color: 0x3d4045, roughness: 0.3, metalness: 0.92 });
   [-1, 1].forEach(s => {
-    const jg = new THREE.Mesh(new THREE.BoxGeometry(L + 0.2, 0.05, 0.1), matJgheab);
-    jg.position.set(0, y0 - 0.05, z0 * s);
+    // Main gutter channel (wider, more realistic)
+    const jg = new THREE.Mesh(new THREE.BoxGeometry(L + 0.5, 0.09, 0.20), matJgheab);
+    jg.position.set(0, y0 - 0.09, z0 * s);
     jg.castShadow = true; scene.add(jg);
+    // Inner lip
+    const jgLip = new THREE.Mesh(new THREE.BoxGeometry(L + 0.4, 0.02, 0.06), matJgheab);
+    jgLip.position.set(0, y0 - 0.04, (z0 - 0.05) * s);
+    jgLip.castShadow = true; scene.add(jgLip);
+    // Gutter brackets (every ~2m)
+    for (let bx = -L/2; bx <= L/2; bx += 2.2) {
+      const bracket = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.14, 0.06), matJgheab);
+      bracket.position.set(bx, y0 - 0.12, (z0 + 0.07) * s);
+      bracket.castShadow = true; scene.add(bracket);
+    }
   });
   [-1, 1].forEach(sx => {
-    const bl = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, hz, 8), matJgheab);
-    bl.position.set(L/2 * sx + 0.3 * sx, hz/2, z0 + 0.1);
+    const bl = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, hz + 0.1, 10), matJgheab);
+    bl.position.set(L/2 * sx + 0.3 * sx, hz/2, z0 + 0.18);
     bl.castShadow = true; scene.add(bl);
+    // Downspout elbow at top
+    const elbow = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.04, 6, 8, Math.PI/2),
+      matJgheab);
+    elbow.position.set(L/2 * sx + 0.3 * sx, hz + 0.02, z0 + 0.14);
+    elbow.rotation.set(0, sx < 0 ? Math.PI : 0, Math.PI/2);
+    elbow.castShadow = true; scene.add(elbow);
   });
 
-  // Streașină
-  const matStreasina = new THREE.MeshStandardMaterial({ color: shade(M.hex, 0.5), roughness: 0.5, metalness: 0.15 });
+  // --- Streașină + fațadă îmbunătățite ---
+  const matStreasina = new THREE.MeshStandardMaterial({ color: shade(M.hex, 0.78), roughness: 0.55, metalness: 0.12 });
   [-1, 1].forEach(s => {
-    const str = new THREE.Mesh(new THREE.BoxGeometry(L + 0.15, 0.03, 0.08), matStreasina);
-    str.position.set(0, y0 - 0.02, z0 * s);
-    str.castShadow = true;
-    scene.add(str);
+    // Eave trim board
+    const str = new THREE.Mesh(new THREE.BoxGeometry(L + 0.35, 0.06, 0.14), matStreasina);
+    str.position.set(0, y0 - 0.03, z0 * s);
+    str.castShadow = true; scene.add(str);
+    // Drip edge (metal strip under eave)
+    const drip = new THREE.Mesh(new THREE.BoxGeometry(L + 0.30, 0.015, 0.06),
+      new THREE.MeshStandardMaterial({ color: 0x5a5a5a, roughness: 0.3, metalness: 0.9 }));
+    drip.position.set(0, y0 - 0.07, (z0 - 0.02) * s);
+    drip.castShadow = true; scene.add(drip);
   });
-    const matJ = new THREE.MeshStandardMaterial({ color: "#70767c", metalness: 0.6, roughness: 0.35 });
+    const matJ = new THREE.MeshStandardMaterial({ color: "#6a7078", metalness: 0.65, roughness: 0.3 });
     const bordura = (w, x, z, rotY = 0) => {
-      const p = new THREE.Mesh(new THREE.BoxGeometry(w, 0.22, 0.06), matPazie);
+      const p = new THREE.Mesh(new THREE.BoxGeometry(w, 0.24, 0.08), matPazieFront);
       p.position.set(x, y0 - 0.02, z); p.rotation.y = rotY; p.castShadow = true; scene.add(p);
-      const j = new THREE.Mesh(new THREE.BoxGeometry(w, 0.13, 0.15), matJ);
-      j.position.set(x, y0 - 0.17, z); j.rotation.y = rotY; scene.add(j);
+      const j = new THREE.Mesh(new THREE.BoxGeometry(w, 0.14, 0.16), matJ);
+      j.position.set(x, y0 - 0.18, z); j.rotation.y = rotY; scene.add(j);
+      // Shadow line (upper trim)
+      const sl = new THREE.Mesh(new THREE.BoxGeometry(w, 0.02, 0.10), new THREE.MeshStandardMaterial({ color: "#3a3832", roughness: 0.5 }));
+      sl.position.set(x, y0 + 0.10, z); sl.rotation.y = rotY; sl.castShadow = true; scene.add(sl);
     };
-    bordura(L + 2 * ov, 0, z0 + 0.04); bordura(L + 2 * ov, 0, -z0 - 0.04);
+    bordura(L + 2.2 * ov, 0, z0 + 0.05); bordura(L + 2.2 * ov, 0, -z0 - 0.05);
     if (tip === "patru_ape") {
-      bordura(W + 2 * ov, x0 + 0.04, 0, Math.PI / 2); bordura(W + 2 * ov, -x0 - 0.04, 0, Math.PI / 2);
+      bordura(W + 2.2 * ov, x0 + 0.05, 0, Math.PI / 2); bordura(W + 2.2 * ov, -x0 - 0.05, 0, Math.PI / 2);
       const cH = Math.max((L - W) / 2, 0);
       const matHip = new THREE.MeshStandardMaterial({ color: shade(M.hex, 0.62), roughness: 0.6 });
       const hip = (p1, p2) => {
@@ -580,9 +793,13 @@ export default function Scena3D({ cfg }) {
 
     const qCoamaL = tip === "patru_ape" ? Math.max(L - W, 0) : L + 2 * ov;
     if (qCoamaL > 0.05) {
-      const co = new THREE.Mesh(new THREE.BoxGeometry(qCoamaL, 0.14, 0.24),
-        new THREE.MeshStandardMaterial({ color: shade(M.hex, 0.6), roughness: 0.6 }));
-      co.position.set(0, yCoama + 0.06, 0); co.castShadow = true; scene.add(co);
+      const matCoama2 = new THREE.MeshStandardMaterial({ color: shade(M.hex, 0.58), roughness: 0.6, metalness: tipMat === "tabla" ? 0.3 : 0.05 });
+      const coBase = new THREE.Mesh(new THREE.BoxGeometry(qCoamaL, 0.05, 0.34), matCoama2);
+      coBase.position.set(0, yCoama + 0.03, 0); coBase.castShadow = true; scene.add(coBase);
+      const coMain = new THREE.Mesh(new THREE.BoxGeometry(qCoamaL - 0.1, 0.10, 0.24), matCoama2);
+      coMain.position.set(0, yCoama + 0.10, 0); coMain.castShadow = true; scene.add(coMain);
+      const coRound = new THREE.Mesh(new THREE.BoxGeometry(qCoamaL - 0.16, 0.05, 0.13), matCoama2);
+      coRound.position.set(0, yCoama + 0.17, 0); coRound.castShadow = true; scene.add(coRound);
     }
 
 
@@ -628,7 +845,49 @@ export default function Scena3D({ cfg }) {
       // Sort tabla
       const sortH = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.03, 0.65),
         new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 0.35, metalness: 0.85 }));
-      sortH.position.set(hx, 0.02, hzp); sortH.castShadow = true; scene.add(sortH); }
+      sortH.position.set(hx, 0.02, hzp); sortH.castShadow = true; scene.add(sortH);
+
+      // --- Șorț de tablă (flashing) la baza hornului ---
+      const matFlashing = new THREE.MeshStandardMaterial({ color: 0x5a5a5a, roughness: 0.3, metalness: 0.9 });
+      const fh = horn; // reference the horn mesh
+      const hornBase = hTop; // height at base of chimney
+      const hw = 0.75 / 2 + 0.08; // half width of chimney + flashing width
+      const hd = 0.55 / 2 + 0.08; // half depth
+      // 4 flashing skirts (one per side of chimney)
+      const flashingGeo = (w, d) => {
+        const g = new THREE.PlaneGeometry(w, d);
+        return g;
+      };
+      // Front flashing (toward camera / +Z side of chimney)
+      const ff = new THREE.Mesh(new THREE.PlaneGeometry(0.91, 0.18), matFlashing);
+      ff.position.set(hx, 0.02, hzp + 0.30);
+      ff.rotation.x = -Math.atan(Math.abs(hzp) < 0.01 ? 0 : hRoof / (W / 2));
+      ff.castShadow = true; scene.add(ff);
+      // Back flashing
+      const fb = new THREE.Mesh(new THREE.PlaneGeometry(0.91, 0.18), matFlashing);
+      fb.position.set(hx, 0.02, hzp - 0.30);
+      fb.rotation.x = Math.atan(Math.abs(hzp) < 0.01 ? 0 : hRoof / (W / 2));
+      fb.castShadow = true; scene.add(fb);
+      // Left flashing
+      const fl = new THREE.Mesh(new THREE.PlaneGeometry(0.71, 0.18), matFlashing);
+      fl.position.set(hx - 0.40, 0.02, hzp);
+      fl.rotation.x = -Math.PI / 2; fl.rotation.z = Math.PI / 2;
+      fl.castShadow = true; scene.add(fl);
+      // Right flashing
+      const fr = new THREE.Mesh(new THREE.PlaneGeometry(0.71, 0.18), matFlashing);
+      fr.position.set(hx + 0.40, 0.02, hzp);
+      fr.rotation.x = -Math.PI / 2; fr.rotation.z = -Math.PI / 2;
+      fr.castShadow = true; scene.add(fr);
+      // Horizontal collar around chimney base
+      const collarFront = new THREE.Mesh(new THREE.BoxGeometry(0.91, 0.015, 0.12), matFlashing);
+      collarFront.position.set(hx, 0.04, hzp + 0.31); collarFront.castShadow = true; scene.add(collarFront);
+      const collarBack = new THREE.Mesh(new THREE.BoxGeometry(0.91, 0.015, 0.12), matFlashing);
+      collarBack.position.set(hx, 0.04, hzp - 0.31); collarBack.castShadow = true; scene.add(collarBack);
+      const collarLeft = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.015, 0.71), matFlashing);
+      collarLeft.position.set(hx - 0.41, 0.04, hzp); collarLeft.castShadow = true; scene.add(collarLeft);
+      const collarRight = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.015, 0.71), matFlashing);
+      collarRight.position.set(hx + 0.41, 0.04, hzp); collarRight.castShadow = true; scene.add(collarRight);
+      }
 
     const target = new THREE.Vector3(0, (hz + hRoof) / 2 + 0.6, 0);
     const rRest = Math.max(L, W) * 1.8 + 8;
