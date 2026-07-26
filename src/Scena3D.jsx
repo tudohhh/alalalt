@@ -594,12 +594,52 @@ export default function Scena3D({ cfg }) {
   // Spate — 2 ferestre
   adaugaFereastra(L * 0.28, hz * 0.58, -W / 2 - 0.03, Math.PI);
   adaugaFereastra(-L * 0.28, hz * 0.58, -W / 2 - 0.03, Math.PI);
-  // Lateral dreapta — 2 ferestre
-  adaugaFereastra(L / 2 + 0.03, hz * 0.58, -W * 0.28, Math.PI / 2);
-  adaugaFereastra(L / 2 + 0.03, hz * 0.58, W * 0.28, Math.PI / 2);
-  // Lateral stânga — 2 ferestre
-  adaugaFereastra(-L / 2 - 0.03, hz * 0.58, -W * 0.28, -Math.PI / 2);
-  adaugaFereastra(-L / 2 - 0.03, hz * 0.58, W * 0.28, -Math.PI / 2);
+  // Fronton decorativ pe laterale — scânduri orizontale
+  const frontonMat = new THREE.MeshStandardMaterial({ color: 0xe8e0d0, roughness: 0.7 });
+  const frontonTrim = new THREE.MeshStandardMaterial({ color: 0xf0ebe0, roughness: 0.65 });
+  [-1, 1].forEach(function(sx) {
+    // Panou fronton (triunghiular)
+    var fg = new THREE.Group();
+    var shape2 = new THREE.Shape();
+    shape2.moveTo(-L/2, 0); shape2.lineTo(L/2, 0);
+    shape2.lineTo(0, hRoof); shape2.closePath();
+    var fGeo = new THREE.ExtrudeGeometry(shape2, {steps:1, depth:0.08, bevelEnabled:false});
+    var fPanou = new THREE.Mesh(fGeo, frontonMat);
+    fPanou.position.set(0, hz, sx * (W/2 + 0.02));
+    if (sx < 0) fPanou.rotation.y = Math.PI;
+    fPanou.castShadow = true; fPanou.receiveShadow = true;
+    scene.add(fPanou);
+
+    // Scânduri orizontale decorative (fâșii suprapuse)
+    for (var i = 0; i < 8; i++) {
+      var sy = hz + 0.08 + i * 0.38;
+      var sw = L - 0.10 - i * 0.08;
+      if (sy < hz + hRoof - 0.15) {
+        var scandura = new THREE.Mesh(
+          new THREE.BoxGeometry(Math.max(0.3, sw), 0.04, 0.04),
+          frontonTrim
+        );
+        scandura.position.set(0, sy, sx * (W/2 + 0.06));
+        scandura.castShadow = true; scene.add(scandura);
+      }
+    }
+
+    // Oculus (fereastră rotundă mică sus)
+    var ocY = hz + hRoof * 0.65;
+    var ocR = 0.25;
+    var ocFrame = new THREE.Mesh(
+      new THREE.TorusGeometry(ocR, 0.04, 8, 16),
+      new THREE.MeshStandardMaterial({ color: 0x3d3d3d, roughness: 0.3, metalness: 0.6 })
+    );
+    ocFrame.position.set(0, ocY, sx * (W/2 + 0.10));
+    ocFrame.castShadow = true; scene.add(ocFrame);
+    var ocGlass = new THREE.Mesh(
+      new THREE.CircleGeometry(ocR - 0.02, 16),
+      new THREE.MeshStandardMaterial({ color: 0x8ab0c8, roughness: 0.15, metalness: 0.2 })
+    );
+    ocGlass.position.set(0, ocY, sx * (W/2 + 0.11));
+    scene.add(ocGlass);
+  });
 
 
   // --- Ușă intrare (aliniată cu aleea) ---
