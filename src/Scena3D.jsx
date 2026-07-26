@@ -377,21 +377,32 @@ export default function Scena3D({ cfg }) {
     const hRoof = (W / 2) * Math.tan(rad(panta));
 
     const scene = new THREE.Scene();
-    // Cer cu gradient
-  const skyCanvas = document.createElement('canvas'); skyCanvas.width = 512; skyCanvas.height = 512;
-  const skyCtx = skyCanvas.getContext('2d');
-  const skyGrad = skyCtx.createLinearGradient(0, 0, 0, 512);
-  skyGrad.addColorStop(0, '#b8d4f0'); skyGrad.addColorStop(0.4, '#dce8f0'); skyGrad.addColorStop(0.7, '#e8e4d8'); skyGrad.addColorStop(1, '#d5cec0');
-  skyCtx.fillStyle = skyGrad; skyCtx.fillRect(0, 0, 512, 512);
-  // Nori subtiri
-  for (let i = 0; i < 15; i++) {
-    skyCtx.fillStyle = 'rgba(255,255,255,0.12)';
-    skyCtx.beginPath();
-    skyCtx.ellipse(100 + Math.random()*312, 50 + Math.random()*100, 30+Math.random()*60, 8+Math.random()*15, Math.random()*0.5, 0, Math.PI*2);
-    skyCtx.fill();
+
+  // Skydome ancorat in lume — nu pe ecran
+  const FOG_COL = "#ddd8cf";
+  scene.background = new THREE.Color(FOG_COL);
+  {
+    const domeGeo = new THREE.SphereGeometry(380, 48, 32);
+    const pos = domeGeo.attributes.position;
+    const cols = new Float32Array(pos.count * 3);
+    const cJos = new THREE.Color(FOG_COL);
+    const cMij = new THREE.Color("#dce8f0");
+    const cSus = new THREE.Color("#b8d4f0");
+    const tmp = new THREE.Color();
+    for (let i = 0; i < pos.count; i++) {
+      const e = Math.max(0, pos.getY(i) / 380);
+      if (e < 0.06) tmp.copy(cJos);
+      else if (e < 0.35) tmp.lerpColors(cJos, cMij, (e - 0.06) / 0.29);
+      else tmp.lerpColors(cMij, cSus, Math.min(1, (e - 0.35) / 0.5));
+      cols[i * 3] = tmp.r; cols[i * 3 + 1] = tmp.g; cols[i * 3 + 2] = tmp.b;
+    }
+    domeGeo.setAttribute("color", new THREE.BufferAttribute(cols, 3));
+    const dome = new THREE.Mesh(domeGeo, new THREE.MeshBasicMaterial({
+      vertexColors: true, side: THREE.BackSide, fog: false, depthWrite: false,
+    }));
+    dome.renderOrder = -1;
+    scene.add(dome);
   }
-  const skyTex = new THREE.CanvasTexture(skyCanvas); skyTex.colorSpace = THREE.SRGBColorSpace;
-  scene.background = skyTex; skyTex.minFilter = THREE.LinearFilter; skyTex.magFilter = THREE.LinearFilter;
     const cam = new THREE.PerspectiveCamera(38, Wpx / Hpx, 0.1, 400);
     const rnd = new THREE.WebGLRenderer({ antialias: true });
     rnd.setPixelRatio(Math.min(window.devicePixelRatio, 2)); rnd.setSize(Wpx, Hpx);
@@ -405,11 +416,6 @@ export default function Scena3D({ cfg }) {
 
     scene.fog = new THREE.Fog("#ddd8cf", 60, 200);
 
-  // Fundal imens — se topeste in ceata, culoarea identica cu fog-ul
-  const bgGround = new THREE.Mesh(new THREE.PlaneGeometry(800, 800),
-    new THREE.MeshStandardMaterial({ color: 0xd1ccc6, roughness: 0.95 }));
-  bgGround.rotation.x = -Math.PI / 2; bgGround.position.y = -0.04; bgGround.receiveShadow = true;
-  scene.add(bgGround);
     const pv = texPavaj();
     const apron = new THREE.Mesh(new THREE.PlaneGeometry(L + 3.2, W + 3.2),
       new THREE.MeshStandardMaterial({ map: pv.map, bumpMap: pv.bump, bumpScale: 0.04, roughness: 0.78, metalness: 0.03, color: 0xffffff }));
