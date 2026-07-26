@@ -403,7 +403,7 @@ export default function Scena3D({ cfg }) {
     rnd.setClearColor(0xdce8f0);
     el.appendChild(rnd.domElement);
 
-    scene.fog = new THREE.Fog("#e6eae7", 30, 95);
+    scene.fog = new THREE.Fog("#e8e4d8", 30, 95);
 
   // Fundal de siguranta sub faSol — aceeasi culoare ca blendul din shader
   const bgGround = new THREE.Mesh(new THREE.PlaneGeometry(300, 300),
