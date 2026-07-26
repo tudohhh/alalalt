@@ -335,7 +335,7 @@ function faSol(latura, razaPlata) {
        vec3 m2 = texture2D(uMacro, wxz * 0.09000 + vec2(0.37, 0.61)).rgb;
        baza *= (0.00 + m1 * 1.00) * (0.30 + m2 * 0.70);
 
-       baza = mix(baza, vec3(0.575, 0.60, 0.545), smoothstep(45.0, 260.0, dOriz));
+       baza = mix(baza, vec3(0.62, 0.58, 0.54), smoothstep(30.0, 70.0, dOriz));
        diffuseColor.rgb *= baza;`
     );
     mat.userData.sh = sh;
@@ -820,7 +820,7 @@ function adaugaFlori(scene, L, W) {
 
 export function adaugaGradina(scene, renderer, L, W, optiuni = {}) {
   const o = Object.assign(
-    { copaci: true, iarba: true, gard: true, sol: true, densIarba: 9000, latSol: 400, envMap: true },
+    { copaci: true, iarba: true, gard: true, sol: true, densIarba: 9000, latSol: 80, envMap: true },
     optiuni
   );
   const T = texturi();
