@@ -596,7 +596,6 @@ export default function Scena3D({ cfg }) {
   adaugaFereastra(-L * 0.28, hz * 0.58, -W / 2 - 0.03, Math.PI);
   // Fronton decorativ pe lateralele scurte (capetele L)
   const frontonMat = new THREE.MeshStandardMaterial({ color: 0xe8e0d0, roughness: 0.7 });
-  const frontonTrim = new THREE.MeshStandardMaterial({ color: 0xf0ebe0, roughness: 0.65 });
   [-1, 1].forEach(function(sx) {
     var fg = new THREE.Group();
     var shape2 = new THREE.Shape();
@@ -609,19 +608,6 @@ export default function Scena3D({ cfg }) {
     fPanou.castShadow = true; fPanou.receiveShadow = true;
     scene.add(fPanou);
 
-    for (var i = 0; i < 8; i++) {
-      var sy = hz + 0.08 + i * 0.38;
-      var sw = W - 0.10 - i * 0.08;
-      if (sy < hz + hRoof - 0.15) {
-        var scandura = new THREE.Mesh(
-          new THREE.BoxGeometry(Math.max(0.3, sw), 0.04, 0.04),
-          frontonTrim
-        );
-        scandura.position.set(sx * (L/2 + 0.06), sy, 0);
-        scandura.rotation.y = sx > 0 ? -Math.PI/2 : Math.PI/2;
-        scandura.castShadow = true; scene.add(scandura);
-      }
-    }
 
     var ocY = hz + hRoof * 0.65;
     var ocR = 0.25;
