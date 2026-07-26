@@ -335,9 +335,9 @@ function texInvelitoare(hex, tip) {
 function texTeren() {
   const c = document.createElement("canvas"); c.width = c.height = 512;
   const x = c.getContext("2d");
-  x.fillStyle = "#87927a"; x.fillRect(0, 0, 512, 512);
+  x.fillStyle = "#7a786a"; x.fillRect(0, 0, 512, 512);
   for (let i = 0; i < 2200; i++) {
-    x.fillStyle = ["#7d8a6f", "#8f9a80", "#79856d", "#93a086"][i % 4];
+    x.fillStyle = ["#8a8878", "#706e60", "#807e70", "#747264"][i % 4];
     x.globalAlpha = 0.25;
     x.fillRect(Math.random() * 512, Math.random() * 512, 2 + Math.random() * 8, 2 + Math.random() * 5);
   }
