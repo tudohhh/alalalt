@@ -607,10 +607,14 @@ export default function Scena3D({ cfg }) {
     scene.add(grup);
   }
 
-  // Câte un geam pe fiecare perete (exceptie fațada cu ușa)
-  adaugaFereastra(-L * 0.35, hz * 0.58, -W / 2 - 0.03, Math.PI);        // spate
-  adaugaFereastra(L / 2 + 0.03, hz * 0.58, 0, Math.PI / 2);              // lateral dreapta
-  adaugaFereastra(-L / 2 - 0.03, hz * 0.58, 0, -Math.PI / 2);            // lateral stânga
+  // Fațadă (cu ușa — geamul stânga sus, departe de ușă)
+  adaugaFereastra(L * 0.35, hz * 0.58, W / 2 + 0.03, 0);
+  // Spate
+  adaugaFereastra(-L * 0.35, hz * 0.58, -W / 2 - 0.03, Math.PI);
+  // Lateral dreapta
+  adaugaFereastra(L / 2 + 0.03, hz * 0.58, -W * 0.35, Math.PI / 2);
+  // Lateral stânga
+  adaugaFereastra(-L / 2 - 0.03, hz * 0.58, W * 0.35, -Math.PI / 2);
 
   // --- Ușă intrare (aliniată cu aleea) ---
   const doorX = -L / 5, doorZ = W / 2 + 0.02, doorW = 0.92, doorH = 2.15;
