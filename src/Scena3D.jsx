@@ -459,16 +459,17 @@ export default function Scena3D({ cfg }) {
         new THREE.MeshStandardMaterial({ color: "#66754f", roughness: 1 }));
       co.scale.y = 0.85; co.position.set(L / 2 + 5, 1.2 * s2 + 0.95 * s2, W / 2 + 1); co.castShadow = true; scene.add(co); }
 
-    scene.add(new THREE.HemisphereLight(0xfdf3e3, 0x8a9480, 0.75));
-    const key = new THREE.DirectionalLight(0xffe9cf, 2.1);
+    scene.add(new THREE.HemisphereLight(0xfff5e8, 0x9d9588, 0.9));
+    const key = new THREE.DirectionalLight(0xfff0d5, 2.8);
     key.position.set(L * 1.7, hz + hRoof + 6.5, W * 0.3); key.castShadow = true;
-    key.shadow.mapSize.set(2048, 2048); key.shadow.radius = 8;
+    key.shadow.mapSize.set(2048, 2048); key.shadow.radius = 6;
     const s = Math.max(L, W) * 1.5;
     key.shadow.camera.left = -s; key.shadow.camera.right = s;
     key.shadow.camera.top = s; key.shadow.camera.bottom = -4; key.shadow.bias = -0.00015; key.shadow.normalBias = 0.04;
     scene.add(key);
-    const fill = new THREE.DirectionalLight(0xd9e4f2, 0.5); fill.position.set(-L, hz, -W); scene.add(fill);
-    const rim = new THREE.DirectionalLight(0xfff0dd, 0.5); rim.position.set(-L * 0.6, hz + hRoof + 6, -W); scene.add(rim);
+    const fill = new THREE.DirectionalLight(0xe8e0d0, 0.6); fill.position.set(-L, hz, -W); scene.add(fill);
+    const rim = new THREE.DirectionalLight(0xfff0dd, 0.6); rim.position.set(-L * 0.6, hz + hRoof + 6, -W); scene.add(rim);
+  rnd.toneMappingExposure = 1.5;
 
     const zc = document.createElement("canvas"); zc.width = 64; zc.height = 256;
     const zx = zc.getContext("2d");
@@ -592,6 +593,50 @@ export default function Scena3D({ cfg }) {
   adaugaFereastra(L / 2 + 0.03, hz * 0.58, -W * 0.35, Math.PI / 2);          // dreapta
   adaugaFereastra(-L * 0.35, hz * 0.58, -W / 2 - 0.03, Math.PI);             // spate
   adaugaFereastra(-L / 2 - 0.03, hz * 0.58, W * 0.35, -Math.PI / 2);         // stânga
+
+  // --- Ghivece flori sub ferestre față ---
+  const flColors = [0xe85d5d, 0xe8a85d, 0xf0d860, 0xe86d8c, 0xf5a0a0, 0xfff0b0, 0xff8080, 0xffd070];
+  const matGhiveci = new THREE.MeshStandardMaterial({ color: 0x8b6f5e, roughness: 0.7 });
+  const matFloare = new THREE.MeshStandardMaterial({ roughness: 0.8 });
+  const matFrunza = new THREE.MeshStandardMaterial({ color: 0x5a7a3a, roughness: 0.8 });
+  function adaugaGhiveci(cx, cz, ry) {
+    const g = new THREE.Group();
+    g.position.set(cx, 0.55, cz); g.rotation.y = ry;
+    const gh = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.18, 0.35, 12), matGhiveci);
+    gh.position.y = 0.17; gh.castShadow = true; g.add(gh);
+    // Flori — bile colorate
+    for (let i = 0; i < 5; i++) {
+      const col = flColors[Math.floor(Math.random() * flColors.length)];
+      const fm = matFloare.clone(); fm.color = new THREE.Color(col);
+      const fl = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 4), fm);
+      fl.position.set((Math.random()-0.5)*0.2, 0.38 + Math.random()*0.15, (Math.random()-0.5)*0.2);
+      fl.castShadow = true; g.add(fl);
+    }
+    // Frunze
+    for (let i = 0; i < 3; i++) {
+      const fr = new THREE.Mesh(new THREE.SphereGeometry(0.04, 4, 2), matFrunza);
+      fr.position.set((Math.random()-0.5)*0.25, 0.30, (Math.random()-0.5)*0.25);
+      fr.scale.set(1, 0.4, 1); g.add(fr);
+    }
+    scene.add(g);
+  }
+  adaugaGhiveci(L * 0.35, W / 2 + 0.22, 0);
+  adaugaGhiveci(-L * 0.35, W / 2 + 0.22, 0);
+
+  // --- Tufe decorative lângă ușă ---
+  function adaugaTufa(px, pz, sc = 1) {
+    const g = new THREE.Group(); g.position.set(px, 0, pz);
+    for (let i = 0; i < 3; i++) {
+      const s = sc * (0.5 + Math.random() * 0.5);
+      const b = new THREE.Mesh(new THREE.SphereGeometry(0.30 * s, 7, 5),
+        new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(0.22 + Math.random()*0.08, 0.5, 0.30 + Math.random()*0.15), roughness: 0.9 }));
+      b.position.set((Math.random()-0.5)*0.4, 0.25 * s, (Math.random()-0.5)*0.4);
+      b.castShadow = true; g.add(b);
+    }
+    scene.add(g);
+  }
+  adaugaTufa(doorX - 0.9, doorZ + 0.7, 1);
+  adaugaTufa(doorX + 0.9, doorZ + 0.7, 0.85);
 
   // --- Ușă intrare (aliniată cu aleea) ---
   const doorX = -L / 5, doorZ = W / 2 + 0.02, doorW = 0.92, doorH = 2.15;
