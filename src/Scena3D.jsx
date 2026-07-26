@@ -403,7 +403,7 @@ export default function Scena3D({ cfg }) {
     rnd.setClearColor(0xdce8f0);
     el.appendChild(rnd.domElement);
 
-    scene.fog = new THREE.Fog("#d1ccc6", 50, 180);
+    scene.fog = new THREE.Fog("#ddd8cf", 60, 200);
 
   // Fundal imens — se topeste in ceata, culoarea identica cu fog-ul
   const bgGround = new THREE.Mesh(new THREE.PlaneGeometry(800, 800),
