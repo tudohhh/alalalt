@@ -271,80 +271,18 @@ function faSol(latura, razaPlata) {
   const rep = latura / 12.0;
   G.map.repeat.set(rep, rep);
   G.bump.repeat.set(rep, rep);
-  const mac = texMacro();
 
+  // Material STANDARD — fara shader custom. Fiabil, fara bug-uri.
   const mat = new THREE.MeshStandardMaterial({
-    color: 0xffffff,
-    // `map` trebuie sa existe ca three sa includa <map_fragment> in shader.
-    // Nu e citit direct: codul de mai jos il inlocuieste cu dala rotita.
     map: G.map,
     bumpMap: G.bump,
     bumpScale: 0.12,
     roughness: 1,
     metalness: 0,
+    color: 0xd1ccc6,
   });
 
-  mat.onBeforeCompile = (sh) => {
-    sh.uniforms.uMacro = { value: mac };
-    sh.uniforms.uDet = { value: G.map };
-
-    // ATENTIE: uniformele si functiile NU se pun inaintea shaderului. Prefixul
-    // three contine `precision`, iar orice `float` declarat mai devreme e
-    // eroare de compilare — de aceea iesea o pata verde. Locul lor e dupa
-    // <include common>, unde precizia e deja declarata.
-    sh.vertexShader = sh.vertexShader.replace(
-      "#include <common>",
-      "#include <common>\n varying vec3 vWPos;"
-    );
-    sh.vertexShader = sh.vertexShader.replace(
-      "#include <begin_vertex>",
-      "#include <begin_vertex>\n vWPos = (modelMatrix * vec4(transformed,1.0)).xyz;"
-    );
-
-    sh.fragmentShader = sh.fragmentShader.replace(
-      "#include <common>",
-      `#include <common>
-       uniform sampler2D uMacro;
-       uniform sampler2D uDet;
-       varying vec3 vWPos;`
-    );
-
-    sh.fragmentShader = sh.fragmentShader.replace(
-      "#include <map_fragment>",
-      `vec2 wxz = vWPos.xz;
-       float dOriz = length(wxz);
-
-       // 1. DEFORMARE UV: coordonatele se deplaseaza cu un zgomot lent inainte
-       //    de citire. Grila nu mai e dreapta nicaieri, deci nu exista aliniere
-       //    de recunoscut. Spre deosebire de dalele rotite, deformarea e
-       //    continua, deci nu apar cusaturi la marginea zonelor.
-       vec2 wp  = (vec2(texture2D(uMacro, wxz * 0.0090).r,
-                        texture2D(uMacro, wxz * 0.0090 + vec2(0.5)).r) - 0.5) * 3.4;
-       vec2 wp2 = (vec2(texture2D(uMacro, wxz * 0.0031).r,
-                        texture2D(uMacro, wxz * 0.0031 + vec2(0.5)).r) - 0.5) * 9.0;
-
-       // 2. DOUA SCARI: dala de 12 m aproape, de 42 m departe. Perioadele nu
-       //    se divid una pe alta, deci nu se pot suprapune.
-       vec3 baza = texture2D(uDet, (wxz + wp) / 12.0).rgb;
-       vec3 dep  = texture2D(uDet, (wxz + wp2) / 42.36).rgb;
-       baza = mix(baza, dep, smoothstep(18.0, 80.0, dOriz));
-
-       // 3. DOUA SCARI DE MACRO, la 33 m si 11 m, decalate. Cu una singura,
-       //    dalele se realiniaza cu ea si grila reapare in departare.
-       vec3 m1 = texture2D(uMacro, wxz * 0.03000).rgb;
-       vec3 m2 = texture2D(uMacro, wxz * 0.09000 + vec2(0.37, 0.61)).rgb;
-       baza *= (0.00 + m1 * 1.00) * (0.30 + m2 * 0.70);
-
-       baza = mix(baza, vec3(0.82, 0.80, 0.78), smoothstep(40.0, 140.0, dOriz));
-       diffuseColor.rgb *= baza;`
-    );
-    mat.userData.sh = sh;
-  };
-
-  // DENIVELARI. Un plan perfect orizontal nu poate avea relief: lumina cade
-  // identic peste tot. Ridic terenul cu unde line, dar numai in afara curtii,
-  // altfel casa, gardul si aleea ar ramane in aer.
-  const geo = new THREE.PlaneGeometry(latura, latura, 160, 160);
+  const geo = new THREE.PlaneGeometry(latura, latura, 80, 80);
   const po = geo.attributes.position;
   for (let i = 0; i < po.count; i++) {
     const px = po.getX(i), py = po.getY(i);
