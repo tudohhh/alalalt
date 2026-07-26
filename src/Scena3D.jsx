@@ -405,7 +405,11 @@ export default function Scena3D({ cfg }) {
 
     scene.fog = new THREE.Fog("#e6eae7", 30, 95);
 
-  // Solul e gestionat de gradina.js (faSol) — un singur plan, fara inele
+  // Fundal de siguranta sub faSol — aceeasi culoare ca blendul din shader
+  const bgGround = new THREE.Mesh(new THREE.PlaneGeometry(300, 300),
+    new THREE.MeshStandardMaterial({ color: 0x9e948a, roughness: 0.95 }));
+  bgGround.rotation.x = -Math.PI / 2; bgGround.position.y = -0.03; bgGround.receiveShadow = true;
+  scene.add(bgGround);
     const pv = texPavaj();
     const apron = new THREE.Mesh(new THREE.PlaneGeometry(L + 3.2, W + 3.2),
       new THREE.MeshStandardMaterial({ map: pv.map, bumpMap: pv.bump, bumpScale: 0.04, roughness: 0.78, metalness: 0.03, color: 0xffffff }));
