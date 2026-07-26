@@ -379,7 +379,7 @@ export default function Scena3D({ cfg }) {
     const scene = new THREE.Scene();
 
   const FOG_COL = "#ddd8cf";
-  scene.background = new THREE.Color(FOG_COL);
+  scene.background = new THREE.Color("#c8dae8");
     const cam = new THREE.PerspectiveCamera(38, Wpx / Hpx, 0.1, 400);
     const rnd = new THREE.WebGLRenderer({ antialias: true });
     rnd.setPixelRatio(Math.min(window.devicePixelRatio, 2)); rnd.setSize(Wpx, Hpx);
@@ -391,7 +391,7 @@ export default function Scena3D({ cfg }) {
     rnd.setClearColor(0xdce8f0);
     el.appendChild(rnd.domElement);
 
-    scene.fog = new THREE.Fog("#ddd8cf", 60, 200);
+    scene.fog = new THREE.Fog(FOG_COL, 60, 200);
 
     const pv = texPavaj();
     const apron = new THREE.Mesh(new THREE.PlaneGeometry(L + 3.2, W + 3.2),
