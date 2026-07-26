@@ -831,7 +831,7 @@ export function adaugaGradina(scene, renderer, L, W, optiuni = {}) {
 
   /* --- solul --- */
   const raza = Math.max(L, W) / 2 + 20;
-  const latimeSol = o.latSol > 0 ? o.latSol : 2 * raza + 10;
+  const latimeSol = o.latSol > 0 ? o.latSol : 160;
   if (o.sol) grup.add(faSol(latimeSol, raza));
 
   /* --- copaci --- */
