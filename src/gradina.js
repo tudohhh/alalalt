@@ -335,7 +335,7 @@ function faSol(latura, razaPlata) {
        vec3 m2 = texture2D(uMacro, wxz * 0.09000 + vec2(0.37, 0.61)).rgb;
        baza *= (0.00 + m1 * 1.00) * (0.30 + m2 * 0.70);
 
-       baza = mix(baza, vec3(0.82, 0.80, 0.75), smoothstep(40.0, 140.0, dOriz));
+       baza = mix(baza, vec3(0.82, 0.80, 0.78), smoothstep(40.0, 140.0, dOriz));
        diffuseColor.rgb *= baza;`
     );
     mat.userData.sh = sh;
