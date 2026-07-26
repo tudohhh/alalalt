@@ -491,63 +491,63 @@ export default function Scena3D({ cfg }) {
   const tctx = tencCanvas.getContext('2d');
   const hashP = (a, b) => { let h = a*374761393+b*668265263+1274126177; h=(h^(h>>13))*1274126177; return (h^(h>>16))/2147483648; };
   tctx.fillStyle = '#f2ede4'; tctx.fillRect(0, 0, 1024, 1024);
-  // Granule medii (0.5-1mm) — vizibile
-  for (let i = 0; i < 18000; i++) {
-    const g = 215 + hashP(i, 0.3) * 35;
-    tctx.fillStyle = `rgba(${g|0},${(g-3)|0},${(g-8)|0},0.35)`;
-    const s = 5 + hashP(i, 0.7) * 9;
+  // Granule fine (nisip fin) — vizibile dar delicate
+  for (let i = 0; i < 20000; i++) {
+    const g = 220 + hashP(i, 0.3) * 30;
+    tctx.fillStyle = `rgba(${g|0},${(g-2)|0},${(g-6)|0},0.30)`;
+    const s = 3 + hashP(i, 0.7) * 5;
     tctx.fillRect(hashP(0.1, i) * 1024, hashP(0.5, i) * 1024, s, s * 0.8);
   }
-  // Pietricele decorative (1-3mm) — clar vizibile
-  for (let i = 0; i < 4000; i++) {
-    const g = 175 + hashP(i, 1.1) * 45;
-    tctx.fillStyle = `rgba(${g|0},${(g-5)|0},${(g-12)|0},0.30)`;
-    const s = 8 + hashP(i, 1.7) * 14;
+  // Pietricele fine
+  for (let i = 0; i < 2500; i++) {
+    const g = 185 + hashP(i, 1.1) * 30;
+    tctx.fillStyle = `rgba(${g|0},${(g-4)|0},${(g-10)|0},0.22)`;
+    const s = 4 + hashP(i, 1.7) * 8;
     tctx.fillRect(hashP(0.3, i) * 1024, hashP(0.7, i) * 1024, s, s * 0.7);
   }
-  // Nori de culoare (variație pe suprafețe mari)
-  for (let i = 0; i < 18; i++) {
+  // Nori de culoare subtili
+  for (let i = 0; i < 15; i++) {
     const px = hashP(i, 0.1) * 1024, py = hashP(i, 0.2) * 1024;
-    const r = 60 + hashP(i, 0.3) * 180;
+    const r = 50 + hashP(i, 0.3) * 150;
     const g = tctx.createRadialGradient(px, py, 0, px, py, r);
-    g.addColorStop(0, `rgba(${195+hashP(i,0.4)*25},${188+hashP(i,0.5)*20},${178+hashP(i,0.6)*18},0.12)`);
+    g.addColorStop(0, `rgba(${195+hashP(i,0.4)*20},${188+hashP(i,0.5)*15},${178+hashP(i,0.6)*14},0.08)`);
     g.addColorStop(1, 'rgba(0,0,0,0)');
     tctx.fillStyle = g; tctx.fillRect(px - r, py - r, r * 2, r * 2);
   }
-  // Urme de gletieră
-  for (let y = 0; y < 1024; y += 65 + hashP(y, 0.1) * 50) {
-    const a = 0.03 + hashP(y, 0.2) * 0.05;
-    tctx.fillStyle = `rgba(255,255,255,${a})`; tctx.fillRect(0, y, 1024, 4 + hashP(y, 0.3) * 10);
-    tctx.fillStyle = `rgba(0,0,0,${a * 0.5})`; tctx.fillRect(0, y + 8, 1024, 2 + hashP(y, 0.4) * 4);
+  // Urme fine de glet
+  for (let y = 0; y < 1024; y += 70 + hashP(y, 0.1) * 45) {
+    const a = 0.02 + hashP(y, 0.2) * 0.03;
+    tctx.fillStyle = `rgba(255,255,255,${a})`; tctx.fillRect(0, y, 1024, 3 + hashP(y, 0.3) * 7);
+    tctx.fillStyle = `rgba(0,0,0,${a * 0.4})`; tctx.fillRect(0, y + 6, 1024, 1 + hashP(y, 0.4) * 3);
   }
   const tencTex = new THREE.CanvasTexture(tencCanvas);
   tencTex.wrapS = tencTex.wrapT = THREE.RepeatWrapping; tencTex.anisotropy = 16;
-  tencTex.repeat.set(L * 0.22, hz * 0.40); tencTex.colorSpace = THREE.SRGBColorSpace;
+  tencTex.repeat.set(L * 0.35, hz * 0.60); tencTex.colorSpace = THREE.SRGBColorSpace;
   tencTex.minFilter = THREE.LinearMipmapLinearFilter; tencTex.magFilter = THREE.LinearFilter;
   tencTex.generateMipmaps = true;
 
-  // Bump map asortat — relief puternic
+  // Bump asortat — relief mediu
   const bumpCanvas = document.createElement('canvas'); bumpCanvas.width = bumpCanvas.height = 1024;
   const bctx = bumpCanvas.getContext('2d');
   bctx.fillStyle = '#808080'; bctx.fillRect(0, 0, 1024, 1024);
-  for (let i = 0; i < 15000; i++) {
-    const v = 128 + (hashP(i, 0.1) - 0.5) * 70;
+  for (let i = 0; i < 18000; i++) {
+    const v = 128 + (hashP(i, 0.1) - 0.5) * 50;
     bctx.fillStyle = `rgb(${v|0},${v|0},${v|0})`;
-    const s = 6 + hashP(i, 0.3) * 10;
+    const s = 3 + hashP(i, 0.3) * 6;
     bctx.fillRect(hashP(0.2, i) * 1024, hashP(0.4, i) * 1024, s, s * 0.8);
   }
-  for (let y = 0; y < 1024; y += 65 + hashP(y, 0.5) * 50) {
-    bctx.fillStyle = '#c0c0c0'; bctx.fillRect(0, y, 1024, 4 + hashP(y, 0.6) * 8);
-    bctx.fillStyle = '#484848'; bctx.fillRect(0, y + 8, 1024, 2 + hashP(y, 0.7) * 3);
+  for (let y = 0; y < 1024; y += 70 + hashP(y, 0.5) * 45) {
+    bctx.fillStyle = '#b8b8b8'; bctx.fillRect(0, y, 1024, 3 + hashP(y, 0.6) * 6);
+    bctx.fillStyle = '#505050'; bctx.fillRect(0, y + 6, 1024, 1 + hashP(y, 0.7) * 3);
   }
   const bumpTex = new THREE.CanvasTexture(bumpCanvas);
   bumpTex.wrapS = bumpTex.wrapT = THREE.RepeatWrapping; bumpTex.anisotropy = 16;
-  bumpTex.repeat.set(L * 0.22, hz * 0.40); bumpTex.colorSpace = THREE.LinearSRGBColorSpace;
+  bumpTex.repeat.set(L * 0.35, hz * 0.60); bumpTex.colorSpace = THREE.LinearSRGBColorSpace;
   bumpTex.minFilter = THREE.LinearMipmapLinearFilter; bumpTex.magFilter = THREE.LinearFilter;
   bumpTex.generateMipmaps = true;
 
-  const matZid = new THREE.MeshStandardMaterial({ color: '#f4f1ea', map: tencTex, roughness: 0.82,
-    bumpMap: bumpTex, bumpScale: 0.12 });
+  const matZid = new THREE.MeshStandardMaterial({ color: '#f4f1ea', map: tencTex, roughness: 0.85,
+    bumpMap: bumpTex, bumpScale: 0.07 });
       const casa = new THREE.Mesh(new THREE.BoxGeometry(L, hz, W), matZid);
     casa.position.y = hz / 2; casa.castShadow = true; casa.receiveShadow = true; scene.add(casa);
   // --- Tâmplărie (ferestre + ușă) ---
