@@ -714,11 +714,11 @@ function mediu(renderer) {
   ec.height = 512;
   const x = ec.getContext("2d");
   const g = x.createLinearGradient(0, 0, 0, 512);
-  g.addColorStop(0, "#79aed6");
-  g.addColorStop(0.42, "#cfe0e9");
+  g.addColorStop(0, "#a8c8e0");
+  g.addColorStop(0.42, "#d8dde0");
   g.addColorStop(0.5, "#e8e4d8");
-  g.addColorStop(0.53, "#b0a898");
-  g.addColorStop(1, "#8a8078");
+  g.addColorStop(0.53, "#c8bfb0");
+  g.addColorStop(1, "#9e948a");
   x.fillStyle = g;
   x.fillRect(0, 0, 1024, 512);
   const sun = x.createRadialGradient(772, 148, 6, 772, 148, 130);
