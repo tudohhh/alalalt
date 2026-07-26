@@ -717,8 +717,8 @@ function mediu(renderer) {
   g.addColorStop(0, "#79aed6");
   g.addColorStop(0.42, "#cfe0e9");
   g.addColorStop(0.5, "#e8e4d8");
-  g.addColorStop(0.53, "#96a184");
-  g.addColorStop(1, "#5d6752");
+  g.addColorStop(0.53, "#b0a898");
+  g.addColorStop(1, "#8a8078");
   x.fillStyle = g;
   x.fillRect(0, 0, 1024, 512);
   const sun = x.createRadialGradient(772, 148, 6, 772, 148, 130);
