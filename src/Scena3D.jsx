@@ -463,14 +463,16 @@ export default function Scena3D({ cfg }) {
     const bordT = new THREE.Mesh(new THREE.PlaneGeometry(L + 3.9, W + 3.9),
       new THREE.MeshStandardMaterial({ map: bordTex, roughness: 0.70, metalness: 0.02, transparent: true, opacity: 0.60 }));
     bordT.rotation.x = -Math.PI / 2; bordT.position.y = 0.009; bordT.receiveShadow = true; scene.add(bordT);
-    const alee = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 7),
+    const aleeLen = (W / 2 + 10) - (W / 2 + 1.6) + 0.3; // ~8.7m, până la poartă
+    const aleeCtrZ = W / 2 + 1.6 + aleeLen / 2;
+    const alee = new THREE.Mesh(new THREE.PlaneGeometry(1.3, aleeLen),
       new THREE.MeshStandardMaterial({ map: pv.map, bumpMap: pv.bump, bumpScale: 0.05, roughness: 0.72, metalness: 0.03, color: 0xffffff }));
-    alee.rotation.x = -Math.PI / 2; alee.position.set(-L / 5, 0.014, W / 2 + 3.5 + 1.6); scene.add(alee);
+    alee.rotation.x = -Math.PI / 2; alee.position.set(-L / 5, 0.014, aleeCtrZ); scene.add(alee);
     // Borduri alee
     const matBord = new THREE.MeshStandardMaterial({ color: 0x8a8076, roughness: 0.65 });
     [-0.65, 0.65].forEach(sx2 => {
-      const bord = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.06, 7.1), matBord);
-      bord.position.set(-L / 5 + sx2, 0.04, W / 2 + 3.5 + 1.6);
+      const bord = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.06, aleeLen + 0.1), matBord);
+      bord.position.set(-L / 5 + sx2, 0.04, aleeCtrZ);
       bord.castShadow = true; bord.receiveShadow = true; scene.add(bord);
     });
     const uc = new THREE.Mesh(new THREE.PlaneGeometry(L + 5, W + 5),
