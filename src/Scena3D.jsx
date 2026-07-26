@@ -803,89 +803,34 @@ export default function Scena3D({ cfg }) {
     }
 
 
-    // --- Horn (coș de fum) — proporții corecte, contrast ridicat ---
+    // --- Horn tencuit modern ---
     { const hx = -L / 4, hzp = -W / 5;
       const roofY = y0 + hRoof - Math.abs(hzp) * Math.tan(rad(panta));
-      const chW = 0.62, chD = 0.48, chH = 1.25;
-      const chBase = roofY + 0.02;
+      const chW = 0.48, chD = 0.38, chH = 1.30;
+      const chBase = roofY + 0.03;
 
-      // Textură cărămidă — 512px, ~7 cărămizi pe lățime, mortar închis pt contrast
-      const hc = document.createElement("canvas"); hc.width = hc.height = 512;
-      const hctx = hc.getContext("2d");
-      const bw = 68, bh = 30, gap = 5;
-      // Mortar închis (contrast puternic cu cărămida)
-      hctx.fillStyle = "#5c5650"; hctx.fillRect(0, 0, 512, 512);
-      for (let i = 0; i < 1500; i++) {
-        const v = 85 + Math.random() * 15;
-        hctx.fillStyle = `rgba(${v},${v-3},${v-8},0.4)`;
-        hctx.fillRect(Math.random() * 512, Math.random() * 512, 2 + Math.random() * 3, 1.5);
-      }
-      // Cărămizi
-      for (let row = 0; row < 512; row += bh + gap) {
-        const off = (Math.floor(row / (bh + gap)) % 2) * (bw / 2 + gap / 2);
-        for (let col = -bw; col < 512; col += bw + gap) {
-          const x0 = col + off, y0b = row;
-          const r = 185 + (Math.random() - 0.5) * 40;
-          const g = 72 + (Math.random() - 0.5) * 22;
-          const b = 42 + (Math.random() - 0.5) * 18;
-          hctx.fillStyle = `rgb(${r|0},${g|0},${b|0})`;
-          hctx.fillRect(x0 + gap, y0b + gap, bw, bh);
-          // Highlight pe muchia de sus (prinde lumina)
-          hctx.fillStyle = "rgba(255,235,200,0.22)"; hctx.fillRect(x0 + gap, y0b + gap, bw, 5);
-          // Umbră sub muchie
-          hctx.fillStyle = "rgba(0,0,0,0.15)"; hctx.fillRect(x0 + gap, y0b + gap + bh - 6, bw, 6);
-        }
-      }
-      // Pete de funingine în partea de sus
-      for (let i = 0; i < 30; i++) {
-        const sx = 200 + Math.random() * 112, sy = Math.random() * 120;
-        const sr = 15 + Math.random() * 45;
-        const sg = hctx.createRadialGradient(sx, sy, 0, sx, sy, sr);
-        sg.addColorStop(0, "rgba(30,25,20,0.25)"); sg.addColorStop(1, "rgba(30,25,20,0)");
-        hctx.fillStyle = sg; hctx.fillRect(sx - sr, sy - sr, sr * 2, sr * 2);
-      }
-      const ht = new THREE.CanvasTexture(hc);
-      ht.wrapS = ht.wrapT = THREE.RepeatWrapping;
-      // ~2.5 cărămizi pe lățimea hornului (0.62m / 0.24m per cărămidă ≈ 2.6)
-      ht.repeat.set(0.29, 0.45);
-      ht.colorSpace = THREE.SRGBColorSpace; ht.anisotropy = 8;
-
-      // Bump map
-      const bc = document.createElement("canvas"); bc.width = bc.height = 512;
-      const bctx = bc.getContext("2d");
-      bctx.fillStyle = "#282828"; bctx.fillRect(0, 0, 512, 512);
-      for (let row = 0; row < 512; row += bh + gap) {
-        const off = (Math.floor(row / (bh + gap)) % 2) * (bw / 2 + gap / 2);
-        for (let col = -bw; col < 512; col += bw + gap) {
-          bctx.fillStyle = "#f0f0f0"; bctx.fillRect(col + off + gap, row + gap, bw, bh);
-          bctx.fillStyle = "#ffffff"; bctx.fillRect(col + off + gap, row + gap, bw, 4);
-          bctx.fillStyle = "#c8c8c8"; bctx.fillRect(col + off + gap, row + gap + bh - 4, bw, 4);
-        }
-      }
-      const bt2 = new THREE.CanvasTexture(bc);
-      bt2.wrapS = bt2.wrapT = THREE.RepeatWrapping; bt2.repeat.set(0.29, 0.45);
-
-      const brickMat = new THREE.MeshStandardMaterial({
-        map: ht, bumpMap: bt2, bumpScale: 0.06, roughness: 0.78, color: 0xffffff
+      // Tencuială în ton cu pereții
+      const hornMat = new THREE.MeshStandardMaterial({
+        color: 0xf2efe8, roughness: 0.82, bumpMap: tencTex, bumpScale: 0.006
       });
 
       // Corp horn
-      const horn = new THREE.Mesh(new THREE.BoxGeometry(chW, chH, chD), brickMat);
+      const horn = new THREE.Mesh(new THREE.BoxGeometry(chW, chH, chD), hornMat);
       horn.position.set(hx, chBase + chH / 2, hzp);
       horn.castShadow = true; horn.receiveShadow = true;
       scene.add(horn);
 
-      // Coroană cu surplus vizibil (20 cm pe fiecare parte)
-      const crownMat = new THREE.MeshStandardMaterial({ color: 0x595046, roughness: 0.6 });
-      const crownBase = new THREE.Mesh(new THREE.BoxGeometry(chW + 0.22, 0.07, chD + 0.22), crownMat);
-      crownBase.position.set(hx, chBase + chH + 0.04, hzp);
-      crownBase.castShadow = true; scene.add(crownBase);
-      const crownMid = new THREE.Mesh(new THREE.BoxGeometry(chW + 0.12, 0.05, chD + 0.12), crownMat);
-      crownMid.position.set(hx, chBase + chH + 0.10, hzp);
-      crownMid.castShadow = true; scene.add(crownMid);
+      // Capac beton cu surplus
+      const capMat = new THREE.MeshStandardMaterial({ color: 0xd5cfc6, roughness: 0.7 });
+      const capBase = new THREE.Mesh(new THREE.BoxGeometry(chW + 0.18, 0.06, chD + 0.18), capMat);
+      capBase.position.set(hx, chBase + chH + 0.04, hzp);
+      capBase.castShadow = true; scene.add(capBase);
+      const capTop = new THREE.Mesh(new THREE.BoxGeometry(chW + 0.08, 0.04, chD + 0.08), capMat);
+      capTop.position.set(hx, chBase + chH + 0.09, hzp);
+      capTop.castShadow = true; scene.add(capTop);
 
-      // Șorț de tablă (flashing) — 4 bucăți late, înclinate cu panta
-      const flashExt = 0.22;
+      // Șorț de tablă (flashing)
+      const flashExt = 0.20;
       const flashMat = new THREE.MeshStandardMaterial({ color: 0x4a4a50, roughness: 0.24, metalness: 0.95 });
       const roofAng = rad(panta) * (hzp < 0 ? -1 : 1);
 
@@ -899,10 +844,10 @@ export default function Scena3D({ cfg }) {
       };
 
       const fY = roofY + 0.015;
-      addFlash(chW + 0.08, flashExt, hx, fY, hzp + chD/2 + flashExt/2);  // față (+Z)
-      addFlash(chW + 0.08, flashExt, hx, fY, hzp - chD/2 - flashExt/2);  // spate (-Z)
-      addFlash(flashExt, chD + 0.04, hx - chW/2 - flashExt/2, fY, hzp);  // stânga (-X)
-      addFlash(flashExt, chD + 0.04, hx + chW/2 + flashExt/2, fY, hzp);  // dreapta (+X)
+      addFlash(chW + 0.06, flashExt, hx, fY, hzp + chD/2 + flashExt/2);
+      addFlash(chW + 0.06, flashExt, hx, fY, hzp - chD/2 - flashExt/2);
+      addFlash(flashExt, chD + 0.04, hx - chW/2 - flashExt/2, fY, hzp);
+      addFlash(flashExt, chD + 0.04, hx + chW/2 + flashExt/2, fY, hzp);
       }
 
     const target = new THREE.Vector3(0, (hz + hRoof) / 2 + 0.6, 0);
