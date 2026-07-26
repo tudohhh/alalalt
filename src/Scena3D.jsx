@@ -405,14 +405,7 @@ export default function Scena3D({ cfg }) {
 
     scene.fog = new THREE.Fog("#e6eae7", 30, 95);
 
-    const teren = new THREE.Mesh(new THREE.PlaneGeometry(100, 100),
-      new THREE.MeshStandardMaterial({ map: texTeren(), roughness: 1 }));
-    teren.rotation.x = -Math.PI / 2; teren.receiveShadow = true; scene.add(teren);
-  // Plan de continuitate — culoare pamantie, ascuns de ceata
-  const bigGround = new THREE.Mesh(new THREE.PlaneGeometry(140, 140),
-    new THREE.MeshStandardMaterial({ color: 0x9d9588, roughness: 0.95 }));
-  bigGround.rotation.x = -Math.PI / 2; bigGround.position.y = -0.02; bigGround.receiveShadow = true;
-  scene.add(bigGround);
+  // Solul e gestionat de gradina.js (faSol) — un singur plan, fara inele
     const pv = texPavaj();
     const apron = new THREE.Mesh(new THREE.PlaneGeometry(L + 3.2, W + 3.2),
       new THREE.MeshStandardMaterial({ map: pv.map, bumpMap: pv.bump, bumpScale: 0.04, roughness: 0.78, metalness: 0.03, color: 0xffffff }));
