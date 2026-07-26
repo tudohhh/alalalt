@@ -607,11 +607,9 @@ export default function Scena3D({ cfg }) {
     scene.add(grup);
   }
 
-  // 4 ferestre
-  adaugaFereastra(L * 0.35, hz * 0.58, W / 2 + 0.03, 0);                    // față
-  adaugaFereastra(L / 2 + 0.03, hz * 0.58, -W * 0.35, Math.PI / 2);          // dreapta
-  adaugaFereastra(-L * 0.35, hz * 0.58, -W / 2 - 0.03, Math.PI);             // spate
-  adaugaFereastra(-L / 2 - 0.03, hz * 0.58, W * 0.35, -Math.PI / 2);         // stânga
+  // Ferestre — față + spate (lateralele au fronton)
+  adaugaFereastra(L * 0.35, hz * 0.58, W / 2 + 0.03, 0);
+  adaugaFereastra(-L * 0.35, hz * 0.58, -W / 2 - 0.03, Math.PI);
 
   // --- Ușă intrare (aliniată cu aleea) ---
   const doorX = -L / 5, doorZ = W / 2 + 0.02, doorW = 0.92, doorH = 2.15;
@@ -816,23 +814,22 @@ export default function Scena3D({ cfg }) {
     const inv = meshTri(tris, matInv); scene.add(inv);
     const sub = meshTri(tris, matSub); sub.position.y = -0.05; sub.castShadow = false; scene.add(sub);
     if (triF.length) scene.add(meshTri(triF, matZid));
-    // --- Ochi de geam în fronton (gable vent) ---
+    // Fronton — panou triunghiular tencuit pe laterale
     if (tip === "doua_ape" || tip === "mansardat") {
-      const gCenterY = y0 + (yv - y0) * 0.38;
-      const gR = 0.22;
-      const matVent = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.3, metalness: 0.7 });
+      const frontonMat = new THREE.MeshStandardMaterial({ color: 0xf4f1ea, roughness: 0.85, map: tencTex });
       [-1, 1].forEach(sx2 => {
-        // Cadru exterior
-        const ring = new THREE.Mesh(new THREE.TorusGeometry(gR, 0.025, 8, 16), matVent);
-        ring.position.set(L/2 * sx2 + (sx2 > 0 ? 0.01 : -0.01), gCenterY, 0);
-        ring.rotation.y = Math.PI / 2;
-        ring.castShadow = true; scene.add(ring);
-        // Disc închis în spate
-        const disc = new THREE.Mesh(new THREE.CylinderGeometry(gR - 0.02, gR - 0.02, 0.01, 16),
-          new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.5 }));
-        disc.position.set(L/2 * sx2 + (sx2 > 0 ? 0.005 : -0.005), gCenterY, 0);
-        disc.rotation.z = Math.PI / 2;
-        scene.add(disc);
+        const fgGeo = new THREE.BufferGeometry();
+        const hw2 = W/2 - 0.10, hh2 = hRoof - 0.10;
+        const fv = new Float32Array([-hw2,0,0, hw2,0,0, 0,hh2,0]);
+        const fu = new Float32Array([0,1, 1,1, 0.5,0]);
+        fgGeo.setAttribute('position', new THREE.BufferAttribute(fv, 3));
+        fgGeo.setAttribute('uv', new THREE.BufferAttribute(fu, 2));
+        fgGeo.setIndex(new THREE.BufferAttribute(new Uint16Array([0,1,2]), 1));
+        fgGeo.computeVertexNormals();
+        const fgMesh = new THREE.Mesh(fgGeo, frontonMat);
+        fgMesh.position.set(L/2 * sx2 + (sx2 > 0 ? 0.005 : -0.005), y0 + 0.05, 0);
+        fgMesh.rotation.y = sx2 > 0 ? -Math.PI/2 : Math.PI/2;
+        fgMesh.receiveShadow = true; scene.add(fgMesh);
       });
     }
 
@@ -960,52 +957,7 @@ export default function Scena3D({ cfg }) {
     }
 
 
-    // --- Horn tencuit modern ---
-    { const hx = -L / 4, hzp = -W / 5;
-      const roofY = y0 + hRoof - Math.abs(hzp) * Math.tan(rad(panta));
-      const chW = 0.48, chD = 0.38, chH = 1.30;
-      const chBase = roofY + 0.03;
 
-      // Tencuială în ton cu pereții
-      const hornMat = new THREE.MeshStandardMaterial({
-        color: 0xf2efe8, roughness: 0.82, bumpMap: tencTex, bumpScale: 0.006
-      });
-
-      // Corp horn
-      const horn = new THREE.Mesh(new THREE.BoxGeometry(chW, chH, chD), hornMat);
-      horn.position.set(hx, chBase + chH / 2, hzp);
-      horn.castShadow = true; horn.receiveShadow = true;
-      scene.add(horn);
-
-      // Capac beton cu surplus
-      const capMat = new THREE.MeshStandardMaterial({ color: 0xd5cfc6, roughness: 0.7 });
-      const capBase = new THREE.Mesh(new THREE.BoxGeometry(chW + 0.18, 0.06, chD + 0.18), capMat);
-      capBase.position.set(hx, chBase + chH + 0.04, hzp);
-      capBase.castShadow = true; scene.add(capBase);
-      const capTop = new THREE.Mesh(new THREE.BoxGeometry(chW + 0.08, 0.04, chD + 0.08), capMat);
-      capTop.position.set(hx, chBase + chH + 0.09, hzp);
-      capTop.castShadow = true; scene.add(capTop);
-
-      // Șorț de tablă (flashing)
-      const flashExt = 0.20;
-      const flashMat = new THREE.MeshStandardMaterial({ color: 0x4a4a50, roughness: 0.24, metalness: 0.95 });
-      const roofAng = rad(panta) * (hzp < 0 ? -1 : 1);
-
-      const addFlash = (w, d, px, py, pz) => {
-        const g = new THREE.BoxGeometry(w, 0.012, d);
-        const m = new THREE.Mesh(g, flashMat);
-        m.position.set(px, py, pz);
-        m.rotation.x = roofAng;
-        m.castShadow = true;
-        scene.add(m);
-      };
-
-      const fY = roofY + 0.015;
-      addFlash(chW + 0.06, flashExt, hx, fY, hzp + chD/2 + flashExt/2);
-      addFlash(chW + 0.06, flashExt, hx, fY, hzp - chD/2 - flashExt/2);
-      addFlash(flashExt, chD + 0.04, hx - chW/2 - flashExt/2, fY, hzp);
-      addFlash(flashExt, chD + 0.04, hx + chW/2 + flashExt/2, fY, hzp);
-      }
 
     const target = new THREE.Vector3(0, (hz + hRoof) / 2 + 0.6, 0);
     const rRest = Math.max(L, W) * 1.8 + 8;
