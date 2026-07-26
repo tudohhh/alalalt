@@ -594,56 +594,57 @@ export default function Scena3D({ cfg }) {
   // Spate — 2 ferestre
   adaugaFereastra(L * 0.28, hz * 0.58, -W / 2 - 0.03, Math.PI);
   adaugaFereastra(-L * 0.28, hz * 0.58, -W / 2 - 0.03, Math.PI);
-  // Fronton — textură lemn cu UV-uri proprii
-  const fs2 = 1024;
-  const fc2 = document.createElement('canvas'); fc2.width = fc2.height = fs2;
-  const fx2 = fc2.getContext('2d');
-  const fh = (a,b)=>{let h=a*374761393+b*668265263+1274126177;h=(h^(h>>13))*1274126177;return(h^(h>>16))/2147483648;};
-  fx2.fillStyle = '#c8b898'; fx2.fillRect(0, 0, fs2, fs2);
-  const bH = 82, fg2 = 3;
-  for (let row = 0; row < fs2; row += bH + fg2) {
-    const br2 = 195+(fh(row,0.1)-0.5)*30, bg2=178+(fh(row,0.2)-0.5)*25, bb2=145+(fh(row,0.3)-0.5)*20;
-    fx2.fillStyle = 'rgb('+[br2|0,bg2|0,bb2|0].join(',')+')';
-    fx2.fillRect(0, row, fs2, bH);
-    for (let fy=row+3; fy<row+bH-3; fy+=1.5+fh(row,fy)*3) {
-      const fv=8+fh(fy,row)*14;
-      fx2.fillStyle='rgba('+[(br2-fv)|0,(bg2-fv-2)|0,(bb2-fv-4)|0]+',0.25)';
-      fx2.fillRect(4+fh(fy,0.5)*6, fy, fs2-8, 0.7);
+  // Fronton — textură lemn, canvas IZOLAT (nerefolosit)
+  var fcnv = document.createElement('canvas'); fcnv.width = fcnv.height = 1024;
+  var fctx = fcnv.getContext('2d');
+  var fh2 = function(a,b){var h=a*374761393+b*668265263+1274126177;h=(h^(h>>13))*1274126177;return(h^(h>>16))/2147483648;};
+  fctx.fillStyle = '#c8b898'; fctx.fillRect(0, 0, 1024, 1024);
+  var bH2 = 82, fg3 = 3;
+  for (var row2 = 0; row2 < 1024; row2 += bH2 + fg3) {
+    var br3 = 195+(fh2(row2,0.1)-0.5)*30, bg3 = 178+(fh2(row2,0.2)-0.5)*25, bb3 = 145+(fh2(row2,0.3)-0.5)*20;
+    fctx.fillStyle = 'rgb('+(br3|0)+','+(bg3|0)+','+(bb3|0)+')';
+    fctx.fillRect(0, row2, 1024, bH2);
+    for (var fy2 = row2+3; fy2 < row2+bH2-3; fy2 += 1.5+fh2(row2,fy2)*3) {
+      var fv2 = 8+fh2(fy2,row2)*14;
+      fctx.fillStyle = 'rgba('+((br3-fv2)|0)+','+((bg3-fv2-2)|0)+','+((bb3-fv2-4)|0)+',0.25)';
+      fctx.fillRect(4+fh2(fy2,0.5)*6, fy2, 1024-8, 0.7);
     }
-    for (let n=0; n<4; n++) {
-      const nx=30+fh(row+n,0.7)*(fs2-60), ny=row+10+fh(row+n,0.8)*(bH-20), nr=3+fh(row+n,0.9)*6;
-      fx2.fillStyle='rgba('+[(br2-25)|0,(bg2-30)|0,(bb2-25)|0]+',0.5)';
-      fx2.beginPath(); fx2.ellipse(nx,ny,nr,nr*0.7,0,0,Math.PI*2); fx2.fill();
+    for (var n2 = 0; n2 < 4; n2++) {
+      var nx2 = 30+fh2(row2+n2,0.7)*(1024-60), ny2 = row2+10+fh2(row2+n2,0.8)*(bH2-20), nr2 = 3+fh2(row2+n2,0.9)*6;
+      fctx.fillStyle = 'rgba('+((br3-25)|0)+','+((bg3-30)|0)+','+((bb3-25)|0)+',0.5)';
+      fctx.beginPath(); fctx.ellipse(nx2,ny2,nr2,nr2*0.7,0,0,Math.PI*2); fctx.fill();
     }
-    fx2.fillStyle='rgba(0,0,0,0.22)'; fx2.fillRect(0,row+bH,fs2,fg2);
-    fx2.fillStyle='rgba(255,255,255,0.08)'; fx2.fillRect(0,row,fs2,1.5);
+    fctx.fillStyle = 'rgba(0,0,0,0.22)'; fctx.fillRect(0,row2+bH2,1024,fg3);
+    fctx.fillStyle = 'rgba(255,255,255,0.08)'; fctx.fillRect(0,row2,1024,1.5);
   }
-  for (let i=0; i<6000; i++) {
-    fx2.fillStyle='rgba(0,0,0,'+(0.02+Math.random()*0.03)+')';
-    fx2.fillRect(Math.random()*fs2,Math.random()*fs2,1,0.5+Math.random());
+  for (var gi = 0; gi < 6000; gi++) {
+    fctx.fillStyle = 'rgba(0,0,0,'+(0.02+Math.random()*0.03)+')';
+    fctx.fillRect(Math.random()*1024,Math.random()*1024,1,0.5+Math.random());
   }
-  const frontTex = new THREE.CanvasTexture(fc2);
-  frontTex.wrapS=frontTex.wrapT=THREE.RepeatWrapping; frontTex.colorSpace=THREE.SRGBColorSpace; frontTex.anisotropy=8;
-  const frontonMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.72, metalness: 0.02, color: 0xffffff });
+  var frontTex = new THREE.CanvasTexture(fcnv);
+  frontTex.wrapS = frontTex.wrapT = THREE.RepeatWrapping;
+  frontTex.colorSpace = THREE.SRGBColorSpace; frontTex.anisotropy = 8;
+  frontTex.needsUpdate = true;
+  var frontonMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.72, metalness: 0.02, color: 0xffffff });
   [-1, 1].forEach(function(sx) {
-    // BufferGeometry cu UV-uri proprii pentru textură corectă
-    var hw = W/2, hh = hRoof;
+    // BufferGeometry cu proiecție planară UV (u=x*s, v=y*s)
+    var hw2 = W/2, hh2 = hRoof, uvS = 0.45;
+    var fVerts = new Float32Array([
+      -hw2,0,0.04,  hw2,0,0.04,  0,hh2,0.04,   // față (3 verts)
+      hw2,0,-0.04,  -hw2,0,-0.04,  0,hh2,-0.04   // spate (3 verts)
+    ]);
+    var fUVs = new Float32Array([
+      (-hw2)*uvS, 0,  hw2*uvS, 0,  0, hh2*uvS,       // față: proiecție planară
+      hw2*uvS, 0,  (-hw2)*uvS, 0,  0, hh2*uvS         // spate: oglindit
+    ]);
+    var fIdx = new Uint16Array([0,1,2, 3,4,5]);
     var fGeo2 = new THREE.BufferGeometry();
-    var verts = new Float32Array([
-      -hw,0,0.04,  hw,0,0.04,  0,hh,0.04,  // front face
-      hw,0,-0.04,  -hw,0,-0.04,  0,hh,-0.04, // back face
-    ]);
-    var uvs = new Float32Array([
-      0,1, 1,1, 0.5,0,  // front UV
-      0,1, 1,1, 0.5,0,  // back UV
-    ]);
-    var idx = new Uint16Array([0,1,2, 3,4,5]);
-    fGeo2.setAttribute('position', new THREE.BufferAttribute(verts, 3));
-    fGeo2.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
-    fGeo2.setIndex(new THREE.BufferAttribute(idx, 1));
+    fGeo2.setAttribute('position', new THREE.BufferAttribute(fVerts, 3));
+    fGeo2.setAttribute('uv', new THREE.BufferAttribute(fUVs, 2));
+    fGeo2.setIndex(new THREE.BufferAttribute(fIdx, 1));
     fGeo2.computeVertexNormals();
     var fPanou = new THREE.Mesh(fGeo2, frontonMat);
-    fPanou.position.set(sx * (L/2 + 0.02), hz, 0);
+    fPanou.position.set(sx * (L/2 + 0.005), hz, 0);
     fPanou.rotation.y = sx > 0 ? -Math.PI/2 : Math.PI/2;
     fPanou.castShadow = true; fPanou.receiveShadow = true;
     scene.add(fPanou);
