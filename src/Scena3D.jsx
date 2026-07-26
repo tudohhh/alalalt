@@ -589,24 +589,18 @@ export default function Scena3D({ cfg }) {
   }
 
   // 4 ferestre
-  // Fațadă — 4 ferestre
-  adaugaFereastra(L * 0.42, hz * 0.58, W / 2 + 0.03, 0);
-  adaugaFereastra(L * 0.14, hz * 0.58, W / 2 + 0.03, 0);
-  adaugaFereastra(-L * 0.14, hz * 0.58, W / 2 + 0.03, 0);
-  adaugaFereastra(-L * 0.42, hz * 0.58, W / 2 + 0.03, 0);
-  // Spate — 4 ferestre
-  adaugaFereastra(L * 0.42, hz * 0.58, -W / 2 - 0.03, Math.PI);
-  adaugaFereastra(L * 0.14, hz * 0.58, -W / 2 - 0.03, Math.PI);
-  adaugaFereastra(-L * 0.14, hz * 0.58, -W / 2 - 0.03, Math.PI);
-  adaugaFereastra(-L * 0.42, hz * 0.58, -W / 2 - 0.03, Math.PI);
-  // Lateral dreapta — 3 ferestre
-  adaugaFereastra(L / 2 + 0.03, hz * 0.58, -W * 0.42, Math.PI / 2);
-  adaugaFereastra(L / 2 + 0.03, hz * 0.58, 0, Math.PI / 2);
-  adaugaFereastra(L / 2 + 0.03, hz * 0.58, W * 0.42, Math.PI / 2);
-  // Lateral stânga — 3 ferestre
-  adaugaFereastra(-L / 2 - 0.03, hz * 0.58, -W * 0.42, -Math.PI / 2);
-  adaugaFereastra(-L / 2 - 0.03, hz * 0.58, 0, -Math.PI / 2);
-  adaugaFereastra(-L / 2 - 0.03, hz * 0.58, W * 0.42, -Math.PI / 2);
+  // Fațadă — 2 ferestre
+  adaugaFereastra(L * 0.28, hz * 0.58, W / 2 + 0.03, 0);
+  adaugaFereastra(-L * 0.28, hz * 0.58, W / 2 + 0.03, 0);
+  // Spate — 2 ferestre
+  adaugaFereastra(L * 0.28, hz * 0.58, -W / 2 - 0.03, Math.PI);
+  adaugaFereastra(-L * 0.28, hz * 0.58, -W / 2 - 0.03, Math.PI);
+  // Lateral dreapta — 2 ferestre
+  adaugaFereastra(L / 2 + 0.03, hz * 0.58, -W * 0.28, Math.PI / 2);
+  adaugaFereastra(L / 2 + 0.03, hz * 0.58, W * 0.28, Math.PI / 2);
+  // Lateral stânga — 2 ferestre
+  adaugaFereastra(-L / 2 - 0.03, hz * 0.58, -W * 0.28, -Math.PI / 2);
+  adaugaFereastra(-L / 2 - 0.03, hz * 0.58, W * 0.28, -Math.PI / 2);
 
 
   // --- Ușă intrare (aliniată cu aleea) ---
