@@ -594,8 +594,56 @@ export default function Scena3D({ cfg }) {
   // Spate — 2 ferestre
   adaugaFereastra(L * 0.28, hz * 0.58, -W / 2 - 0.03, Math.PI);
   adaugaFereastra(-L * 0.28, hz * 0.58, -W / 2 - 0.03, Math.PI);
-  // Fronton decorativ pe lateralele scurte (capetele L)
-  const frontonMat = new THREE.MeshStandardMaterial({ color: 0xe8e0d0, roughness: 0.7 });
+  // Fronton decorativ — textură lemn siding
+  const fs = 1024;
+  const fc = document.createElement('canvas'); fc.width = fc.height = fs;
+  const fx = fc.getContext('2d');
+  const fhash = (a,b)=>{let h=a*374761393+b*668265263+1274126177;h=(h^(h>>13))*1274126177;return(h^(h>>16))/2147483648;};
+  fx.fillStyle = '#c8b898'; fx.fillRect(0, 0, fs, fs);
+  // Scânduri orizontale
+  const boardH = 92, fgap = 4;
+  for (let row = 0; row < fs; row += boardH + fgap) {
+    // Culoare de bază per scândură — variație caldă
+    const br = 195 + (fhash(row, 0.1)-0.5)*30;
+    const bg = 178 + (fhash(row, 0.2)-0.5)*25;
+    const bb = 145 + (fhash(row, 0.3)-0.5)*20;
+    fx.fillStyle = `rgb(${br|0},${bg|0},${bb|0})`;
+    fx.fillRect(0, row, fs, boardH);
+    // Fibre lemn — dungi fine orizontale
+    for (let fy = row + 3; fy < row + boardH - 3; fy += 1.5 + fhash(row, fy)*3) {
+      const fv = 8 + fhash(fy, row) * 14;
+      fx.fillStyle = `rgba(${br-fv},${bg-fv-2},${bb-fv-4},0.25)`;
+      fx.fillRect(4 + fhash(fy,0.5)*6, fy, fs-8, 0.7);
+    }
+    // Noduri lemn — câteva per scândură
+    for (let n = 0; n < 4; n++) {
+      const nx = 30 + fhash(row+n, 0.7) * (fs-60);
+      const ny = row + 10 + fhash(row+n, 0.8) * (boardH-20);
+      const nr = 3 + fhash(row+n, 0.9) * 6;
+      fx.fillStyle = `rgba(${br-25},${bg-30},${bb-25},0.5)`;
+      fx.beginPath(); fx.ellipse(nx, ny, nr, nr*0.7, 0, 0, Math.PI*2); fx.fill();
+      fx.fillStyle = `rgba(${br-40},${bg-45},${bb-35},0.3)`;
+      fx.beginPath(); fx.ellipse(nx, ny, nr*0.5, nr*0.35, 0, 0, Math.PI*2); fx.fill();
+    }
+    // Umbră între scânduri
+    fx.fillStyle = 'rgba(0,0,0,0.22)';
+    fx.fillRect(0, row + boardH, fs, fgap);
+    // Highlight margine superioară
+    fx.fillStyle = 'rgba(255,255,255,0.08)';
+    fx.fillRect(0, row, fs, 1.5);
+  }
+  // Granulație fină
+  for (let i = 0; i < 8000; i++) {
+    const gx = Math.random()*fs, gy = Math.random()*fs;
+    const gv = 4 + Math.random()*10;
+    fx.fillStyle = `rgba(0,0,0,${0.03+Math.random()*0.04})`;
+    fx.fillRect(gx, gy, 1, 0.5 + Math.random()*1);
+  }
+  const frontTex = new THREE.CanvasTexture(fc);
+  frontTex.wrapS = frontTex.wrapT = THREE.RepeatWrapping;
+  frontTex.repeat.set(1.2, 1.5);
+  frontTex.colorSpace = THREE.SRGBColorSpace; frontTex.anisotropy = 8;
+  const frontonMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.72, metalness: 0.02, color: 0xffffff });
   [-1, 1].forEach(function(sx) {
     var fg = new THREE.Group();
     var shape2 = new THREE.Shape();
