@@ -518,34 +518,128 @@ export default function Scena3D({ cfg }) {
     bumpMap: bumpTex, bumpScale: 0.008 });
       const casa = new THREE.Mesh(new THREE.BoxGeometry(L, hz, W), matZid);
     casa.position.y = hz / 2; casa.castShadow = true; casa.receiveShadow = true; scene.add(casa);
-  // Ferestre + usa
-  // Ferestre + usa (PBR real)
-  const matToc = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.35, metalness: 0.7 });
-  const matGeam = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.05, metalness: 0.05, clearcoat: 1, clearcoatRoughness: 0.05, envMapIntensity: 1.2, transparent: true, opacity: 0.85 });
-  const matUsa = new THREE.MeshStandardMaterial({ color: 0x4a2a1a, roughness: 0.45 });
-  // Fereastra fata cu pervaz
-  const pervaz1 = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.06, 0.08), matToc);
-  pervaz1.position.set(L * 0.35, hz * 0.55 - 0.55, W / 2 + 0.03);
-  pervaz1.castShadow = true; scene.add(pervaz1);
-  const fereastra = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.1, 0.05), matToc);
-  fereastra.position.set(L * 0.35, hz * 0.55, W / 2 + 0.02);
-  fereastra.castShadow = true; scene.add(fereastra);
-  const geamFata = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.95, 0.01), matGeam);
-  geamFata.position.set(L * 0.35, hz * 0.55, W / 2 + 0.05);
-  scene.add(geamFata);
-  // Fereastra laterala cu pervaz
-  const pervaz2 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.08, 1.0), matToc);
-  pervaz2.position.set(L / 2 + 0.03, hz * 0.55 - 0.55, -W * 0.35);
-  pervaz2.castShadow = true; scene.add(pervaz2);
-  const fereastra2 = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.1, 0.9), matToc);
-  fereastra2.position.set(L / 2 + 0.02, hz * 0.55, -W * 0.35);
-  fereastra2.castShadow = true; scene.add(fereastra2);
-  const geamLat = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.95, 0.75), matGeam);
-  geamLat.position.set(L / 2 + 0.05, hz * 0.55, -W * 0.35);
-  scene.add(geamLat);
-    const soclu = new THREE.Mesh(new THREE.BoxGeometry(L + 0.18, 0.4, W + 0.18),
-      new THREE.MeshStandardMaterial({ color: 0x3a3632, roughness: 0.8, bumpMap: bumpTex, bumpScale: 0.01 }));
-    soclu.position.y = 0.175; soclu.receiveShadow = true; scene.add(soclu);
+  // --- Tâmplărie (ferestre + ușă) ---
+  const matToc = new THREE.MeshStandardMaterial({ color: 0x1f1f1f, roughness: 0.3, metalness: 0.75 });
+  const matGeam = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.04, metalness: 0.03, clearcoat: 1, clearcoatRoughness: 0.03, envMapIntensity: 1.4, transparent: true, opacity: 0.82 });
+
+  // Helper: creează o fereastră cu pervaz și obloane
+  function adaugaFereastra(cx, cy, cz, rotY, w = 0.9, h = 1.1) {
+    const grup = new THREE.Group();
+    grup.position.set(cx, cy, cz);
+    grup.rotation.y = rotY;
+    // Toc
+    const toc = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.06), matToc);
+    toc.castShadow = true; grup.add(toc);
+    // Geam
+    const geam = new THREE.Mesh(new THREE.BoxGeometry(w - 0.18, h - 0.18, 0.01), matGeam);
+    geam.position.z = 0.035; grup.add(geam);
+    // Pervaz
+    const pervaz = new THREE.Mesh(new THREE.BoxGeometry(w + 0.1, 0.06, 0.10), matToc);
+    pervaz.position.set(0, -h/2 - 0.04, 0.04); pervaz.castShadow = true; grup.add(pervaz);
+    // Mulioane (traverse interioare)
+    const mulionV = new THREE.Mesh(new THREE.BoxGeometry(0.04, h - 0.22, 0.04), matToc);
+    mulionV.position.z = 0.04; grup.add(mulionV);
+    const mulionH = new THREE.Mesh(new THREE.BoxGeometry(w - 0.22, 0.04, 0.04), matToc);
+    mulionH.position.set(0, h * 0.12, 0.04); grup.add(mulionH);
+
+    // Obloane (jaluzele) — textură procedurală cu fante orizontale
+    const jCanvas = document.createElement("canvas"); jCanvas.width = 64; jCanvas.height = 512;
+    const jx = jCanvas.getContext("2d");
+    jx.fillStyle = "#27201a"; jx.fillRect(0, 0, 64, 512);
+    for (let sy = 0; sy < 512; sy += 7) {
+      jx.fillStyle = "#383028"; jx.fillRect(0, sy, 64, 2.5);
+      jx.fillStyle = "#1a1510"; jx.fillRect(0, sy + 3, 64, 1.5);
+    }
+    const jTex = new THREE.CanvasTexture(jCanvas); jTex.wrapS = jTex.wrapT = THREE.RepeatWrapping;
+    jTex.colorSpace = THREE.SRGBColorSpace;
+    const matOblon = new THREE.MeshStandardMaterial({ map: jTex, roughness: 0.75, color: 0xffffff });
+
+    const sw = 0.32, sd = 0.05;
+    [-1, 1].forEach(s => {
+      const oblon = new THREE.Mesh(new THREE.BoxGeometry(sw, h + 0.08, sd), matOblon);
+      oblon.position.set(s * (w/2 + sw/2 + 0.04), 0, 0.01);
+      oblon.castShadow = true; grup.add(oblon);
+    });
+    scene.add(grup);
+  }
+
+  // 4 ferestre
+  adaugaFereastra(L * 0.35, hz * 0.58, W / 2 + 0.03, 0);                    // față
+  adaugaFereastra(L / 2 + 0.03, hz * 0.58, -W * 0.35, Math.PI / 2);          // dreapta
+  adaugaFereastra(-L * 0.35, hz * 0.58, -W / 2 - 0.03, Math.PI);             // spate
+  adaugaFereastra(-L / 2 - 0.03, hz * 0.58, W * 0.35, -Math.PI / 2);         // stânga
+
+  // --- Ușă intrare (aliniată cu aleea) ---
+  const doorX = -L / 5, doorZ = W / 2 + 0.02, doorW = 0.92, doorH = 2.15;
+  const doorGroup = new THREE.Group();
+  doorGroup.position.set(doorX, doorH / 2, doorZ);
+  // Toc ușă
+  const tocUsa = new THREE.Mesh(new THREE.BoxGeometry(doorW + 0.12, doorH + 0.12, 0.08), matToc);
+  tocUsa.castShadow = true; doorGroup.add(tocUsa);
+  // Panou inferior (metalic plin)
+  const panouJos = new THREE.Mesh(new THREE.BoxGeometry(doorW - 0.06, doorH * 0.42, 0.04),
+    new THREE.MeshStandardMaterial({ color: 0x2c2c2c, roughness: 0.25, metalness: 0.85 }));
+  panouJos.position.set(0, -doorH * 0.22, 0.02); panouJos.castShadow = true; doorGroup.add(panouJos);
+  // Panou superior (geam)
+  const panouSus = new THREE.Mesh(new THREE.BoxGeometry(doorW - 0.06, doorH * 0.38, 0.01), matGeam);
+  panouSus.position.set(0, doorH * 0.18, 0.035); doorGroup.add(panouSus);
+  // Mâner
+  const maner = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.22, 8),
+    new THREE.MeshStandardMaterial({ color: 0xc0c0c0, roughness: 0.2, metalness: 0.95 }));
+  maner.position.set(doorW/2 - 0.05, 0.04, 0.04);
+  maner.rotation.z = Math.PI / 2; doorGroup.add(maner);
+  // Copertină deasupra ușii
+  const copertina = new THREE.Mesh(new THREE.BoxGeometry(doorW + 0.30, 0.03, 0.22),
+    new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.3, metalness: 0.8 }));
+  copertina.position.set(0, doorH/2 + 0.12, -0.05); copertina.castShadow = true; doorGroup.add(copertina);
+  scene.add(doorGroup);
+
+  // --- Soclu piatră (travertin / calcar) ---
+  const sCanvas = document.createElement("canvas"); sCanvas.width = sCanvas.height = 512;
+  const sx = sCanvas.getContext("2d");
+  // Bază caldă
+  sx.fillStyle = "#c4b8a8"; sx.fillRect(0, 0, 512, 512);
+  // Blocuri de piatră
+  const sbw = 96, sbh = 48, sgap = 4;
+  for (let row = 0; row < 512; row += sbh + sgap) {
+    const off = (Math.floor(row / (sbh + sgap)) % 2) * ((sbw + sgap) / 2);
+    for (let col = -sbw; col < 512; col += sbw + sgap) {
+      const bx2 = col + off, by2 = row;
+      const r = 185 + (Math.random() - 0.5) * 20;
+      const g = 170 + (Math.random() - 0.5) * 18;
+      const b = 150 + (Math.random() - 0.5) * 16;
+      sx.fillStyle = `rgb(${r|0},${g|0},${b|0})`;
+      sx.fillRect(bx2 + sgap, by2 + sgap, sbw, sbh);
+      // Variație subtilă per bloc
+      sx.fillStyle = "rgba(255,255,255,0.06)"; sx.fillRect(bx2 + sgap, by2 + sgap, sbw, sbh/2);
+      sx.fillStyle = "rgba(0,0,0,0.04)"; sx.fillRect(bx2 + sgap, by2 + sgap + sbh/2, sbw, sbh/2);
+    }
+  }
+  // Granulație fină
+  for (let i = 0; i < 4000; i++) {
+    const v = 170 + Math.random() * 30;
+    sx.fillStyle = `rgba(${v},${v-5},${v-15},0.2)`;
+    sx.fillRect(Math.random() * 512, Math.random() * 512, 1.5, 1.5);
+  }
+  const sTex = new THREE.CanvasTexture(sCanvas); sTex.wrapS = sTex.wrapT = THREE.RepeatWrapping;
+  sTex.repeat.set((L + 0.18) / 1.8, 1.1); sTex.colorSpace = THREE.SRGBColorSpace; sTex.anisotropy = 8;
+  // Bump soclu
+  const sbCanvas = document.createElement("canvas"); sbCanvas.width = sbCanvas.height = 512;
+  const sbx = sbCanvas.getContext("2d");
+  sbx.fillStyle = "#707070"; sbx.fillRect(0, 0, 512, 512);
+  for (let row = 0; row < 512; row += sbh + sgap) {
+    const off = (Math.floor(row / (sbh + sgap)) % 2) * ((sbw + sgap) / 2);
+    for (let col = -sbw; col < 512; col += sbw + sgap) {
+      sbx.fillStyle = "#d0d0d0"; sbx.fillRect(col + off + sgap, row + sgap, sbw, sbh);
+      sbx.fillStyle = "#e8e8e8"; sbx.fillRect(col + off + sgap, row + sgap, sbw, 3);
+    }
+  }
+  const sbTex = new THREE.CanvasTexture(sbCanvas); sbTex.wrapS = sbTex.wrapT = THREE.RepeatWrapping;
+  sbTex.repeat.set((L + 0.18) / 1.8, 1.1);
+
+  const soclu = new THREE.Mesh(new THREE.BoxGeometry(L + 0.18, 0.40, W + 0.18),
+    new THREE.MeshStandardMaterial({ map: sTex, bumpMap: sbTex, bumpScale: 0.04, roughness: 0.78, color: 0xffffff }));
+  soclu.position.y = 0.175; soclu.receiveShadow = true; scene.add(soclu);
 
     const M = C.materialeMp[material] || Object.values(C.materialeMp)[0];
     const tipMat = M.tex || "tabla";
@@ -678,6 +772,25 @@ export default function Scena3D({ cfg }) {
     const inv = meshTri(tris, matInv); scene.add(inv);
     const sub = meshTri(tris, matSub); sub.position.y = -0.05; sub.castShadow = false; scene.add(sub);
     if (triF.length) scene.add(meshTri(triF, matZid));
+    // --- Ochi de geam în fronton (gable vent) ---
+    if (tip === "doua_ape" || tip === "mansardat") {
+      const gCenterY = y0 + (yv - y0) * 0.38;
+      const gR = 0.22;
+      const matVent = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.3, metalness: 0.7 });
+      [-1, 1].forEach(sx2 => {
+        // Cadru exterior
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(gR, 0.025, 8, 16), matVent);
+        ring.position.set(L/2 * sx2 + (sx2 > 0 ? 0.01 : -0.01), gCenterY, 0);
+        ring.rotation.y = Math.PI / 2;
+        ring.castShadow = true; scene.add(ring);
+        // Disc închis în spate
+        const disc = new THREE.Mesh(new THREE.CylinderGeometry(gR - 0.02, gR - 0.02, 0.01, 16),
+          new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.5 }));
+        disc.position.set(L/2 * sx2 + (sx2 > 0 ? 0.005 : -0.005), gCenterY, 0);
+        disc.rotation.z = Math.PI / 2;
+        scene.add(disc);
+      });
+    }
 
     const matPazie = new THREE.MeshStandardMaterial({ color: "#e8e0d5", roughness: 0.75 });
     const matPazieFront = new THREE.MeshStandardMaterial({ color: "#d5cdc0", roughness: 0.72 });
