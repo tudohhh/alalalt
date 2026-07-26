@@ -803,23 +803,21 @@ export default function Scena3D({ cfg }) {
     }
 
 
-    // --- Horn (coș de fum) refăcut ---
+    // --- Horn (coș de fum) — proporții corecte, contrast ridicat ---
     { const hx = -L / 4, hzp = -W / 5;
-      // Înălțimea acoperișului la poziția hornului
       const roofY = y0 + hRoof - Math.abs(hzp) * Math.tan(rad(panta));
-      const chW = 0.58, chD = 0.46, chH = 1.05;
+      const chW = 0.62, chD = 0.48, chH = 1.25;
       const chBase = roofY + 0.02;
 
-      // Textură cărămidă procedurală (caldă, realistă)
+      // Textură cărămidă — 512px, ~7 cărămizi pe lățime, mortar închis pt contrast
       const hc = document.createElement("canvas"); hc.width = hc.height = 512;
       const hctx = hc.getContext("2d");
       const bw = 68, bh = 30, gap = 5;
-      // Mortar
-      hctx.fillStyle = "#8a8278"; hctx.fillRect(0, 0, 512, 512);
-      // Granulație mortar
-      for (let i = 0; i < 2000; i++) {
-        const v = 130 + Math.random() * 20;
-        hctx.fillStyle = `rgba(${v},${v-5},${v-10},0.45)`;
+      // Mortar închis (contrast puternic cu cărămida)
+      hctx.fillStyle = "#5c5650"; hctx.fillRect(0, 0, 512, 512);
+      for (let i = 0; i < 1500; i++) {
+        const v = 85 + Math.random() * 15;
+        hctx.fillStyle = `rgba(${v},${v-3},${v-8},0.4)`;
         hctx.fillRect(Math.random() * 512, Math.random() * 512, 2 + Math.random() * 3, 1.5);
       }
       // Cărămizi
@@ -827,38 +825,48 @@ export default function Scena3D({ cfg }) {
         const off = (Math.floor(row / (bh + gap)) % 2) * (bw / 2 + gap / 2);
         for (let col = -bw; col < 512; col += bw + gap) {
           const x0 = col + off, y0b = row;
-          // Varietate caldă de cărămidă
-          const r = 175 + (Math.random() - 0.5) * 30;
-          const g = 80 + (Math.random() - 0.5) * 18;
-          const b = 55 + (Math.random() - 0.5) * 14;
+          const r = 185 + (Math.random() - 0.5) * 40;
+          const g = 72 + (Math.random() - 0.5) * 22;
+          const b = 42 + (Math.random() - 0.5) * 18;
           hctx.fillStyle = `rgb(${r|0},${g|0},${b|0})`;
           hctx.fillRect(x0 + gap, y0b + gap, bw, bh);
-          // Highlight subtil pe muchia de sus
-          hctx.fillStyle = "rgba(255,220,190,0.15)"; hctx.fillRect(x0 + gap, y0b + gap, bw, 4);
-          // Umbră la bază
-          hctx.fillStyle = "rgba(0,0,0,0.12)"; hctx.fillRect(x0 + gap, y0b + gap + bh - 5, bw, 5);
+          // Highlight pe muchia de sus (prinde lumina)
+          hctx.fillStyle = "rgba(255,235,200,0.22)"; hctx.fillRect(x0 + gap, y0b + gap, bw, 5);
+          // Umbră sub muchie
+          hctx.fillStyle = "rgba(0,0,0,0.15)"; hctx.fillRect(x0 + gap, y0b + gap + bh - 6, bw, 6);
         }
       }
+      // Pete de funingine în partea de sus
+      for (let i = 0; i < 30; i++) {
+        const sx = 200 + Math.random() * 112, sy = Math.random() * 120;
+        const sr = 15 + Math.random() * 45;
+        const sg = hctx.createRadialGradient(sx, sy, 0, sx, sy, sr);
+        sg.addColorStop(0, "rgba(30,25,20,0.25)"); sg.addColorStop(1, "rgba(30,25,20,0)");
+        hctx.fillStyle = sg; hctx.fillRect(sx - sr, sy - sr, sr * 2, sr * 2);
+      }
       const ht = new THREE.CanvasTexture(hc);
-      ht.wrapS = ht.wrapT = THREE.RepeatWrapping; ht.repeat.set(1.4, chH * 1.8);
+      ht.wrapS = ht.wrapT = THREE.RepeatWrapping;
+      // ~2.5 cărămizi pe lățimea hornului (0.62m / 0.24m per cărămidă ≈ 2.6)
+      ht.repeat.set(0.38, 1.0);
       ht.colorSpace = THREE.SRGBColorSpace; ht.anisotropy = 8;
 
-      // Bump map cărămidă
+      // Bump map
       const bc = document.createElement("canvas"); bc.width = bc.height = 512;
       const bctx = bc.getContext("2d");
-      bctx.fillStyle = "#404040"; bctx.fillRect(0, 0, 512, 512);
+      bctx.fillStyle = "#282828"; bctx.fillRect(0, 0, 512, 512);
       for (let row = 0; row < 512; row += bh + gap) {
         const off = (Math.floor(row / (bh + gap)) % 2) * (bw / 2 + gap / 2);
         for (let col = -bw; col < 512; col += bw + gap) {
-          bctx.fillStyle = "#e8e8e8"; bctx.fillRect(col + off + gap, row + gap, bw, bh);
-          bctx.fillStyle = "#fafafa"; bctx.fillRect(col + off + gap, row + gap, bw, 3);
+          bctx.fillStyle = "#f0f0f0"; bctx.fillRect(col + off + gap, row + gap, bw, bh);
+          bctx.fillStyle = "#ffffff"; bctx.fillRect(col + off + gap, row + gap, bw, 4);
+          bctx.fillStyle = "#c8c8c8"; bctx.fillRect(col + off + gap, row + gap + bh - 4, bw, 4);
         }
       }
       const bt2 = new THREE.CanvasTexture(bc);
-      bt2.wrapS = bt2.wrapT = THREE.RepeatWrapping; bt2.repeat.set(1.4, chH * 1.8);
+      bt2.wrapS = bt2.wrapT = THREE.RepeatWrapping; bt2.repeat.set(0.38, 1.0);
 
       const brickMat = new THREE.MeshStandardMaterial({
-        map: ht, bumpMap: bt2, bumpScale: 0.04, roughness: 0.82, color: 0xffffff
+        map: ht, bumpMap: bt2, bumpScale: 0.06, roughness: 0.78, color: 0xffffff
       });
 
       // Corp horn
@@ -867,22 +875,22 @@ export default function Scena3D({ cfg }) {
       horn.castShadow = true; horn.receiveShadow = true;
       scene.add(horn);
 
-      // Coroană (2 straturi, cu surplus față de corp)
-      const crownMat = new THREE.MeshStandardMaterial({ color: 0x5c5248, roughness: 0.65 });
-      const crownBase = new THREE.Mesh(new THREE.BoxGeometry(chW + 0.16, 0.06, chD + 0.16), crownMat);
-      crownBase.position.set(hx, chBase + chH + 0.03, hzp);
+      // Coroană cu surplus vizibil (20 cm pe fiecare parte)
+      const crownMat = new THREE.MeshStandardMaterial({ color: 0x595046, roughness: 0.6 });
+      const crownBase = new THREE.Mesh(new THREE.BoxGeometry(chW + 0.22, 0.07, chD + 0.22), crownMat);
+      crownBase.position.set(hx, chBase + chH + 0.04, hzp);
       crownBase.castShadow = true; scene.add(crownBase);
-      const crownTop = new THREE.Mesh(new THREE.BoxGeometry(chW + 0.08, 0.05, chD + 0.08), crownMat);
-      crownTop.position.set(hx, chBase + chH + 0.08, hzp);
-      crownTop.castShadow = true; scene.add(crownTop);
+      const crownMid = new THREE.Mesh(new THREE.BoxGeometry(chW + 0.12, 0.05, chD + 0.12), crownMat);
+      crownMid.position.set(hx, chBase + chH + 0.10, hzp);
+      crownMid.castShadow = true; scene.add(crownMid);
 
-      // Șorț de tablă (flashing) — 4 bucăți, fiecare înclinată cu panta acoperișului
-      const flashExt = 0.16;
-      const flashMat = new THREE.MeshStandardMaterial({ color: 0x4e4e52, roughness: 0.26, metalness: 0.94 });
-      const roofAng = rad(panta) * (hzp < 0 ? -1 : 1); // semnul: în ce parte urcă panta
+      // Șorț de tablă (flashing) — 4 bucăți late, înclinate cu panta
+      const flashExt = 0.22;
+      const flashMat = new THREE.MeshStandardMaterial({ color: 0x4a4a50, roughness: 0.24, metalness: 0.95 });
+      const roofAng = rad(panta) * (hzp < 0 ? -1 : 1);
 
       const addFlash = (w, d, px, py, pz) => {
-        const g = new THREE.BoxGeometry(w, 0.01, d);
+        const g = new THREE.BoxGeometry(w, 0.012, d);
         const m = new THREE.Mesh(g, flashMat);
         m.position.set(px, py, pz);
         m.rotation.x = roofAng;
@@ -890,11 +898,11 @@ export default function Scena3D({ cfg }) {
         scene.add(m);
       };
 
-      const fY = roofY + 0.01;
-      addFlash(chW + 0.06, flashExt, hx, fY, hzp + chD/2 + flashExt/2);  // față (+Z)
-      addFlash(chW + 0.06, flashExt, hx, fY, hzp - chD/2 - flashExt/2);  // spate (-Z)
-      addFlash(flashExt, chD, hx - chW/2 - flashExt/2, fY, hzp);          // stânga (-X)
-      addFlash(flashExt, chD, hx + chW/2 + flashExt/2, fY, hzp);          // dreapta (+X)
+      const fY = roofY + 0.015;
+      addFlash(chW + 0.08, flashExt, hx, fY, hzp + chD/2 + flashExt/2);  // față (+Z)
+      addFlash(chW + 0.08, flashExt, hx, fY, hzp - chD/2 - flashExt/2);  // spate (-Z)
+      addFlash(flashExt, chD + 0.04, hx - chW/2 - flashExt/2, fY, hzp);  // stânga (-X)
+      addFlash(flashExt, chD + 0.04, hx + chW/2 + flashExt/2, fY, hzp);  // dreapta (+X)
       }
 
     const target = new THREE.Vector3(0, (hz + hRoof) / 2 + 0.6, 0);
