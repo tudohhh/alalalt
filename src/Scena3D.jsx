@@ -594,78 +594,62 @@ export default function Scena3D({ cfg }) {
   // Spate — 2 ferestre
   adaugaFereastra(L * 0.28, hz * 0.58, -W / 2 - 0.03, Math.PI);
   adaugaFereastra(-L * 0.28, hz * 0.58, -W / 2 - 0.03, Math.PI);
-  // Fronton — textură lemn, canvas IZOLAT (nerefolosit)
-  var fcnv = document.createElement('canvas'); fcnv.width = fcnv.height = 1024;
-  var fctx = fcnv.getContext('2d');
-  var fh2 = function(a,b){var h=a*374761393+b*668265263+1274126177;h=(h^(h>>13))*1274126177;return(h^(h>>16))/2147483648;};
-  fctx.fillStyle = '#c8b898'; fctx.fillRect(0, 0, 1024, 1024);
-  var bH2 = 82, fg3 = 3;
-  for (var row2 = 0; row2 < 1024; row2 += bH2 + fg3) {
-    var br3 = 195+(fh2(row2,0.1)-0.5)*30, bg3 = 178+(fh2(row2,0.2)-0.5)*25, bb3 = 145+(fh2(row2,0.3)-0.5)*20;
-    fctx.fillStyle = 'rgb('+(br3|0)+','+(bg3|0)+','+(bb3|0)+')';
-    fctx.fillRect(0, row2, 1024, bH2);
-    for (var fy2 = row2+3; fy2 < row2+bH2-3; fy2 += 1.5+fh2(row2,fy2)*3) {
-      var fv2 = 8+fh2(fy2,row2)*14;
-      fctx.fillStyle = 'rgba('+((br3-fv2)|0)+','+((bg3-fv2-2)|0)+','+((bb3-fv2-4)|0)+',0.25)';
-      fctx.fillRect(4+fh2(fy2,0.5)*6, fy2, 1024-8, 0.7);
-    }
-    for (var n2 = 0; n2 < 4; n2++) {
-      var nx2 = 30+fh2(row2+n2,0.7)*(1024-60), ny2 = row2+10+fh2(row2+n2,0.8)*(bH2-20), nr2 = 3+fh2(row2+n2,0.9)*6;
-      fctx.fillStyle = 'rgba('+((br3-25)|0)+','+((bg3-30)|0)+','+((bb3-25)|0)+',0.5)';
-      fctx.beginPath(); fctx.ellipse(nx2,ny2,nr2,nr2*0.7,0,0,Math.PI*2); fctx.fill();
-    }
-    fctx.fillStyle = 'rgba(0,0,0,0.22)'; fctx.fillRect(0,row2+bH2,1024,fg3);
-    fctx.fillStyle = 'rgba(255,255,255,0.08)'; fctx.fillRect(0,row2,1024,1.5);
-  }
-  for (var gi = 0; gi < 6000; gi++) {
-    fctx.fillStyle = 'rgba(0,0,0,'+(0.02+Math.random()*0.03)+')';
-    fctx.fillRect(Math.random()*1024,Math.random()*1024,1,0.5+Math.random());
-  }
-  var frontTex = new THREE.CanvasTexture(fcnv);
-  frontTex.wrapS = frontTex.wrapT = THREE.RepeatWrapping;
-  frontTex.colorSpace = THREE.SRGBColorSpace; frontTex.anisotropy = 8;
-  frontTex.needsUpdate = true;
-  var frontonMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.72, metalness: 0.02, color: 0xffffff });
+  // Fronton piatră decorativă — geometrie reală, nu textură
+  const stoneColors = [0xd4c9b8, 0xc4a882, 0xb8b0a5, 0x6b6058];
+  const stoneWeights = [0.35, 0.30, 0.25, 0.10];
+  const mortarMat = new THREE.MeshStandardMaterial({ color: 0xc8c0b5, roughness: 0.95 });
+  var stoneIdx = 0;
+  // Seeded random per gable side
+  function stoneRand(sx) { stoneIdx++; var h = (stoneIdx*374761393+sx*668265263+1274126177)>>>0; return ((h^(h>>13))*1274126177>>>0)/2147483648; }
   [-1, 1].forEach(function(sx) {
-    // BufferGeometry cu proiecție planară UV (u=x*s, v=y*s)
-    var hw2 = W/2, hh2 = hRoof, uvS = 0.45;
-    var fVerts = new Float32Array([
-      -hw2,0,0.04,  hw2,0,0.04,  0,hh2,0.04,   // față (3 verts)
-      hw2,0,-0.04,  -hw2,0,-0.04,  0,hh2,-0.04   // spate (3 verts)
-    ]);
-    var fUVs = new Float32Array([
-      (-hw2)*uvS, 0,  hw2*uvS, 0,  0, hh2*uvS,       // față: proiecție planară
-      hw2*uvS, 0,  (-hw2)*uvS, 0,  0, hh2*uvS         // spate: oglindit
-    ]);
-    var fIdx = new Uint16Array([0,1,2, 3,4,5]);
-    var fGeo2 = new THREE.BufferGeometry();
-    fGeo2.setAttribute('position', new THREE.BufferAttribute(fVerts, 3));
-    fGeo2.setAttribute('uv', new THREE.BufferAttribute(fUVs, 2));
-    fGeo2.setIndex(new THREE.BufferAttribute(fIdx, 1));
-    fGeo2.computeVertexNormals();
-    var fPanou = new THREE.Mesh(fGeo2, frontonMat);
-    fPanou.position.set(sx * (L/2 + 0.005), hz, 0);
-    fPanou.rotation.y = sx > 0 ? -Math.PI/2 : Math.PI/2;
-    fPanou.castShadow = true; fPanou.receiveShadow = true;
-    scene.add(fPanou);
+    // Mortar plane behind stones
+    var mGeo = new THREE.BufferGeometry();
+    var mhw = W/2, mhh = hRoof;
+    var mVerts = new Float32Array([-mhw,0,0.005, mhw,0,0.005, 0,mhh,0.005]);
+    mGeo.setAttribute('position', new THREE.BufferAttribute(mVerts, 3));
+    mGeo.setIndex(new THREE.BufferAttribute(new Uint16Array([0,1,2]), 1));
+    mGeo.computeVertexNormals();
+    var mortarPlane = new THREE.Mesh(mGeo, mortarMat);
+    mortarPlane.position.set(sx*(L/2+0.005), hz, 0);
+    mortarPlane.rotation.y = sx>0 ? -Math.PI/2 : Math.PI/2;
+    mortarPlane.receiveShadow = true; scene.add(mortarPlane);
 
-
-    var ocY = hz + hRoof * 0.65;
-    var ocR = 0.25;
-    var ocFrame = new THREE.Mesh(
-      new THREE.TorusGeometry(ocR, 0.04, 8, 16),
-      new THREE.MeshStandardMaterial({ color: 0x3d3d3d, roughness: 0.3, metalness: 0.6 })
-    );
-    ocFrame.position.set(sx * (L/2 + 0.10), ocY, 0);
-    ocFrame.rotation.y = sx > 0 ? -Math.PI/2 : Math.PI/2;
-    ocFrame.castShadow = true; scene.add(ocFrame);
-    var ocGlass = new THREE.Mesh(
-      new THREE.CircleGeometry(ocR - 0.02, 16),
-      new THREE.MeshStandardMaterial({ color: 0x8ab0c8, roughness: 0.15, metalness: 0.2 })
-    );
-    ocGlass.position.set(sx * (L/2 + 0.11), ocY, 0);
-    ocGlass.rotation.y = sx > 0 ? -Math.PI/2 : Math.PI/2;
-    scene.add(ocGlass);
+    // Stones — rows from bottom to top of triangle
+    var rowH = 0.15, gap = 0.018, y = 0;
+    while (y + rowH < hRoof - 0.05) {
+      var actualH = rowH * (0.7 + stoneRand(sx)*0.6);
+      var triWidth = (1 - (y+actualH/2)/hRoof) * W;
+      if (triWidth < 0.15) break;
+      var x = -triWidth/2;
+      var rowOffset = (stoneIdx%2) * 0.06; // zidărie decalată
+      while (x < triWidth/2 - 0.08) {
+        var stoneW = 0.18 + stoneRand(sx)*0.28;
+        stoneW = Math.min(stoneW, triWidth/2 - x + 0.02);
+        if (stoneW < 0.08) { x += stoneW; continue; }
+        var stoneD = 0.03 + stoneRand(sx)*0.04;
+        // Pick color
+        var cRand = stoneRand(sx); var cIdx = 0, cSum = 0;
+        for (var ci=0; ci<4; ci++) { cSum+=stoneWeights[ci]; if(cRand<cSum){cIdx=ci;break;} }
+        var stoneCol = stoneColors[cIdx];
+        var rough = 0.55 + stoneRand(sx)*0.2;
+        var sMat = new THREE.MeshStandardMaterial({ color: stoneCol, roughness: rough, metalness: 0 });
+        var sGeo = new THREE.BoxGeometry(stoneW, actualH, stoneD);
+        // Bevel: slightly scale top face to simulate rough edges
+        var sMesh = new THREE.Mesh(sGeo, sMat);
+        sMesh.position.set(
+          sx*(L/2 + 0.005 + stoneD/2),
+          hz + y + actualH/2,
+          x + stoneW/2 + rowOffset
+        );
+        sMesh.rotation.y = sx>0 ? -Math.PI/2 : Math.PI/2;
+        // Slight random rotation for natural look
+        sMesh.rotation.z = (stoneRand(sx)-0.5)*0.03;
+        sMesh.castShadow = true; sMesh.receiveShadow = true;
+        scene.add(sMesh);
+        x += stoneW + gap;
+      }
+      y += actualH + gap;
+    }
   });
 
 
