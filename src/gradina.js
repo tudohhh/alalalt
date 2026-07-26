@@ -271,8 +271,9 @@ function faSol(latura, razaPlata) {
   const rep = latura / 12.0;
   G.map.repeat.set(rep, rep);
   G.bump.repeat.set(rep, rep);
+  G.map.anisotropy = 16;
+  G.bump.anisotropy = 16;
 
-  // Material STANDARD — fara shader custom. Fiabil, fara bug-uri.
   const mat = new THREE.MeshStandardMaterial({
     map: G.map,
     bumpMap: G.bump,
@@ -282,20 +283,7 @@ function faSol(latura, razaPlata) {
     color: 0xd1ccc6,
   });
 
-  const geo = new THREE.PlaneGeometry(latura, latura, 80, 80);
-  const po = geo.attributes.position;
-  for (let i = 0; i < po.count; i++) {
-    const px = po.getX(i), py = po.getY(i);
-    const d = Math.hypot(px, py);
-    const k = Math.min(1, Math.max(0, (d - razaPlata) / 45));
-    const h =
-      Math.sin(px * 0.035 + py * 0.021) * 1.35 +
-      Math.sin(px * 0.011 - py * 0.017) * 2.4 +
-      Math.sin(px * 0.083 + py * 0.061) * 0.42;
-    po.setZ(i, h * k * k);
-  }
-  geo.computeVertexNormals();
-
+  const geo = new THREE.PlaneGeometry(latura, latura);
   const m = new THREE.Mesh(geo, mat);
   m.rotation.x = -Math.PI / 2;
   m.position.y = 0.004;
@@ -770,7 +758,7 @@ export function adaugaGradina(scene, renderer, L, W, optiuni = {}) {
   /* --- solul --- */
   if (!o.sol) return;
   const raza = Math.max(L, W) / 2 + 25;
-  const latimeSol = o.latSol > 0 ? o.latSol : 800;
+  const latimeSol = o.latSol > 0 ? o.latSol : 500;
   grup.add(faSol(latimeSol, raza));
 
   /* --- copaci --- */
