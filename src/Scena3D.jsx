@@ -500,13 +500,6 @@ export default function Scena3D({ cfg, ora = 0.35, culoareFatada = "#e9e4d9", sn
       co.position.set(px, 1.1 * s + 1.3 * s, pz); co.castShadow = true; scene.add(co);
     };
 // [gradina]     copac(-L / 2 - 4.5, -W / 2 - 2, 1.15);
-    { const s2 = 0.9;
-      const tr = new THREE.Mesh(new THREE.CylinderGeometry(0.09 * s2, 0.13 * s2, 1.2 * s2, 7),
-        new THREE.MeshStandardMaterial({ color: "#6b5744", roughness: 1 }));
-      tr.position.set(L / 2 + 5, 0.6 * s2, W / 2 + 1); tr.castShadow = true; scene.add(tr);
-      const co = new THREE.Mesh(new THREE.SphereGeometry(1.15 * s2, 9, 7),
-        new THREE.MeshStandardMaterial({ color: "#66754f", roughness: 1 }));
-      co.scale.y = 0.85; co.position.set(L / 2 + 5, 1.2 * s2 + 0.95 * s2, W / 2 + 1); co.castShadow = true; scene.add(co); }
 
     // Tufe joase + flori la baza casei — o fac să pară locuită, nu o machetă
     // goală. Geometrie simplă (sfere turtite), plasate la colțuri și pe lângă
