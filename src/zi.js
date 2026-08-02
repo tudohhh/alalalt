@@ -33,7 +33,7 @@ function faza(ora) {
   return { de: "golden", spre: "amurg", t: (ora - 0.85) / 0.15 };
 }
 
-export function creeazaZi({ scene, key, fill, rim, hemi, matGeam, L, W, hz, hRoof }) {
+export function creeazaZi({ scene, renderer, key, fill, rim, hemi, matGeam, L, W, hz, hRoof }) {
   // ---- cerul: canvas regenerat la schimbarea orei ----
   const canvas = document.createElement("canvas");
   canvas.width = 512; canvas.height = 512;
@@ -77,6 +77,7 @@ export function creeazaZi({ scene, key, fill, rim, hemi, matGeam, L, W, hz, hRoo
     tex.needsUpdate = true;
   }
 
+  let _ultimCer = 0, _cerProgramat = null;
   function seteazaOra(ora) {
     ora = Math.max(0, Math.min(1, ora));
     const f = faza(ora);
@@ -110,7 +111,21 @@ export function creeazaZi({ scene, key, fill, rim, hemi, matGeam, L, W, hz, hRoo
     }
     luminaCasa.intensity = aprins * 2.4;
 
-    deseneazaCer(ora);
+    // PERFORMANȚĂ: cerul (canvas 512² + upload GPU) e partea scumpă — îl
+    // redesenăm la max ~15fps în timpul drag-ului, cu un desen final garantat.
+    // Lumina de mai sus (ieftină) rămâne pe fiecare mișcare → slider fluid.
+    const acum = performance.now();
+    if (acum - _ultimCer > 66) {
+      _ultimCer = acum;
+      deseneazaCer(ora);
+    } else {
+      clearTimeout(_cerProgramat);
+      _cerProgramat = setTimeout(() => { _ultimCer = performance.now(); deseneazaCer(ora); }, 80);
+    }
+
+    // Umbrele: înghețate (autoUpdate=false), dar soarele S-A MUTAT — cerem o
+    // singură reîmprospătare. Umbrele se lungesc la apus, fără cost continuu.
+    if (renderer) renderer.shadowMap.needsUpdate = true;
   }
 
   return { seteazaOra };

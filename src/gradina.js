@@ -47,24 +47,23 @@ function cuVant(mat, amp) {
   return mat;
 }
 
-let ceasPornit = false;
-function pornesteCeasul() {
-  if (ceasPornit) return;
-  ceasPornit = true;
-  let t0 = performance.now();
-  let t = 0;
-  const pas = () => {
-    const acum = performance.now();
-    t += Math.min(0.05, (acum - t0) / 1000);
-    t0 = acum;
-    for (let i = MAT_VANT.length - 1; i >= 0; i--) {
-      const sh = MAT_VANT[i].userData.sh;
-      if (sh) sh.uniforms.uTime.value = t;
-    }
-    requestAnimationFrame(pas);
-  };
-  requestAnimationFrame(pas);
+// Vântul: în loc de un requestAnimationFrame PROPRIU (a doua buclă paralelă,
+// care nici nu se oprea la demontare → leak), expunem un tick ieftin pe care
+// bucla principală de render îl cheamă. Un singur RAF în toată aplicația.
+let _tVant = 0, _t0Vant = 0;
+export function tickVant() {
+  const acum = performance.now();
+  if (_t0Vant === 0) _t0Vant = acum;
+  _tVant += Math.min(0.05, (acum - _t0Vant) / 1000);
+  _t0Vant = acum;
+  for (let i = MAT_VANT.length - 1; i >= 0; i--) {
+    const sh = MAT_VANT[i].userData.sh;
+    if (sh) sh.uniforms.uTime.value = _tVant;
+  }
 }
+// Compatibilitate: pornesteCeasul nu mai pornește nimic — bucla principală
+// cheamă tickVant(). Păstrat ca no-op ca apelul existent să nu crape.
+function pornesteCeasul() {}
 
 /* ---------- texturi ---------- */
 function texturaFrunza(tip, seed) {

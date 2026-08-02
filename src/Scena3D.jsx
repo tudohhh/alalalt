@@ -4,7 +4,7 @@
 // Structura proiect: vezi acoperis-REPRODUCERE.txt
 import React, { useRef, useEffect } from "react";
 import * as THREE from "three";
-import { adaugaGradina } from "./gradina";
+import { adaugaGradina, tickVant } from "./gradina";
 import { creeazaZi } from "./zi";
 import { CONFIG_ACOPERIS as C } from "../config/CONFIG";
 
@@ -557,7 +557,7 @@ export default function Scena3D({ cfg, ora = 0.35 }) {
   const matGeam = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.02, metalness: 0.08, envMapIntensity: 1.6, transparent: true, opacity: 0.80, depthWrite: false });
 
   // Ciclul zi→apus: soare, cer, ceață, ferestre aprinse — un singur parametru.
-  const zi = creeazaZi({ scene, key, fill, rim, hemi, matGeam, L, W, hz, hRoof });
+  const zi = creeazaZi({ scene, renderer: rnd, key, fill, rim, hemi, matGeam, L, W, hz, hRoof });
   zi.seteazaOra(ora);
   ziRef.current = zi;
 
@@ -979,9 +979,18 @@ export default function Scena3D({ cfg, ora = 0.35 }) {
     dom.addEventListener("wheel", e => { e.preventDefault(); r = Math.max(6, Math.min(rRest * 2.2, r + e.deltaY * 0.02)); }, { passive: false });
 
     let raf;
+    // Pixel ratio adaptiv: pe ecrane dense (ratio 2 = 4x pixeli), coborâm la
+    // 1.5 în timpul drag-ului (~44% mai puțini pixeli) și revenim la repaus.
+    // Diferența nu se vede în mișcare; fluiditatea da.
+    const prMax = Math.min(window.devicePixelRatio, 2);
+    const prDrag = Math.min(prMax, 1.5);
+    let prCurent = prMax;
     const loop = () => {
       if (intro < 1) { intro = Math.min(1, intro + 0.02); const e = 1 - Math.pow(1 - intro, 3); r = rRest + (1 - e) * rRest * 0.5; th = 0.7 + (1 - e) * 0.5; }
       if (!drag) { th += vth; ph = Math.max(0.5, Math.min(1.5, ph + vph)); vth *= 0.92; vph *= 0.92; if (Math.abs(vth) < 0.0004 && intro >= 1) th += 0.0011; }
+      const prVrut = drag ? prDrag : prMax;
+      if (prVrut !== prCurent) { prCurent = prVrut; rnd.setPixelRatio(prCurent); }
+      tickVant();
       upd(); rnd.render(scene, cam); raf = requestAnimationFrame(loop);
     };
     loop();
