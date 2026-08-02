@@ -15,6 +15,13 @@ export const CONFIG_ACOPERIS = {
   },
   // Culori fațadă (tencuială decorativă) — nu schimbă prețul, dar clientul
   // vede casa în culoarea lui. Decizie emoțională mare, cost tehnic zero.
+  // Preseturi: pornire rapidă pentru clientul care nu știe de unde să înceapă.
+  // Setează dimensiuni + tip dintr-o dată. Prețul se recalculează automat.
+  preseturi: {
+    "Casă mică":      { lungime: 8,  latime: 7,  panta: 30, tip: "doua_ape" },
+    "Casă familie":   { lungime: 11, latime: 9,  panta: 35, tip: "patru_ape" },
+    "Vilă":           { lungime: 14, latime: 11, panta: 40, tip: "mansardat" },
+  },
   culoriFatada: {
     "Alb crem":     "#e9e4d9",
     "Galben nisip": "#e8d5a8",

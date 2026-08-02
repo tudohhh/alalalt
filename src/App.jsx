@@ -48,6 +48,7 @@ export default function App() {
   const [faza, setFaza] = useState("config");
   const [ora, setOra] = useState(0.35); // 0=dimineață · 0.35=prânz · 0.8=apus · 1=amurg
   const [culoareFatada, setCuloareFatada] = useState("#e9e4d9");
+  const snapRef = useRef(null);
 
   const cfg = { lungime, latime, panta, tip, material, lucrare, demontare, jgheaburi };
   const q = useMemo(() => cantitati(cfg), [lungime, latime, panta, tip]);
@@ -60,7 +61,7 @@ export default function App() {
 
   return (
     <div style={{ position: "relative", width: "100vw", height: "100vh", overflow: "hidden", fontFamily: "system-ui,sans-serif", color: "#22282e", background: "#dfe9ee" }}>
-      <div style={{ position: "absolute", inset: 0 }}><Scena3D cfg={cfg} ora={ora} culoareFatada={culoareFatada} /></div>
+      <div style={{ position: "absolute", inset: 0 }}><Scena3D cfg={cfg} ora={ora} culoareFatada={culoareFatada} snapRef={snapRef} /></div>
 
       <div className="fz-panel" style={{ position: "absolute", top: 16, left: 18 }}>
         <div style={{ fontFamily: DISPLAY, fontSize: 22, fontWeight: 700, textShadow: "0 1px 0 rgba(255,255,255,.6)" }}>{C.companyName}</div>
@@ -68,6 +69,13 @@ export default function App() {
       </div>
 
       <div className="fz-panel" style={{ ...panou, left: 18, top: 70, bottom: 16, width: 272, overflowY: "auto", animationDelay: "80ms" }}>
+        <Sec>Pornire rapidă</Sec>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginBottom: 4 }}>
+          {Object.entries(C.preseturi).map(([nume, p]) => (
+            <button key={nume} onClick={() => { setLungime(p.lungime); setLatime(p.latime); setPanta(p.panta); setTip(p.tip); }}
+              style={{ padding: "8px 2px", borderRadius: 9, cursor: "pointer", fontSize: 11, fontWeight: 600,
+                border: "1px solid #d5dde2", background: "#fff", color: "#3a4550" }}>{nume}</button>))}
+        </div>
         <Sec>Tip acoperiș</Sec>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
           {Object.entries(C.tipuriAcoperis).map(([k, t]) => (
@@ -142,6 +150,14 @@ export default function App() {
           aria-label="Ora zilei" title="Vezi casa la orice oră: zi → apus" />
         <span style={{ fontSize: 13 }} title="Apus">🌙</span>
       </div>
+
+      <button onClick={() => snapRef.current && snapRef.current()}
+        title="Descarcă imaginea casei tale"
+        style={{ position: "absolute", right: 18, bottom: 52, display: "flex", alignItems: "center", gap: 7,
+          background: "rgba(255,255,255,.85)", backdropFilter: "blur(6px)", border: "1px solid rgba(0,0,0,.1)",
+          padding: "9px 14px", borderRadius: 20, cursor: "pointer", fontSize: 12.5, fontWeight: 600, color: "#3a4550" }}>
+        <span style={{ fontSize: 15 }}>📷</span> Salvează imaginea
+      </button>
 
       <div style={{ position: "absolute", left: "50%", bottom: 14, transform: "translateX(-50%)", fontSize: 11.5, color: "#5c6a75", background: "rgba(255,255,255,.7)", backdropFilter: "blur(6px)", padding: "6px 14px", borderRadius: 20, whiteSpace: "nowrap", maxWidth: "70vw", overflow: "hidden", textOverflow: "ellipsis" }}>
         {lungime}×{latime} m · pantă {panta}° · {C.tipuriAcoperis[tip].nume} · ~{Math.round(q.mp)} mp

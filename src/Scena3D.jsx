@@ -369,7 +369,7 @@ function umbraContact() {
   return new THREE.CanvasTexture(c);
 }
 
-export default function Scena3D({ cfg, ora = 0.35, culoareFatada = "#e9e4d9" }) {
+export default function Scena3D({ cfg, ora = 0.35, culoareFatada = "#e9e4d9", snapRef = null }) {
   const mount = useRef(null);
   const ziRef = useRef(null);
   const zidRef = useRef(null);
@@ -383,7 +383,7 @@ export default function Scena3D({ cfg, ora = 0.35, culoareFatada = "#e9e4d9" }) 
     // Cerul: generat dinamic de modulul zi.js (ciclu zi→apus), conectat
     // după crearea luminilor — orchestrează soare + cer + ferestre împreună.
     const cam = new THREE.PerspectiveCamera(38, Wpx / Hpx, 0.1, 400);
-    const rnd = new THREE.WebGLRenderer({ antialias: true });
+    const rnd = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
     rnd.setPixelRatio(Math.min(window.devicePixelRatio, 2)); rnd.setSize(Wpx, Hpx);
     rnd.shadowMap.enabled = true; rnd.shadowMap.type = THREE.PCFSoftShadowMap; rnd.shadowMap.autoUpdate = false;
     if ("outputColorSpace" in rnd) rnd.outputColorSpace = THREE.SRGBColorSpace;
@@ -392,6 +392,17 @@ export default function Scena3D({ cfg, ora = 0.35, culoareFatada = "#e9e4d9" }) 
   rnd.toneMappingExposure = 1.15;
     rnd.setClearColor(0xdce8f0);
     el.appendChild(rnd.domElement);
+
+    // Snapshot: randăm proaspăt (preserveDrawingBuffer e activ) și descărcăm
+    // canvas-ul ca PNG. Clientul pleacă cu poza casei LUI — cel mai puternic
+    // instrument de vânzare, cost aproape zero.
+    if (snapRef) snapRef.current = () => {
+      rnd.render(scene, cam);
+      const link = document.createElement("a");
+      link.download = `casa-${cfg.lungime}x${cfg.latime}m.png`;
+      link.href = rnd.domElement.toDataURL("image/png");
+      link.click();
+    };
 
     scene.fog = new THREE.Fog("#e6eae7", 30, 95);
 
