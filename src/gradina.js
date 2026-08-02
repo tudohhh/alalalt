@@ -1,3 +1,5 @@
+// ✓ ACTIV — peisajul folosit de aplicație (importat în Scena3D.jsx).
+// Alternativă modulară disponibilă în peisaj.js + texturi.js (vezi README).
 import * as THREE from "three";
 
 /* ============================================================

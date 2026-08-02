@@ -1,3 +1,5 @@
+// ⚠ ALTERNATIVĂ NECONECTATĂ — texturi procedurale separate (folosite de peisaj.js).
+// Lanțul viu folosește texturile din gradina.js. Vezi README.
 // texturi.js - funcții pentru generarea texturilor
 import * as THREE from "three";
 

@@ -1,3 +1,6 @@
+// ⚠ ALTERNATIVĂ NECONECTATĂ — versiunea modulară a peisajului.
+// Lanțul viu folosește gradina.js. Vezi README → 'Module alternative'.
+// Pentru a comuta: în Scena3D.jsx importă adaugaPeisaj din acest fișier.
 // peisaj.js - elemente decorative (copaci, iarbă, gard, flori)
 import * as THREE from "three";
 
