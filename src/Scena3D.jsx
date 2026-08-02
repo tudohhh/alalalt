@@ -385,6 +385,11 @@ export default function Scena3D({ cfg, ora = 0.35, culoareFatada = "#e9e4d9", sn
     const hRoof = (W / 2) * Math.tan(rad(panta));
 
     const scene = new THREE.Scene();
+    // hashP: generator pseudo-aleator determinist (seed → 0..1). Declarat SUS
+    // ca să fie disponibil peste tot în scenă (tufe, texturi). Era declarat mai
+    // jos și tufele adăugate ulterior îl foloseau înainte → ReferenceError →
+    // pagină albă. const nu e hoisted; ordinea contează.
+    const hashP = (a, b) => { let h = a*374761393+b*668265263+1274126177; h=(h^(h>>13))*1274126177; return (h^(h>>16))/2147483648; };
     // Cerul: generat dinamic de modulul zi.js (ciclu zi→apus), conectat
     // după crearea luminilor — orchestrează soare + cer + ferestre împreună.
     const cam = new THREE.PerspectiveCamera(38, Wpx / Hpx, 0.1, 400);
@@ -551,7 +556,6 @@ export default function Scena3D({ cfg, ora = 0.35, culoareFatada = "#e9e4d9", sn
       // Tencuială decorativă vizibilă — granule mari, contrast, relief
   const tencCanvas = document.createElement('canvas'); tencCanvas.width = tencCanvas.height = 1024;
   const tctx = tencCanvas.getContext('2d');
-  const hashP = (a, b) => { let h = a*374761393+b*668265263+1274126177; h=(h^(h>>13))*1274126177; return (h^(h>>16))/2147483648; };
   tctx.fillStyle = '#f2ede4'; tctx.fillRect(0, 0, 1024, 1024);
   // Granule fine (nisip fin) — vizibile dar delicate
   for (let i = 0; i < 20000; i++) {
