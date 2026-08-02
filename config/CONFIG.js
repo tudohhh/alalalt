@@ -13,6 +13,16 @@ export const CONFIG_ACOPERIS = {
     "Montaj simplu":                 35,
     "Reparație dulgherie + montaj":  65,
   },
+  // Culori fațadă (tencuială decorativă) — nu schimbă prețul, dar clientul
+  // vede casa în culoarea lui. Decizie emoțională mare, cost tehnic zero.
+  culoriFatada: {
+    "Alb crem":     "#e9e4d9",
+    "Galben nisip": "#e8d5a8",
+    "Teracotă":     "#d9a986",
+    "Gri piatră":   "#b8b4ac",
+    "Verde salvie": "#b3bba6",
+    "Albastru pal": "#aebfc4",
+  },
   optionale: {
     demontareVecheMp: 15,
     jgheaburiBurlaneMl: 25,

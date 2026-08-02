@@ -47,6 +47,7 @@ export default function App() {
   const [detalii, setDetalii] = useState(false);
   const [faza, setFaza] = useState("config");
   const [ora, setOra] = useState(0.35); // 0=dimineață · 0.35=prânz · 0.8=apus · 1=amurg
+  const [culoareFatada, setCuloareFatada] = useState("#e9e4d9");
 
   const cfg = { lungime, latime, panta, tip, material, lucrare, demontare, jgheaburi };
   const q = useMemo(() => cantitati(cfg), [lungime, latime, panta, tip]);
@@ -59,7 +60,7 @@ export default function App() {
 
   return (
     <div style={{ position: "relative", width: "100vw", height: "100vh", overflow: "hidden", fontFamily: "system-ui,sans-serif", color: "#22282e", background: "#dfe9ee" }}>
-      <div style={{ position: "absolute", inset: 0 }}><Scena3D cfg={cfg} ora={ora} /></div>
+      <div style={{ position: "absolute", inset: 0 }}><Scena3D cfg={cfg} ora={ora} culoareFatada={culoareFatada} /></div>
 
       <div className="fz-panel" style={{ position: "absolute", top: 16, left: 18 }}>
         <div style={{ fontFamily: DISPLAY, fontSize: 22, fontWeight: 700, textShadow: "0 1px 0 rgba(255,255,255,.6)" }}>{C.companyName}</div>
@@ -86,6 +87,16 @@ export default function App() {
             <span style={{ flex: 1, textAlign: "left", fontSize: 12 }}>{n}</span>
             <span style={{ fontSize: 10.5, color: "#5c6a75" }}>{m.pret} lei/mp</span>
           </button>))}
+        <Sec>Culoare fațadă</Sec>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 6 }}>
+          {Object.entries(C.culoriFatada).map(([nume, hex]) => (
+            <button key={hex} onClick={() => setCuloareFatada(hex)} title={nume}
+              style={{ width: 38, height: 38, borderRadius: 9, cursor: "pointer",
+                background: hex, border: culoareFatada === hex ? `3px solid ${ACC}` : "1px solid rgba(0,0,0,.15)",
+                boxShadow: culoareFatada === hex ? "0 2px 6px rgba(0,0,0,.15)" : "none",
+                transition: "transform .12s", transform: culoareFatada === hex ? "scale(1.08)" : "scale(1)" }} />
+          ))}
+        </div>
         <Sec>Lucrare</Sec>
         {Object.entries(C.manoperaMp).map(([n, p]) => (
           <label key={n} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 12.5, marginBottom: 6, cursor: "pointer" }}>

@@ -369,9 +369,10 @@ function umbraContact() {
   return new THREE.CanvasTexture(c);
 }
 
-export default function Scena3D({ cfg, ora = 0.35 }) {
+export default function Scena3D({ cfg, ora = 0.35, culoareFatada = "#e9e4d9" }) {
   const mount = useRef(null);
   const ziRef = useRef(null);
+  const zidRef = useRef(null);
   useEffect(() => {
     const el = mount.current, Wpx = el.clientWidth, Hpx = el.clientHeight;
     const { lungime: L, latime: W, panta, tip, material } = cfg;
@@ -603,7 +604,7 @@ export default function Scena3D({ cfg, ora = 0.35 }) {
   const matZid = new THREE.MeshStandardMaterial({
     // Culoare ușor caldă (nu aproape-alb) ca TEXTURA să conducă, nu culoarea
     // plată. Înainte #f4f1ea aproape-alb "spăla" textura → look de Paint.
-    color: '#e9e4d9', map: tencTex, roughness: 0.92,
+    color: culoareFatada || '#e9e4d9', map: tencTex, roughness: 0.92,
     bumpMap: bumpTex, bumpScale: 0.11,        // relief mai citit (era 0.07)
     roughnessMap: roughTex,                    // rugozitate variabilă → lumina joacă
     envMapIntensity: 0.4,                      // reflexie subtilă a mediului (viață)
@@ -618,6 +619,7 @@ export default function Scena3D({ cfg, ora = 0.35 }) {
   const zi = creeazaZi({ scene, renderer: rnd, key, fill, rim, hemi, matGeam, L, W, hz, hRoof });
   zi.seteazaOra(ora);
   ziRef.current = zi;
+  zidRef.current = matZid;
 
   // Helper: creează o fereastră cu pervaz și obloane
   function adaugaFereastra(cx, cy, cz, rotY, w = 0.9, h = 1.1) {
@@ -1057,6 +1059,13 @@ export default function Scena3D({ cfg, ora = 0.35 }) {
   useEffect(() => {
     if (ziRef.current) ziRef.current.seteazaOra(ora);
   }, [ora]);
+
+  // Culoarea fațadei se schimbă instant — doar materialul, nu toată scena.
+  useEffect(() => {
+    if (zidRef.current && culoareFatada) {
+      zidRef.current.color.set(culoareFatada);
+    }
+  }, [culoareFatada]);
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
       <div ref={mount} style={{ width: "100%", height: "100%", touchAction: "none", cursor: "grab" }} />
