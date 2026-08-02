@@ -394,6 +394,29 @@ export default function Scena3D({ cfg, ora = 0.35 }) {
 
     scene.fog = new THREE.Fog("#e6eae7", 30, 95);
 
+    // Environment map: materialele au envMapIntensity setat, dar fără un mediu
+    // de reflectat nu fac nimic — un motiv-cheie pentru care casa părea plată.
+    // Generăm un mediu neutru cald din care suprafețele "primesc" lumină de jur
+    // împrejur (image-based lighting). Acum roughnessMap-ul zidului, geamurile
+    // și tabla prind viață — au în sfârșit ce reflecta.
+    {
+      const pmrem = new THREE.PMREMGenerator(rnd);
+      const envScene = new THREE.Scene();
+      const envGrad = document.createElement('canvas'); envGrad.width = 4; envGrad.height = 256;
+      const egc = envGrad.getContext('2d');
+      const eg = egc.createLinearGradient(0, 0, 0, 256);
+      eg.addColorStop(0, '#cfe0f0');   // cer sus (rece)
+      eg.addColorStop(0.5, '#eae6dc');  // orizont (neutru cald)
+      eg.addColorStop(1, '#b8ad9c');    // sol (cald, reflectă în jos)
+      egc.fillStyle = eg; egc.fillRect(0, 0, 4, 256);
+      const envTex = new THREE.CanvasTexture(envGrad);
+      envTex.mapping = THREE.EquirectangularReflectionMapping;
+      envScene.background = envTex;
+      const envRT = pmrem.fromScene(envScene, 0.04);
+      scene.environment = envRT.texture;
+      pmrem.dispose(); envTex.dispose();
+    }
+
     const teren = new THREE.Mesh(new THREE.PlaneGeometry(100, 100),
       new THREE.MeshStandardMaterial({ map: texTeren(), roughness: 1 }));
     teren.rotation.x = -Math.PI / 2; teren.receiveShadow = true; scene.add(teren);
@@ -548,12 +571,42 @@ export default function Scena3D({ cfg, ora = 0.35 }) {
   bumpTex.minFilter = THREE.LinearMipmapLinearFilter; bumpTex.magFilter = THREE.LinearFilter;
   bumpTex.generateMipmaps = true;
 
+  // Roughness map: tencuiala reală NU e mată uniform — unele zone reflectă
+  // lumina puțin diferit. O hartă de rugozitate variabilă face lumina să
+  // "joace" pe suprafață când rotești casa → sparge look-ul de vopsea plată.
+  // Gri deschis = mai neted (reflectă mai mult), gri închis = mai aspru (mat).
+  const roughCanvas = document.createElement('canvas'); roughCanvas.width = roughCanvas.height = 512;
+  const rctx = roughCanvas.getContext('2d');
+  rctx.fillStyle = '#d0d0d0'; rctx.fillRect(0, 0, 512, 512); // rugozitate medie de bază
+  // Pete LARGI de variație (scara mare, se văd pe zid), difuze
+  for (let i = 0; i < 26; i++) {
+    const px = hashP(i, 0.11) * 512, py = hashP(i, 0.22) * 512;
+    const r = 40 + hashP(i, 0.33) * 130;
+    const v = 175 + (hashP(i, 0.44) - 0.5) * 90; // ±45 în jurul mediei
+    const g = rctx.createRadialGradient(px, py, 0, px, py, r);
+    g.addColorStop(0, `rgba(${v|0},${v|0},${v|0},0.5)`);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    rctx.fillStyle = g; rctx.fillRect(px - r, py - r, r * 2, r * 2);
+  }
+  // Textură fină deasupra (micro-variație)
+  for (let i = 0; i < 3000; i++) {
+    const v = 200 + (hashP(i, 0.7) - 0.5) * 70;
+    rctx.fillStyle = `rgba(${v|0},${v|0},${v|0},0.15)`;
+    const s = 3 + hashP(i, 0.9) * 7;
+    rctx.fillRect(hashP(0.2, i) * 512, hashP(0.5, i) * 512, s, s);
+  }
+  const roughTex = new THREE.CanvasTexture(roughCanvas);
+  roughTex.wrapS = roughTex.wrapT = THREE.RepeatWrapping; roughTex.anisotropy = 8;
+  roughTex.repeat.set(L * 0.18, hz * 0.30); // scară mai mare = pete mai vizibile
+  roughTex.colorSpace = THREE.LinearSRGBColorSpace;
+
   const matZid = new THREE.MeshStandardMaterial({
     // Culoare ușor caldă (nu aproape-alb) ca TEXTURA să conducă, nu culoarea
     // plată. Înainte #f4f1ea aproape-alb "spăla" textura → look de Paint.
     color: '#e9e4d9', map: tencTex, roughness: 0.92,
     bumpMap: bumpTex, bumpScale: 0.11,        // relief mai citit (era 0.07)
-    envMapIntensity: 0.35,                     // reflexie subtilă a mediului (viață)
+    roughnessMap: roughTex,                    // rugozitate variabilă → lumina joacă
+    envMapIntensity: 0.4,                      // reflexie subtilă a mediului (viață)
   });
       const casa = new THREE.Mesh(new THREE.BoxGeometry(L, hz, W), matZid);
     casa.position.y = hz / 2; casa.castShadow = true; casa.receiveShadow = true; scene.add(casa);
