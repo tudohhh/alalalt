@@ -388,7 +388,7 @@ export default function Scena3D({ cfg, ora = 0.35 }) {
     if ("outputColorSpace" in rnd) rnd.outputColorSpace = THREE.SRGBColorSpace;
     else rnd.outputEncoding = THREE.sRGBEncoding;
     rnd.toneMapping = THREE.ACESFilmicToneMapping;
-  rnd.toneMappingExposure = 1.4;
+  rnd.toneMappingExposure = 1.15;
     rnd.setClearColor(0xdce8f0);
     el.appendChild(rnd.domElement);
 
@@ -548,8 +548,13 @@ export default function Scena3D({ cfg, ora = 0.35 }) {
   bumpTex.minFilter = THREE.LinearMipmapLinearFilter; bumpTex.magFilter = THREE.LinearFilter;
   bumpTex.generateMipmaps = true;
 
-  const matZid = new THREE.MeshStandardMaterial({ color: '#f4f1ea', map: tencTex, roughness: 0.85,
-    bumpMap: bumpTex, bumpScale: 0.07 });
+  const matZid = new THREE.MeshStandardMaterial({
+    // Culoare ușor caldă (nu aproape-alb) ca TEXTURA să conducă, nu culoarea
+    // plată. Înainte #f4f1ea aproape-alb "spăla" textura → look de Paint.
+    color: '#e9e4d9', map: tencTex, roughness: 0.92,
+    bumpMap: bumpTex, bumpScale: 0.11,        // relief mai citit (era 0.07)
+    envMapIntensity: 0.35,                     // reflexie subtilă a mediului (viață)
+  });
       const casa = new THREE.Mesh(new THREE.BoxGeometry(L, hz, W), matZid);
     casa.position.y = hz / 2; casa.castShadow = true; casa.receiveShadow = true; scene.add(casa);
   // --- Tâmplărie (ferestre + ușă) ---
