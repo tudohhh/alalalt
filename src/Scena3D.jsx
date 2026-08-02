@@ -363,8 +363,13 @@ function texCer() {
 function umbraContact() {
   const c = document.createElement("canvas"); c.width = c.height = 256;
   const x = c.getContext("2d");
-  const g = x.createRadialGradient(128, 128, 20, 128, 128, 128);
-  g.addColorStop(0, "rgba(30,32,26,0.38)"); g.addColorStop(0.6, "rgba(30,32,26,0.14)"); g.addColorStop(1, "rgba(30,32,26,0)");
+  const g = x.createRadialGradient(128, 128, 10, 128, 128, 128);
+  // Mai densă la bază (0.52), cădere mai rapidă → umbra "ține" casa lipită de
+  // teren, nu o pată difuză care plutește. Ancorare vizuală.
+  g.addColorStop(0, "rgba(26,28,22,0.52)");
+  g.addColorStop(0.45, "rgba(26,28,22,0.22)");
+  g.addColorStop(0.75, "rgba(26,28,22,0.07)");
+  g.addColorStop(1, "rgba(26,28,22,0)");
   x.fillStyle = g; x.fillRect(0, 0, 256, 256);
   return new THREE.CanvasTexture(c);
 }
@@ -483,7 +488,7 @@ export default function Scena3D({ cfg, ora = 0.35, culoareFatada = "#e9e4d9", sn
       bord.position.set(-L / 5 + sx2, 0.04, aleeCtrZ);
       bord.castShadow = true; bord.receiveShadow = true; scene.add(bord);
     });
-    const uc = new THREE.Mesh(new THREE.PlaneGeometry(L + 5, W + 5),
+    const uc = new THREE.Mesh(new THREE.PlaneGeometry(L + 3, W + 3),
       new THREE.MeshBasicMaterial({ map: umbraContact(), transparent: true, depthWrite: false }));
     uc.rotation.x = -Math.PI / 2; uc.position.y = 0.02; scene.add(uc);
     const copac = (px, pz, s = 1) => {
@@ -502,6 +507,33 @@ export default function Scena3D({ cfg, ora = 0.35, culoareFatada = "#e9e4d9", sn
       const co = new THREE.Mesh(new THREE.SphereGeometry(1.15 * s2, 9, 7),
         new THREE.MeshStandardMaterial({ color: "#66754f", roughness: 1 }));
       co.scale.y = 0.85; co.position.set(L / 2 + 5, 1.2 * s2 + 0.95 * s2, W / 2 + 1); co.castShadow = true; scene.add(co); }
+
+    // Tufe joase + flori la baza casei — o fac să pară locuită, nu o machetă
+    // goală. Geometrie simplă (sfere turtite), plasate la colțuri și pe lângă
+    // fațada din față. Ieftin, dar face scena caldă.
+    const adaugaTufa = (px, pz, s = 1) => {
+      const verde = ["#5a6e48", "#647a4e", "#556641"][Math.floor(hashP(px, pz) * 3)];
+      const t = new THREE.Mesh(new THREE.SphereGeometry(0.45 * s, 8, 6),
+        new THREE.MeshStandardMaterial({ color: verde, roughness: 1 }));
+      t.scale.y = 0.7; t.position.set(px, 0.28 * s, pz); t.castShadow = true; t.receiveShadow = true;
+      scene.add(t);
+      // 2-3 flori mici colorate pe tufă
+      const culoriFlori = ["#e8a0b0", "#f0d060", "#d88ac0", "#e8e0e0"];
+      const nf = 2 + Math.floor(hashP(pz, px) * 2);
+      for (let k = 0; k < nf; k++) {
+        const fl = new THREE.Mesh(new THREE.SphereGeometry(0.06 * s, 5, 4),
+          new THREE.MeshStandardMaterial({ color: culoriFlori[Math.floor(hashP(k, px) * 4)], roughness: 0.8 }));
+        const ang = hashP(k, pz) * Math.PI * 2, rad2 = 0.3 * s;
+        fl.position.set(px + Math.cos(ang) * rad2, 0.42 * s, pz + Math.sin(ang) * rad2);
+        scene.add(fl);
+      }
+    };
+    // Tufe la colțurile din față ale casei + una lângă intrare
+    const zf = W / 2 + 0.7;
+    adaugaTufa(-L / 2 + 0.6, zf, 1.1);
+    adaugaTufa(L / 2 - 0.6, zf, 1.0);
+    adaugaTufa(L / 2 - 2.2, zf, 0.8);
+    adaugaTufa(-L / 2 + 1.8, zf, 0.85);
 
     const hemi = new THREE.HemisphereLight(0xfdf3e3, 0x8a9480, 0.75);
     scene.add(hemi);
