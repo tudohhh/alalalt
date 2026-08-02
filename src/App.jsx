@@ -69,13 +69,6 @@ export default function App() {
       </div>
 
       <div className="fz-panel" style={{ ...panou, left: 18, top: 70, bottom: 16, width: 272, overflowY: "auto", animationDelay: "80ms" }}>
-        <Sec>Pornire rapidă</Sec>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginBottom: 4 }}>
-          {Object.entries(C.preseturi).map(([nume, p]) => (
-            <button key={nume} onClick={() => { setLungime(p.lungime); setLatime(p.latime); setPanta(p.panta); setTip(p.tip); }}
-              style={{ padding: "8px 2px", borderRadius: 9, cursor: "pointer", fontSize: 11, fontWeight: 600,
-                border: "1px solid #d5dde2", background: "#fff", color: "#3a4550" }}>{nume}</button>))}
-        </div>
         <Sec>Tip acoperiș</Sec>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
           {Object.entries(C.tipuriAcoperis).map(([k, t]) => (

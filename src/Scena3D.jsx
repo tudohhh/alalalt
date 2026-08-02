@@ -448,8 +448,13 @@ export default function Scena3D({ cfg, ora = 0.35, culoareFatada = "#e9e4d9", sn
   bigGround.rotation.x = -Math.PI / 2; bigGround.position.y = -0.02; bigGround.receiveShadow = true;
   scene.add(bigGround);
     const pv = texPavaj();
-    const apron = new THREE.Mesh(new THREE.PlaneGeometry(L + 3.2, W + 3.2),
-      new THREE.MeshStandardMaterial({ map: pv.map, bumpMap: pv.bump, bumpScale: 0.04, roughness: 0.78, metalness: 0.03, color: 0xffffff }));
+    // Material de pavaj UNIC — folosit și de platforma din jurul casei, și de
+    // alee, ca să pară un singur pavaj continuu (fără cusătură între ele).
+    const matPavaj = new THREE.MeshStandardMaterial({
+      map: pv.map, bumpMap: pv.bump, bumpScale: 0.04, roughness: 0.78,
+      metalness: 0.03, color: 0xffffff,
+    });
+    const apron = new THREE.Mesh(new THREE.PlaneGeometry(L + 3.2, W + 3.2), matPavaj);
     apron.rotation.x = -Math.PI / 2; apron.position.y = 0.013; apron.receiveShadow = true; scene.add(apron);
     // Bordura decorativă perimetrală (piatră cubică)
     const bordTCanvas = document.createElement('canvas'); bordTCanvas.width = bordTCanvas.height = 512;
@@ -483,9 +488,8 @@ export default function Scena3D({ cfg, ora = 0.35, culoareFatada = "#e9e4d9", sn
     bordT.rotation.x = -Math.PI / 2; bordT.position.y = 0.009; bordT.receiveShadow = true; scene.add(bordT);
     const aleeLen = (W / 2 + 10) - (W / 2 + 1.6) + 0.3; // ~8.7m, până la poartă
     const aleeCtrZ = W / 2 + 1.6 + aleeLen / 2;
-    const alee = new THREE.Mesh(new THREE.PlaneGeometry(1.3, aleeLen),
-      new THREE.MeshStandardMaterial({ map: pv.map, bumpMap: pv.bump, bumpScale: 0.05, roughness: 0.72, metalness: 0.03, color: 0xffffff }));
-    alee.rotation.x = -Math.PI / 2; alee.position.set(-L / 5, 0.014, aleeCtrZ); scene.add(alee);
+    const alee = new THREE.Mesh(new THREE.PlaneGeometry(1.3, aleeLen), matPavaj);
+    alee.rotation.x = -Math.PI / 2; alee.position.set(-L / 5, 0.013, aleeCtrZ); scene.add(alee);
     // Borduri alee
     const matBord = new THREE.MeshStandardMaterial({ color: 0x8a8076, roughness: 0.65 });
     [-0.65, 0.65].forEach(sx2 => {
@@ -506,32 +510,6 @@ export default function Scena3D({ cfg, ora = 0.35, culoareFatada = "#e9e4d9", sn
     };
 // [gradina]     copac(-L / 2 - 4.5, -W / 2 - 2, 1.15);
 
-    // Tufe joase + flori la baza casei — o fac să pară locuită, nu o machetă
-    // goală. Geometrie simplă (sfere turtite), plasate la colțuri și pe lângă
-    // fațada din față. Ieftin, dar face scena caldă.
-    const adaugaTufa = (px, pz, s = 1) => {
-      const verde = ["#5a6e48", "#647a4e", "#556641"][Math.floor(hashP(px, pz) * 3)];
-      const t = new THREE.Mesh(new THREE.SphereGeometry(0.45 * s, 8, 6),
-        new THREE.MeshStandardMaterial({ color: verde, roughness: 1 }));
-      t.scale.y = 0.7; t.position.set(px, 0.28 * s, pz); t.castShadow = true; t.receiveShadow = true;
-      scene.add(t);
-      // 2-3 flori mici colorate pe tufă
-      const culoriFlori = ["#e8a0b0", "#f0d060", "#d88ac0", "#e8e0e0"];
-      const nf = 2 + Math.floor(hashP(pz, px) * 2);
-      for (let k = 0; k < nf; k++) {
-        const fl = new THREE.Mesh(new THREE.SphereGeometry(0.06 * s, 5, 4),
-          new THREE.MeshStandardMaterial({ color: culoriFlori[Math.floor(hashP(k, px) * 4)], roughness: 0.8 }));
-        const ang = hashP(k, pz) * Math.PI * 2, rad2 = 0.3 * s;
-        fl.position.set(px + Math.cos(ang) * rad2, 0.42 * s, pz + Math.sin(ang) * rad2);
-        scene.add(fl);
-      }
-    };
-    // Tufe la colțurile din față ale casei + una lângă intrare
-    const zf = W / 2 + 0.7;
-    adaugaTufa(-L / 2 + 0.6, zf, 1.1);
-    adaugaTufa(L / 2 - 0.6, zf, 1.0);
-    adaugaTufa(L / 2 - 2.2, zf, 0.8);
-    adaugaTufa(-L / 2 + 1.8, zf, 0.85);
 
     const hemi = new THREE.HemisphereLight(0xfdf3e3, 0x8a9480, 0.75);
     scene.add(hemi);
