@@ -906,6 +906,53 @@ export default function Scena3D({ cfg, ora = 0.35, culoareFatada = "#e9e4d9", sn
       const fronton = meshTri(triF, matFronton);
       fronton.castShadow = true; fronton.receiveShadow = true;
       scene.add(fronton);
+
+      // REALISM fronton: detalii arhitecturale care fac diferența dintre un
+      // triunghi de carton și un capăt de casă adevărat. Vârful frontonului
+      // (yv la două ape, yT la mansardat), la fiecare capăt x = ±L/2.
+      const yVarf = tip === "mansardat" ? yCoama : yv;
+      const fxF = L / 2;
+      const matLemn = new THREE.MeshStandardMaterial({ color: "#8a6b4a", roughness: 0.85, bumpMap: bumpTex, bumpScale: 0.03 });
+      const matLemnInchis = new THREE.MeshStandardMaterial({ color: "#6e5238", roughness: 0.9 });
+
+      [-1, 1].forEach(sx => {
+        const x = fxF * sx;
+        const grup = new THREE.Group();
+
+        // 1. Bordură de lemn pe cele două muchii înclinate (urmează panta,
+        //    de la colțul de jos spre vârf) — ascunde marginea acoperișului.
+        [W / 2, -W / 2].forEach(zBaza => {
+          const dz = 0 - zBaza, dy = yVarf - y0;
+          const lung = Math.hypot(dz, dy);
+          const bord = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.22, lung), matLemn);
+          bord.position.set(x + sx * 0.06, (y0 + yVarf) / 2, zBaza / 2);
+          // Aliniază cutia pe direcția de la (zBaza, y0) la (0, yVarf).
+          bord.rotation.x = -Math.atan2(dy, Math.abs(dz)) * Math.sign(zBaza);
+          bord.castShadow = true; grup.add(bord);
+        });
+
+        // 2. Grindă orizontală la baza triunghiului (talpa frontonului).
+        const grinda = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.26, W + 0.1), matLemn);
+        grinda.position.set(x + sx * 0.05, y0 + 0.05, 0);
+        grinda.castShadow = true; grup.add(grinda);
+
+        // 3. Ochi de pod (aerisire) în vârf — un mic hexagon/dreptunghi întunecat
+        //    cu ramă de lemn. Detaliul care spune "pod real".
+        const ramaH = 0.55, ramaW = 0.7;
+        const rama = new THREE.Mesh(new THREE.BoxGeometry(0.08, ramaH, ramaW), matLemnInchis);
+        const yOchi = y0 + (yVarf - y0) * 0.62;
+        rama.position.set(x + sx * 0.05, yOchi, 0); rama.castShadow = true; grup.add(rama);
+        const gol = new THREE.Mesh(new THREE.BoxGeometry(0.10, ramaH * 0.68, ramaW * 0.68),
+          new THREE.MeshStandardMaterial({ color: "#2a2622", roughness: 0.95 }));
+        gol.position.set(x + sx * 0.04, yOchi, 0); grup.add(gol);
+        // Două șipci verticale peste gol (grilaj aerisire)
+        [-0.18, 0.18].forEach(off => {
+          const sipca = new THREE.Mesh(new THREE.BoxGeometry(0.11, ramaH * 0.6, 0.04), matLemnInchis);
+          sipca.position.set(x + sx * 0.045, yOchi, off * ramaW); grup.add(sipca);
+        });
+
+        scene.add(grup);
+      });
     }
 
     const matPazie = new THREE.MeshStandardMaterial({ color: "#e8e0d5", roughness: 0.75 });
