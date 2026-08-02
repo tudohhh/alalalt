@@ -5,6 +5,7 @@
 import React, { useRef, useEffect } from "react";
 import * as THREE from "three";
 import { adaugaGradina } from "./gradina";
+import { creeazaZi } from "./zi";
 import { CONFIG_ACOPERIS as C } from "../config/CONFIG";
 
 // Generează textură de pavaj (piatră cubică cu rosturi)
@@ -368,8 +369,9 @@ function umbraContact() {
   return new THREE.CanvasTexture(c);
 }
 
-export default function Scena3D({ cfg }) {
+export default function Scena3D({ cfg, ora = 0.35 }) {
   const mount = useRef(null);
+  const ziRef = useRef(null);
   useEffect(() => {
     const el = mount.current, Wpx = el.clientWidth, Hpx = el.clientHeight;
     const { lungime: L, latime: W, panta, tip, material } = cfg;
@@ -377,21 +379,8 @@ export default function Scena3D({ cfg }) {
     const hRoof = (W / 2) * Math.tan(rad(panta));
 
     const scene = new THREE.Scene();
-    // Cer cu gradient
-  const skyCanvas = document.createElement('canvas'); skyCanvas.width = 512; skyCanvas.height = 512;
-  const skyCtx = skyCanvas.getContext('2d');
-  const skyGrad = skyCtx.createLinearGradient(0, 0, 0, 512);
-  skyGrad.addColorStop(0, '#b8d4f0'); skyGrad.addColorStop(0.4, '#dce8f0'); skyGrad.addColorStop(0.7, '#e8e4d8'); skyGrad.addColorStop(1, '#d5cec0');
-  skyCtx.fillStyle = skyGrad; skyCtx.fillRect(0, 0, 512, 512);
-  // Nori subtiri
-  for (let i = 0; i < 15; i++) {
-    skyCtx.fillStyle = 'rgba(255,255,255,0.12)';
-    skyCtx.beginPath();
-    skyCtx.ellipse(100 + Math.random()*312, 50 + Math.random()*100, 30+Math.random()*60, 8+Math.random()*15, Math.random()*0.5, 0, Math.PI*2);
-    skyCtx.fill();
-  }
-  const skyTex = new THREE.CanvasTexture(skyCanvas); skyTex.colorSpace = THREE.SRGBColorSpace;
-  scene.background = skyTex; skyTex.minFilter = THREE.LinearFilter; skyTex.magFilter = THREE.LinearFilter;
+    // Cerul: generat dinamic de modulul zi.js (ciclu zi→apus), conectat
+    // după crearea luminilor — orchestrează soare + cer + ferestre împreună.
     const cam = new THREE.PerspectiveCamera(38, Wpx / Hpx, 0.1, 400);
     const rnd = new THREE.WebGLRenderer({ antialias: true });
     rnd.setPixelRatio(Math.min(window.devicePixelRatio, 2)); rnd.setSize(Wpx, Hpx);
@@ -479,7 +468,8 @@ export default function Scena3D({ cfg }) {
         new THREE.MeshStandardMaterial({ color: "#66754f", roughness: 1 }));
       co.scale.y = 0.85; co.position.set(L / 2 + 5, 1.2 * s2 + 0.95 * s2, W / 2 + 1); co.castShadow = true; scene.add(co); }
 
-    scene.add(new THREE.HemisphereLight(0xfdf3e3, 0x8a9480, 0.75));
+    const hemi = new THREE.HemisphereLight(0xfdf3e3, 0x8a9480, 0.75);
+    scene.add(hemi);
     const key = new THREE.DirectionalLight(0xffe9cf, 2.1);
     key.position.set(L * 1.7, hz + hRoof + 6.5, W * 0.3); key.castShadow = true;
     key.shadow.mapSize.set(2048, 2048); key.shadow.radius = 8;
@@ -565,6 +555,11 @@ export default function Scena3D({ cfg }) {
   // --- Tâmplărie (ferestre + ușă) ---
   const matToc = new THREE.MeshStandardMaterial({ color: 0x1f1f1f, roughness: 0.3, metalness: 0.75 });
   const matGeam = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.02, metalness: 0.08, envMapIntensity: 1.6, transparent: true, opacity: 0.80, depthWrite: false });
+
+  // Ciclul zi→apus: soare, cer, ceață, ferestre aprinse — un singur parametru.
+  const zi = creeazaZi({ scene, key, fill, rim, hemi, matGeam, L, W, hz, hRoof });
+  zi.seteazaOra(ora);
+  ziRef.current = zi;
 
   // Helper: creează o fereastră cu pervaz și obloane
   function adaugaFereastra(cx, cy, cz, rotY, w = 0.9, h = 1.1) {
@@ -996,6 +991,11 @@ export default function Scena3D({ cfg }) {
 
     return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", onR); window.removeEventListener("mousemove", move); window.removeEventListener("mouseup", up); rnd.dispose(); el.removeChild(rnd.domElement); };
   }, [cfg]);
+
+  // Ora zilei se schimbă FĂRĂ reconstrucția scenei — slider fluid.
+  useEffect(() => {
+    if (ziRef.current) ziRef.current.seteazaOra(ora);
+  }, [ora]);
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
       <div ref={mount} style={{ width: "100%", height: "100%", touchAction: "none", cursor: "grab" }} />

@@ -46,6 +46,7 @@ export default function App() {
   const [jgheaburi, setJgheaburi] = useState(true);
   const [detalii, setDetalii] = useState(false);
   const [faza, setFaza] = useState("config");
+  const [ora, setOra] = useState(0.35); // 0=dimineață · 0.35=prânz · 0.8=apus · 1=amurg
 
   const cfg = { lungime, latime, panta, tip, material, lucrare, demontare, jgheaburi };
   const q = useMemo(() => cantitati(cfg), [lungime, latime, panta, tip]);
@@ -58,7 +59,7 @@ export default function App() {
 
   return (
     <div style={{ position: "relative", width: "100vw", height: "100vh", overflow: "hidden", fontFamily: "system-ui,sans-serif", color: "#22282e", background: "#dfe9ee" }}>
-      <div style={{ position: "absolute", inset: 0 }}><Scena3D cfg={cfg} /></div>
+      <div style={{ position: "absolute", inset: 0 }}><Scena3D cfg={cfg} ora={ora} /></div>
 
       <div className="fz-panel" style={{ position: "absolute", top: 16, left: 18 }}>
         <div style={{ fontFamily: DISPLAY, fontSize: 22, fontWeight: 700, textShadow: "0 1px 0 rgba(255,255,255,.6)" }}>{C.companyName}</div>
@@ -121,6 +122,14 @@ export default function App() {
           <div style={{ fontSize: 13, color: "#8a4b3a", margin: "8px 0" }}>{dv.message}
             <button onClick={() => setFaza("formular")} style={{ ...pillMic, marginTop: 10 }}>Cere verificare cu un tehnician</button>
           </div>)}
+      </div>
+
+      <div style={{ position: "absolute", left: "50%", bottom: 52, transform: "translateX(-50%)", display: "flex", alignItems: "center", gap: 9, background: "rgba(255,255,255,.7)", backdropFilter: "blur(6px)", padding: "7px 14px", borderRadius: 20 }}>
+        <span style={{ fontSize: 13 }} title="Zi">☀️</span>
+        <input type="range" min={0} max={1} step={0.01} value={ora} onChange={e => setOra(+e.target.value)}
+          style={{ width: 130, accentColor: ora > 0.6 ? "#e8944a" : ACC, cursor: "pointer" }}
+          aria-label="Ora zilei" title="Vezi casa la orice oră: zi → apus" />
+        <span style={{ fontSize: 13 }} title="Apus">🌙</span>
       </div>
 
       <div style={{ position: "absolute", left: "50%", bottom: 14, transform: "translateX(-50%)", fontSize: 11.5, color: "#5c6a75", background: "rgba(255,255,255,.7)", backdropFilter: "blur(6px)", padding: "6px 14px", borderRadius: 20, whiteSpace: "nowrap", maxWidth: "70vw", overflow: "hidden", textOverflow: "ellipsis" }}>
