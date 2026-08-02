@@ -472,7 +472,7 @@ export default function Scena3D({ cfg, ora = 0.35 }) {
     scene.add(hemi);
     const key = new THREE.DirectionalLight(0xffe9cf, 2.1);
     key.position.set(L * 1.7, hz + hRoof + 6.5, W * 0.3); key.castShadow = true;
-    key.shadow.mapSize.set(2048, 2048); key.shadow.radius = 8;
+    key.shadow.mapSize.set(1536, 1536); key.shadow.radius = 4;
     const s = Math.max(L, W) * 1.5;
     key.shadow.camera.left = -s; key.shadow.camera.right = s;
     key.shadow.camera.top = s; key.shadow.camera.bottom = -4; key.shadow.bias = -0.00015; key.shadow.normalBias = 0.04;
@@ -816,24 +816,18 @@ export default function Scena3D({ cfg, ora = 0.35 }) {
     }
     const inv = meshTri(tris, matInv); scene.add(inv);
     const sub = meshTri(tris, matSub); sub.position.y = -0.05; sub.castShadow = false; scene.add(sub);
-    if (triF.length) scene.add(meshTri(triF, matZid));
-    // Fronton — panou triunghiular tencuit pe laterale
-    if (tip === "doua_ape" || tip === "mansardat") {
-      const frontonMat = new THREE.MeshStandardMaterial({ color: 0xf4f1ea, roughness: 0.85, map: tencTex });
-      [-1, 1].forEach(sx2 => {
-        const fgGeo = new THREE.BufferGeometry();
-        const hw2 = W/2 - 0.10, hh2 = hRoof - 0.10;
-        const fv = new Float32Array([-hw2,0,0, hw2,0,0, 0,hh2,0]);
-        const fu = new Float32Array([0,1, 1,1, 0.5,0]);
-        fgGeo.setAttribute('position', new THREE.BufferAttribute(fv, 3));
-        fgGeo.setAttribute('uv', new THREE.BufferAttribute(fu, 2));
-        fgGeo.setIndex(new THREE.BufferAttribute(new Uint16Array([0,1,2]), 1));
-        fgGeo.computeVertexNormals();
-        const fgMesh = new THREE.Mesh(fgGeo, frontonMat);
-        fgMesh.position.set(L/2 * sx2 + (sx2 > 0 ? 0.005 : -0.005), y0 + 0.05, 0);
-        fgMesh.rotation.y = sx2 > 0 ? -Math.PI/2 : Math.PI/2;
-        fgMesh.receiveShadow = true; scene.add(fgMesh);
+    // Frontonul (peretele triunghiular de sub coamă, la capete): e inclus în
+    // triF, construit din geometria acoperișului → se potrivește EXACT cu panta.
+    // DoubleSide garantează că se vede indiferent de ordinea vârfurilor (înainte
+    // apărea gol când normala ieșea spre interior). Material dedicat, tencuit.
+    if (triF.length) {
+      const matFronton = new THREE.MeshStandardMaterial({
+        color: "#efe9df", map: tencTex, roughness: 0.88, side: THREE.DoubleSide,
+        bumpMap: bumpTex, bumpScale: 0.06,
       });
+      const fronton = meshTri(triF, matFronton);
+      fronton.castShadow = true; fronton.receiveShadow = true;
+      scene.add(fronton);
     }
 
     const matPazie = new THREE.MeshStandardMaterial({ color: "#e8e0d5", roughness: 0.75 });
